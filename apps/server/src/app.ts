@@ -6,6 +6,8 @@ import pool from "./db/pool.js";
 import demo_route from "./routes/demoPage.route.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import notFound from "./middlewares/notFound.js";
+
+import auth_route from "./routes/auth.route.js";
 import AppError from "./utils/AppError.js";
 
 // middlewares
@@ -16,6 +18,7 @@ app.use(morgan('dev'));
 
 // routes
 
+app.use("/api/auth", auth_route);
 app.use("/api/demo", demo_route);
 
 
