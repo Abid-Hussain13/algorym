@@ -1,12 +1,13 @@
-import express from "express";
+import express, { Request, Response } from "express";
 
-const route = express.Router();
+const demo_route = express.Router();
 
-route.get('/', (req, res) => {
+demo_route.get('/', (req: Request, res: Response): void => {
     res.send("hi");
 })
 
+demo_route.get("/data", (req, res) => {
+    res.send("this is u data");
+})
 
-export { route as demoPage };
-
-
+export default demo_route;
