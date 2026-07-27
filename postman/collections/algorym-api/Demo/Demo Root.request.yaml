@@ -1,0 +1,16 @@
+$kind: http-request
+name: Demo Root
+method: GET
+url: '{{baseUrl}}/api/demo/'
+order: 1000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status code is 200', function () {
+        pm.response.to.have.status(200);
+      });
+
+      pm.test('Response body text is "hi"', function () {
+        pm.expect(pm.response.text()).to.equal('hi');
+      });

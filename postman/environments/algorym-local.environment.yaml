@@ -1,0 +1,16 @@
+name: algorym - Local
+values:
+  - key: baseUrl
+    value: 'http://localhost:3000'
+  - key: accessToken
+    value: ''
+  - key: refreshToken
+    value: ''
+  - key: userId
+    value: ''
+  - key: userEmail
+    value: testuser@example.com
+  - key: userPassword
+    value: Test@1234
+  - key: userName
+    value: Test User
