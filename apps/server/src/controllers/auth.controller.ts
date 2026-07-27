@@ -36,7 +36,7 @@ export const signup = async (req: Request, res: Response) => {
 
     setAuthCookies(res, accessToken, refreshToken);
 
-    res.json({ success: true, message: "User registered successfully", user: payload });
+    res.json({ success: true, message: "User registered successfully", user: payload, statusCode: 201 });
 };
 
 export const login = async (req: Request, res: Response) => {

@@ -3,13 +3,11 @@ import dotenv from "dotenv";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 
-import pool from "./db/pool.js";
-import demo_route from "./routes/demoPage.route.js";
+import authRoute from "./routes/auth.routes.js";
+
 import errorHandler from "./middlewares/errorHandler.js";
 import notFound from "./middlewares/notFound.js";
-
-import authRoute from "./routes/auth.routes.js";
-import AppError from "./utils/AppError.js";
+import questionRoute from "./routes/questions.routes.js";
 
 // middlewares
 const app = express();
@@ -22,7 +20,7 @@ app.use(morgan('dev'));
 // routes
 
 app.use("/api/auth", authRoute);
-app.use("/api/demo", demo_route);
+app.use("/api/question", questionRoute);
 
 
 app.use(notFound);
