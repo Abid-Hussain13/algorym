@@ -109,7 +109,7 @@ export const getSessionById = async (userId: string, sessionId: string): Promise
     return session.rows[0];
 }
 
-export const updateSession = async (userId: string, sessionId: string, data: CreateSessionInput): Promise<Session> => {
+export const updateSession = async (userId: string, sessionId: string, data: Partial<CreateSessionInput>): Promise<Session> => {
     const existing = await db.query(
         "SELECT * FROM sessions WHERE id = $1 AND created_by = $2",
         [sessionId, userId]
@@ -117,6 +117,9 @@ export const updateSession = async (userId: string, sessionId: string, data: Cre
     if (!existing.rows[0]) throw new AppError("Session not found", 404);
 
     const session = existing.rows[0];
+    const mode = data.mode ?? session.mode;
+    const questionId = data.question_id ?? session.question_id;
+    const roleContext = data.role_context ?? session.role_context;
     const scheduledAt = data.scheduled_at ?? session.scheduled_at;
     const durationMinutes = data.duration_minutes ?? session.duration_minutes;
     const expiresAt = new Date(new Date(scheduledAt).getTime() + durationMinutes * 60000).toISOString();
@@ -128,9 +131,9 @@ export const updateSession = async (userId: string, sessionId: string, data: Cre
          WHERE id = $7 AND created_by = $8
          RETURNING *`,
         [
-            data.question_id ?? null,
-            data.mode,
-            data.role_context ?? null,
+            questionId,
+            mode,
+            roleContext,
             scheduledAt,
             durationMinutes,
             expiresAt,
