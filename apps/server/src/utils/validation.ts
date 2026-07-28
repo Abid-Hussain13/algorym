@@ -27,6 +27,7 @@ export const createSessionSchema = z.object({
     role_context: z.string().optional(),
     scheduled_at: z.string().datetime().optional(),
     duration_minutes: z.number().min(10, "Session should be longer than 10 minutes").max(121, "Session should be under 2 hours"),
+    status: z.enum(["scheduled", "live", "completed", "cancelled", "expired"]).optional()
 });
 
 export const getAllSessionsSchema = z.object({
@@ -37,6 +38,17 @@ export const getAllSessionsSchema = z.object({
 });
 
 export const updateSessionSchema = createSessionSchema.partial();
+
+export const joinSessionSchema = z.object({
+    access_token: z.string().min(1, "Access token is required"),
+    email: z.string().email("Invalid email format").optional(),
+    display_name: z.string().optional(),
+    consent_to_contact: z.boolean(),
+});
+
+export const changeQuestionSchema = z.object({
+    question_id: z.string().uuid("Invalid question ID format"),
+});
 
 export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;

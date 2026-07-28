@@ -117,6 +117,9 @@ export const updateSession = async (userId: string, sessionId: string, data: Par
     if (!existing.rows[0]) throw new AppError("Session not found", 404);
 
     const session = existing.rows[0];
+    if (session.status !== "scheduled") {
+        throw new AppError("Can only update sessions that are scheduled", 400);
+    }
     const mode = data.mode ?? session.mode;
     const questionId = data.question_id ?? session.question_id;
     const roleContext = data.role_context ?? session.role_context;
@@ -153,3 +156,117 @@ export const deleteSession = async (userId: string, sessionId: string): Promise<
 
     if (!rowCount) throw new AppError("Session not found", 404);
 }
+
+export const startSession = async (userId: string, sessionId: string): Promise<Session> => {
+    const existing = await db.query(
+        "SELECT * FROM sessions WHERE id = $1 AND created_by = $2",
+        [sessionId, userId]
+    );
+
+    const session = existing.rows[0];
+    if (!session) throw new AppError("Session not found", 404);
+    if (session.status !== "scheduled") throw new AppError("Session is not scheduled", 400);
+
+    const { rows } = await db.query(
+        `UPDATE sessions SET status = 'live', started_at = now() WHERE id = $1 AND created_by = $2 RETURNING *`,
+        [sessionId, userId]
+    );
+
+    return rows[0];
+}
+
+export const completeSession = async (userId: string, sessionId: string): Promise<Session> => {
+    const existing = await db.query(
+        "SELECT * FROM sessions WHERE id = $1 AND created_by = $2",
+        [sessionId, userId]
+    );
+
+    const session = existing.rows[0];
+    if (!session) throw new AppError("Session not found", 404);
+    if (session.status !== "live") throw new AppError("Only live sessions can be completed", 400);
+
+    const { rows } = await db.query(
+        `UPDATE sessions SET status = 'completed' WHERE id = $1 AND created_by = $2 RETURNING *`,
+        [sessionId, userId]
+    );
+
+    return rows[0];
+};
+
+export const cancelSession = async (userId: string, sessionId: string): Promise<Session> => {
+    const existing = await db.query(
+        "SELECT * FROM sessions WHERE id = $1 AND created_by = $2",
+        [sessionId, userId]
+    );
+
+    const session = existing.rows[0];
+    if (!session) throw new AppError("Session not found", 404);
+    if (session.status !== "scheduled") throw new AppError("Only scheduled sessions can be cancelled", 400);
+
+    const { rows } = await db.query(
+        `UPDATE sessions SET status = 'cancelled' WHERE id = $1 AND created_by = $2 RETURNING *`,
+        [sessionId, userId]
+    );
+
+    return rows[0];
+};
+
+interface JoinSessionData {
+    access_token: string;
+    email?: string;
+    display_name?: string;
+    consent_to_contact: boolean;
+}
+
+export const joinSession = async (data: JoinSessionData, userId?: string): Promise<{ session: Session; participant: any }> => {
+    const existing = await db.query(
+        "SELECT * FROM sessions WHERE access_token = $1",
+        [data.access_token]
+    );
+
+    const session = existing.rows[0];
+    if (!session) throw new AppError("Session not found", 404);
+    if (session.status !== "scheduled" && session.status !== "live") {
+        throw new AppError("Session is not open for joining", 400);
+    }
+
+    let email = data.email;
+    let displayName = data.display_name;
+
+    if (userId) {
+        const user = await db.query("SELECT name, email FROM users WHERE id = $1", [userId]);
+        if (user.rows[0]) {
+            if (!email) email = user.rows[0].email;
+            displayName = user.rows[0].name;
+        }
+    }
+
+    if (!email) throw new AppError("Email is required to join a session", 400);
+    if (!displayName) throw new AppError("Name is required to join a session", 400);
+
+    const { rows } = await db.query(
+        `INSERT INTO session_participants (session_id, user_id, email, display_name, role, consent_to_contact, consent_timestamp)
+         VALUES ($1, $2, $3, $4, 'guest', $5, now()) RETURNING *`,
+        [session.id, userId || null, email, displayName || null, data.consent_to_contact]
+    );
+
+    return { session, participant: rows[0] };
+};
+
+export const changeQuestion = async (userId: string, sessionId: string, questionId: string): Promise<Session> => {
+    const existing = await db.query(
+        "SELECT * FROM sessions WHERE id = $1 AND created_by = $2",
+        [sessionId, userId]
+    );
+
+    const session = existing.rows[0];
+    if (!session) throw new AppError("Session not found", 404);
+    if (session.status !== "live") throw new AppError("Can only change question in a live session", 400);
+
+    const { rows } = await db.query(
+        `UPDATE sessions SET question_id = $1 WHERE id = $2 AND created_by = $3 RETURNING *`,
+        [questionId, sessionId, userId]
+    );
+
+    return rows[0];
+};
