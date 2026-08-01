@@ -150,6 +150,14 @@ export interface QuestionChangePayload {
     languages: string[];
 }
 
+export interface CollaboratorPresence {
+    participantId: string;
+    displayName: string;
+    color: string;
+    cursor?: { line: number; ch: number };
+    selection?: { from: number; to: number };
+}
+
 export type WsMessage =
     | { type: 'code_snapshot'; payload: CodeSnapshotPayload }
     | { type: 'run_result'; payload: RunResultPayload }

@@ -9,4 +9,6 @@ const db = new Pool({
     database: process.env.DB_DATABASE
 });
 
+db.query("SELECT 1").then(() => console.log("Database connected"));
+
 export default db;
