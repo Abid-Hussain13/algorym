@@ -19,6 +19,7 @@ export const handleMessage = (ws: WebSocket, sessionId: string, raw: Buffer): vo
     const validTypes = [
         "code_snapshot", "run_result", "highlight",
         "comment", "question_change", "join", "leave",
+        "session_started", "session_completed", "session_cancelled",
     ];
 
     if (!validTypes.includes(message.type)) {

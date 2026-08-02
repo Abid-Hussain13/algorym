@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken";
-import db from "../db/pool.js";
 import type { AuthPayload } from "../types/index.js";
 
 export interface CollabConnectionInfo {
@@ -32,21 +31,4 @@ export const parseCollabConnectionInfo = (url: string | undefined): CollabConnec
     }
 
     return { sessionId, participantId, userId };
-};
-
-export const verifyParticipant = async (info: CollabConnectionInfo): Promise<boolean> => {
-    const result = await db.query<{ user_id: string | null }>(
-        `SELECT user_id
-         FROM session_participants
-         WHERE id = $1 AND session_id = $2`,
-        [info.participantId, info.sessionId]
-    );
-
-    if (result.rowCount === 0) return false;
-
-    const { user_id } = result.rows[0];
-
-    if (user_id === null) return info.userId === undefined;
-
-    return user_id === info.userId;
 };

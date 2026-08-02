@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import * as service from "../services/session.service.js";
-import AppError from "../utils/AppError.js";
+import { getQuestionById } from "../services/questions.service.js";
+import { broadcast } from "../ws/connectionManager.js";
 import type { AuthPayload } from "../types/index.js";
 
 export const createSession = async (req: Request, res: Response) => {
@@ -41,17 +42,23 @@ export const deleteSession = async (req: Request, res: Response) => {
 export const startSession = async (req: Request, res: Response) => {
     const session = await service.startSession(req.user!.id, req.params.id as string);
 
+    broadcast(session.id, { type: "session_started", payload: { session } });
+
     res.json({ success: true, session });
 };
 
 export const completeSession = async (req: Request, res: Response) => {
     const session = await service.completeSession(req.user!.id, req.params.id as string);
 
+    broadcast(session.id, { type: "session_completed", payload: { session } });
+
     res.json({ success: true, session });
 };
 
 export const cancelSession = async (req: Request, res: Response) => {
     const session = await service.cancelSession(req.user!.id, req.params.id as string);
+
+    broadcast(session.id, { type: "session_cancelled", payload: { session } });
 
     res.json({ success: true, session });
 };
@@ -79,6 +86,19 @@ export const joinSession = async (req: Request, res: Response) => {
 
 export const changeQuestion = async (req: Request, res: Response) => {
     const session = await service.changeQuestion(req.user!.id, req.params.id as string, req.body.question_id);
+
+    const question = await getQuestionById(req.body.question_id, req.user!.id);
+
+    broadcast(session.id, {
+        type: "question_change",
+        payload: {
+            question_id: question.id,
+            title: question.title,
+            description: question.description,
+            starter_code: question.starter_code ?? "",
+            languages: question.languages,
+        },
+    });
 
     res.json({ success: true, session });
 };

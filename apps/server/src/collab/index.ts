@@ -2,7 +2,8 @@ import type { IncomingMessage, Server as HttpServer } from "http";
 import type { Duplex } from "stream";
 import { WebSocketServer } from "ws";
 import { setupWSConnection } from "@y/websocket-server/utils";
-import { COLLAB_PATH_PREFIX, parseCollabConnectionInfo, verifyParticipant } from "./auth.js";
+import { COLLAB_PATH_PREFIX, parseCollabConnectionInfo } from "./auth.js";
+import { verifyParticipant } from "../utils/verifyParticipant.js";
 
 export const initializeCollabServer = (server: HttpServer): void => {
     const wss = new WebSocketServer({ noServer: true });

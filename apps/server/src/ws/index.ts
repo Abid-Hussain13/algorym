@@ -3,6 +3,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { extractConnectionInfo } from "./auth.js";
 import { joinRoom, leaveRoom, broadcast } from "./connectionManager.js";
 import { handleMessage } from "./handlers.js";
+import { verifyParticipant } from "../utils/verifyParticipant.js";
 import { Duplex } from "stream";
 
 interface WsConnection extends WebSocket {
@@ -18,9 +19,30 @@ export const initializeWebSocketServer = (server: HttpServer): WebSocketServer =
 
         if (pathname !== "/ws") return;
 
-        wss.handleUpgrade(request, socket, head, (ws) => {
-            wss.emit("connection", ws, request);
-        });
+        const info = extractConnectionInfo(request.url);
+
+        if (!info) {
+            socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+            socket.destroy();
+            return;
+        }
+
+        verifyParticipant(info)
+            .then((isVerified) => {
+                if (!isVerified) {
+                    socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+                    socket.destroy();
+                    return;
+                }
+
+                wss.handleUpgrade(request, socket, head, (ws) => {
+                    wss.emit("connection", ws, request);
+                });
+            })
+            .catch(() => {
+                socket.write("HTTP/1.1 500 Internal Server Error\r\n\r\n");
+                socket.destroy();
+            });
     });
 
     wss.on("connection", (ws: WsConnection, req) => {
