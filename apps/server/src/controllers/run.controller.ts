@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import * as runService from "../services/code-run.service.js";
-import db from "../db/pool.js";
+import { getSessionStatus } from "../services/session.service.js";
 import { broadcast } from "../ws/connectionManager.js";
 import { verifyParticipant } from "../utils/verifyParticipant.js";
 import AppError from "../utils/AppError.js";
@@ -25,12 +25,9 @@ export const runCode = async (req: Request, res: Response) => {
     const isVerified = await verifyParticipant({ sessionId, participantId, userId });
     if (!isVerified) throw new AppError("You are not a participant of this session", 401);
 
-    const session = await db.query<{ status: string }>(
-        "SELECT status FROM sessions WHERE id = $1",
-        [sessionId]
-    );
-    if (!session.rows[0]) throw new AppError("Session not found", 404);
-    if (session.rows[0].status !== "live") throw new AppError("Session is not live", 400);
+    const sessionStatus = await getSessionStatus(sessionId);
+
+    if (sessionStatus !== "live") throw new AppError("Session is not live", 400);
 
     const result = await runService.runCode({ code, language, stdin });
 

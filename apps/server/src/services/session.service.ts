@@ -270,3 +270,11 @@ export const changeQuestion = async (userId: string, sessionId: string, question
 
     return rows[0];
 };
+
+export const getSessionStatus = async (sessionId: string): Promise<string> => {
+    const queryString = `SELECT status from sessions WHERE id = $1`;
+    const sessionStatus = await db.query<{ status: string }>(queryString, [sessionId]);
+    if (!sessionStatus.rows[0]) throw new AppError("Session not found", 404);
+    return sessionStatus.rows[0].status;
+}
+
