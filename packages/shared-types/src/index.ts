@@ -4,7 +4,7 @@ export type SessionMode = 'interview' | 'practice';
 
 export type SessionStatus = 'scheduled' | 'live' | 'completed' | 'cancelled' | 'expired';
 
-export type EventType = 'code_snapshot' | 'run_result' | 'highlight' | 'comment' | 'join' | 'leave' | 'question_change';
+export type EventType = 'code_snapshot' | 'run_result' | 'highlight' | 'comment' | 'join' | 'leave' | 'question_change' | 'session_started' | 'session_completed' | 'session_cancelled';
 
 export type EvaluationRating = 'weak' | 'average' | 'strong';
 
@@ -127,10 +127,18 @@ export interface CodeSnapshotPayload {
     code: string;
 }
 
+export type RunStatus = 'accepted' | 'wrong_answer' | 'time_limit_exceeded' |
+    'compile_error' | 'runtime_error' | 'internal_error' | 'error';
+
 export interface RunResultPayload {
-    output: string;
-    passed: number;
-    total: number;
+    language: string;
+    stdout: string;
+    stderr: string;
+    compile_output: string;
+    time: number | null;      // seconds
+    memory: number | null;    // KB
+    status: RunStatus;
+    exit_code: number | null;
 }
 
 export interface HighlightPayload {
@@ -150,6 +158,10 @@ export interface QuestionChangePayload {
     languages: string[];
 }
 
+export interface SessionStatePayload {
+    session: Session;
+}
+
 export interface CollaboratorPresence {
     participantId: string;
     displayName: string;
@@ -164,5 +176,8 @@ export type WsMessage =
     | { type: 'highlight'; payload: HighlightPayload }
     | { type: 'comment'; payload: CommentPayload }
     | { type: 'question_change'; payload: QuestionChangePayload }
+    | { type: 'session_started'; payload: SessionStatePayload }
+    | { type: 'session_completed'; payload: SessionStatePayload }
+    | { type: 'session_cancelled'; payload: SessionStatePayload }
     | { type: 'join'; payload: Record<string, never> }
     | { type: 'leave'; payload: Record<string, never> };

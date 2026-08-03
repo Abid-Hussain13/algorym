@@ -50,8 +50,19 @@ export const changeQuestionSchema = z.object({
     question_id: z.string().uuid("Invalid question ID format"),
 });
 
+export const runCodeSchema = z.object({
+    sessionId: z.string().uuid("Invalid session ID format"),
+    participantId: z.string().uuid("Invalid participant ID format"),
+    code: z.string().min(1, "Code is required").max(20000, "Code must be under 20KB"),
+    language: z.enum(["javascript", "python", "java", "cpp", "go"], {
+        message: "Language must be javascript, python, java, cpp, or go",
+    }),
+    stdin: z.string().max(10000, "Stdin must be under 10KB").optional(),
+});
+
 export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type CreateQuestionInput = z.infer<typeof createQuestionSchema>;
 export type CreateSessionInput = z.infer<typeof createSessionSchema>;
 export type GetAllSessionsQuery = z.infer<typeof getAllSessionsSchema>;
+export type RunCodeInput = z.infer<typeof runCodeSchema>;
