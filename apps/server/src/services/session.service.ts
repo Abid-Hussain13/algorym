@@ -105,7 +105,7 @@ export const getSessionById = async (userId: string, sessionId: string): Promise
     const queryString = `Select * from sessions where created_by = $1 AND id = $2`;
     const session = await db.query(queryString, [userId, sessionId]);
 
-    if (!session.rows[0]) throw new AppError("Session nout found", 404);
+    if (!session.rows[0]) throw new AppError("Session not found", 404);
     return session.rows[0];
 }
 

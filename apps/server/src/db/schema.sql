@@ -76,3 +76,5 @@ create index idx_questions_owner on questions(owner_id);
 create index idx_sessions_created_by on sessions(created_by);
 create index idx_participants_session on session_participants(session_id);
 create index idx_events_session on session_events(session_id);
+create unique index idx_evaluations_session_candidate
+    on session_evaluations(session_id, evaluated_participant_id);

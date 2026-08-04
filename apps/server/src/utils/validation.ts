@@ -60,9 +60,18 @@ export const runCodeSchema = z.object({
     stdin: z.string().max(10000, "Stdin must be under 10KB").optional(),
 });
 
+
+export const evaluatedUserSchema = z.object({
+    sessionId: z.string().uuid("Invalid session ID format"),
+    participantId: z.string().uuid("Invalid participant ID format"),
+    rating: z.enum(["weak", "average", "strong"]),
+    notes: z.string().optional()
+})
+
 export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type CreateQuestionInput = z.infer<typeof createQuestionSchema>;
 export type CreateSessionInput = z.infer<typeof createSessionSchema>;
 export type GetAllSessionsQuery = z.infer<typeof getAllSessionsSchema>;
 export type RunCodeInput = z.infer<typeof runCodeSchema>;
+export type EvaluatedUserInput = z.infer<typeof evaluatedUserSchema>;
