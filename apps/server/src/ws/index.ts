@@ -61,7 +61,7 @@ export const initializeWebSocketServer = (server: HttpServer): WebSocketServer =
         broadcast(info.sessionId, { type: "join", payload: {} }, ws);
 
         ws.on("message", (data: Buffer) => {
-            handleMessage(ws, info.sessionId, data);
+            handleMessage(ws, info.sessionId, info.participantId, data);
         });
 
         ws.on("close", () => {

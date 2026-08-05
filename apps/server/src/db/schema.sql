@@ -3,7 +3,7 @@ create extension if not exists "pgcrypto";
 create type difficulty_level as enum ('easy', 'medium', 'hard');
 create type session_mode as enum ('interview', 'practice');
 create type session_status as enum ('scheduled', 'live', 'completed', 'cancelled', 'expired');
-create type event_type as enum ('code_snapshot', 'run_result', 'highlight', 'comment', 'join', 'leave', 'question_change');
+create type event_type as enum ('code_snapshot', 'run_result', 'question_change', 'session_started', 'session_completed', 'session_cancelled');
 create type evaluation_rating as enum ('weak', 'average', 'strong');
 create type participant_role as enum ('host', 'guest');
 
@@ -35,7 +35,7 @@ create table sessions (
     access_token text not null unique,
     role_context text,
     scheduled_at timestamptz,
-    duration_minutes integer not null,
+    duration_minutes integer,
     started_at timestamptz,
     expires_at timestamptz,
     created_at timestamptz not null default now()
@@ -53,8 +53,7 @@ create table session_participants (
     joined_at timestamptz not null default now()
 );
 
-create table session_events (
-    id uuid primary key default gen_random_uuid(),
+create table session_events ( id uuid primary key default gen_random_uuid(),
     session_id uuid not null references sessions(id) on delete cascade,
     actor_participant_id uuid references session_participants(id) on delete set null,
     event_type event_type not null,

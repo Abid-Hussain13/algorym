@@ -1,7 +1,7 @@
 import { WebSocket } from "ws";
-import { broadcast } from "./connectionManager.js";
+import { logSessionEvent } from "../services/session-events.service.js";
 
-export const handleMessage = (ws: WebSocket, sessionId: string, raw: Buffer): void => {
+export const handleMessage = (ws: WebSocket, sessionId: string, participantId: string | undefined, raw: Buffer): void => {
     let message: Record<string, unknown>;
 
     try {
@@ -16,16 +16,18 @@ export const handleMessage = (ws: WebSocket, sessionId: string, raw: Buffer): vo
         return;
     }
 
-    const validTypes = [
-        "code_snapshot", "run_result", "highlight",
-        "comment", "question_change", "join", "leave",
-        "session_started", "session_completed", "session_cancelled",
-    ];
-
-    if (!validTypes.includes(message.type)) {
+    if (message.type !== "code_snapshot") {
         ws.send(JSON.stringify({ type: "error", payload: { message: `Unknown message type: ${message.type}` } }));
         return;
     }
 
-    broadcast(sessionId, message, ws);
+    const payload = message.payload as { code?: unknown };
+
+    if (typeof payload.code !== "string") {
+        ws.send(JSON.stringify({ type: "error", payload: { message: "code_snapshot payload must include a code string" } }));
+        return;
+    }
+
+    void logSessionEvent(sessionId, participantId ?? null, "code_snapshot", { code: payload.code })
+        .catch((err) => console.error("Failed to persist code_snapshot:", err));
 };

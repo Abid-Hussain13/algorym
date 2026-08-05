@@ -4,7 +4,7 @@ export type SessionMode = 'interview' | 'practice';
 
 export type SessionStatus = 'scheduled' | 'live' | 'completed' | 'cancelled' | 'expired';
 
-export type EventType = 'code_snapshot' | 'run_result' | 'highlight' | 'comment' | 'join' | 'leave' | 'question_change' | 'session_started' | 'session_completed' | 'session_cancelled';
+export type EventType = 'code_snapshot' | 'run_result' | 'question_change' | 'session_started' | 'session_completed' | 'session_cancelled';
 
 export type EvaluationRating = 'weak' | 'average' | 'strong';
 
@@ -38,7 +38,7 @@ export interface Session {
     access_token: string;
     role_context: string | null;
     scheduled_at: string | null;
-    duration_minutes: number;
+    duration_minutes: number | null;
     started_at: string | null;
     expires_at: string | null;
     created_at: string;
@@ -111,7 +111,7 @@ export interface CreateQuestionBody {
 
 export interface CreateSessionBody {
     mode: SessionMode;
-    duration_minutes: number;
+    duration_minutes?: number;
     question_id?: string;
     role_context?: string;
     scheduled_at?: string;
@@ -141,15 +141,6 @@ export interface RunResultPayload {
     exit_code: number | null;
 }
 
-export interface HighlightPayload {
-    line: number;
-    comment: string;
-}
-
-export interface CommentPayload {
-    text: string;
-}
-
 export interface QuestionChangePayload {
     question_id: string;
     title: string;
@@ -173,8 +164,6 @@ export interface CollaboratorPresence {
 export type WsMessage =
     | { type: 'code_snapshot'; payload: CodeSnapshotPayload }
     | { type: 'run_result'; payload: RunResultPayload }
-    | { type: 'highlight'; payload: HighlightPayload }
-    | { type: 'comment'; payload: CommentPayload }
     | { type: 'question_change'; payload: QuestionChangePayload }
     | { type: 'session_started'; payload: SessionStatePayload }
     | { type: 'session_completed'; payload: SessionStatePayload }

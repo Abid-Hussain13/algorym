@@ -26,7 +26,7 @@ export const createSessionSchema = z.object({
     mode: z.enum(["interview", "practice"]),
     role_context: z.string().optional(),
     scheduled_at: z.string().datetime().optional(),
-    duration_minutes: z.number().min(10, "Session should be longer than 10 minutes").max(121, "Session should be under 2 hours"),
+    duration_minutes: z.number().min(10, "Session should be longer than 10 minutes").max(301, "Session should be under 5 hours").optional(),
     status: z.enum(["scheduled", "live", "completed", "cancelled", "expired"]).optional()
 });
 

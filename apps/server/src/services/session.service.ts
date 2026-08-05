@@ -32,7 +32,7 @@ export const createSession = async (userId: string, data: CreateSessionInput): P
         startedAt = startTime.toISOString();
     }
 
-    const expiresAt = new Date(startTime.getTime() + duration_minutes * 60000).toISOString();
+    const expiresAt = duration_minutes ? new Date(startTime.getTime() + duration_minutes * 60000).toISOString() : null;
     const scheduledAtISO = startTime.toISOString();
 
     try {
@@ -125,7 +125,7 @@ export const updateSession = async (userId: string, sessionId: string, data: Par
     const roleContext = data.role_context ?? session.role_context;
     const scheduledAt = data.scheduled_at ?? session.scheduled_at;
     const durationMinutes = data.duration_minutes ?? session.duration_minutes;
-    const expiresAt = new Date(new Date(scheduledAt).getTime() + durationMinutes * 60000).toISOString();
+    const expiresAt = durationMinutes ? new Date(new Date(scheduledAt).getTime() + durationMinutes * 60000).toISOString() : null;
 
     const { rows } = await db.query(
         `UPDATE sessions
