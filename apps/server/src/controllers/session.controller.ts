@@ -2,8 +2,10 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import * as service from "../services/session.service.js";
 import { getQuestionById } from "../services/questions.service.js";
-import { getHostParticipant } from "../services/participant.service.js";
+import { getHostParticipant, getCandidateParticipant } from "../services/participant.service.js";
+import { saveSessionNotes, getSessionEvaluation } from "../services/evaluation.service.js";
 import { logSessionEvent } from "../services/session-events.service.js";
+import AppError from "../utils/AppError.js";
 import type { AuthPayload } from "../types/index.js";
 
 export const createSession = async (req: Request, res: Response) => {
@@ -103,4 +105,32 @@ export const changeQuestion = async (req: Request, res: Response) => {
     });
 
     res.json({ success: true, session });
+};
+
+export const saveNotes = async (req: Request, res: Response) => {
+    const sessionId = req.params.id as string;
+    const notes = req.body.notes;
+
+    const session = await service.getSessionById(req.user!.id, sessionId);
+    if (session.status !== "live" && session.status !== "completed") {
+        throw new AppError("Notes can only be saved for live or completed sessions", 409);
+    }
+
+    const host = await getHostParticipant(sessionId, req.user!.id);
+    const candidate = await getCandidateParticipant(sessionId);
+
+    const evaluation = await saveSessionNotes(sessionId, host.id, candidate.id, notes ?? null);
+
+    res.json({ success: true, evaluation });
+};
+
+export const getEvaluation = async (req: Request, res: Response) => {
+    const sessionId = req.params.id as string;
+
+    await service.getSessionById(req.user!.id, sessionId);
+    await getHostParticipant(sessionId, req.user!.id);
+
+    const evaluation = await getSessionEvaluation(sessionId);
+
+    res.json({ success: true, evaluation });
 };

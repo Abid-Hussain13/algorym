@@ -2,7 +2,8 @@ import { Router } from "express";
 import {
     createSession, getAllSessions, getSessionById,
     updateSession, deleteSession, startSession,
-    completeSession, cancelSession, joinSession, changeQuestion
+    completeSession, cancelSession, joinSession, changeQuestion,
+    saveNotes, getEvaluation
 } from "../controllers/session.controller.js";
 import { protect } from "../middlewares/protect.js";
 import { validate, validateQuery } from "../middlewares/validate.js";
@@ -28,5 +29,7 @@ sessionRoute.patch("/:id/start", protect, startSession);
 sessionRoute.patch("/:id/complete", protect, completeSession);
 sessionRoute.patch("/:id/cancel", protect, cancelSession);
 sessionRoute.patch("/:id/question", protect, validate(changeQuestionSchema), changeQuestion);
+sessionRoute.patch("/:id/notes", protect, saveNotes);
+sessionRoute.get("/:id/evaluation", protect, getEvaluation);
 
 export default sessionRoute;

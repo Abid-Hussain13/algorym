@@ -5,7 +5,7 @@ import AppError from "../utils/AppError.js";
 import { CreateSessionInput, GetAllSessionsQuery } from "../utils/validation.js";
 
 interface GetAllSessionsResult {
-    sessions: Session[];
+    sessions: (Session & { evaluated: boolean })[];
     pagination: {
         page: number;
         limit: number;
@@ -81,7 +81,13 @@ export const getAllSessions = async (userId: string, params: GetAllSessionsQuery
     const order = params.order;
 
     const countQuery = `SELECT COUNT(*) FROM sessions WHERE ${whereClause}`;
-    const dataQuery = `SELECT * FROM sessions WHERE ${whereClause} ORDER BY ${sortBy} ${order} LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    const dataQuery = `SELECT s.*, EXISTS(
+                        SELECT 1 FROM session_evaluations ev WHERE ev.session_id = s.id
+                      ) AS evaluated
+                      FROM sessions s
+                      WHERE ${whereClause}
+                      ORDER BY ${sortBy} ${order}
+                      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
 
     const [countResult, dataResult] = await Promise.all([
         db.query(countQuery, values),

@@ -66,7 +66,7 @@ create table session_evaluations (
     session_id uuid not null references sessions(id) on delete cascade,
     evaluator_participant_id uuid not null references session_participants(id) on delete cascade,
     evaluated_participant_id uuid not null references session_participants(id) on delete cascade,
-    rating evaluation_rating not null,
+    rating evaluation_rating,
     notes text,
     created_at timestamptz not null default now()
 );

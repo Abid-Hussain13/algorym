@@ -70,7 +70,7 @@ export interface SessionEvaluation {
     session_id: string;
     evaluator_participant_id: string;
     evaluated_participant_id: string;
-    rating: EvaluationRating;
+    rating: EvaluationRating | null;
     notes: string | null;
     created_at: string;
 }

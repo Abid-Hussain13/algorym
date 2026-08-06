@@ -17,3 +17,12 @@ export const getParticipantBySession = async (sessionId: string, participantId: 
     if (!rows[0]) throw new AppError("Candidate is not a participant of this session", 404);
     return rows[0];
 };
+
+export const getCandidateParticipant = async (sessionId: string): Promise<SessionParticipant> => {
+    const { rows } = await db.query(
+        `SELECT * FROM session_participants WHERE session_id = $1 AND role = 'guest' ORDER BY joined_at ASC LIMIT 1`,
+        [sessionId]
+    );
+    if (!rows[0]) throw new AppError("No candidate has joined this session yet", 400);
+    return rows[0];
+};

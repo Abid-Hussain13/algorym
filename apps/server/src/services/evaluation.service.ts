@@ -11,7 +11,30 @@ export const evaluateUser = async (data: sessionEvaluationParams): Promise<Sessi
                         On Conflict (session_id, evaluated_participant_id)
                         Do Update Set rating = Excluded.rating, notes = Excluded.notes
                         Returning *`;
-    const evaluation = await db.query(queryString, [session_id, evaluator_participant_id, evaluated_participant_id, rating, notes ?? ""]);
+    const evaluation = await db.query(queryString, [session_id, evaluator_participant_id, evaluated_participant_id, rating ?? null, notes ?? ""]);
 
     return evaluation.rows[0];
 }
+
+export const saveSessionNotes = async (
+    sessionId: string,
+    evaluatorParticipantId: string,
+    evaluatedParticipantId: string,
+    notes: string | null
+): Promise<SessionEvaluation> => {
+    const queryString = `Insert into session_evaluations(session_id, evaluator_participant_id, evaluated_participant_id, notes)
+                        Values ($1, $2, $3, $4)
+                        On Conflict (session_id, evaluated_participant_id)
+                        Do Update Set notes = Excluded.notes
+                        Returning *`;
+    const { rows } = await db.query(queryString, [sessionId, evaluatorParticipantId, evaluatedParticipantId, notes ?? ""]);
+    return rows[0];
+};
+
+export const getSessionEvaluation = async (sessionId: string): Promise<SessionEvaluation | null> => {
+    const { rows } = await db.query(
+        `SELECT * FROM session_evaluations WHERE session_id = $1 ORDER BY created_at DESC LIMIT 1`,
+        [sessionId]
+    );
+    return rows[0] ?? null;
+};

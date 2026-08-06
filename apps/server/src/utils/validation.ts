@@ -64,7 +64,7 @@ export const runCodeSchema = z.object({
 export const evaluatedUserSchema = z.object({
     sessionId: z.string().uuid("Invalid session ID format"),
     participantId: z.string().uuid("Invalid participant ID format"),
-    rating: z.enum(["weak", "average", "strong"]),
+    rating: z.enum(["weak", "average", "strong"]).optional(),
     notes: z.string().optional()
 })
 
