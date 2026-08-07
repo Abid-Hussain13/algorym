@@ -20,13 +20,13 @@ export const getAllQuestions = async (req: Request, res: Response) => {
 };
 
 export const getQuestion = async (req: Request, res: Response) => {
-    const question = await questionService.getQuestionById(req.params.id, req.user!.id);
+    const question = await questionService.getQuestionById(req.params.id as string, req.user!.id);
     res.json({ question });
 };
 
 export const updateQuestion = async (req: Request, res: Response) => {
     const { title, description, languages, difficulty, starter_code } = req.body;
-    const question = await questionService.updateQuestion(req.params.id, req.user!.id, {
+    const question = await questionService.updateQuestion(req.params.id as string, req.user!.id, {
         owner_id: req.user!.id,
         title,
         description,
@@ -38,6 +38,6 @@ export const updateQuestion = async (req: Request, res: Response) => {
 };
 
 export const deleteQuestion = async (req: Request, res: Response) => {
-    await questionService.deleteQuestion(req.params.id, req.user!.id);
+    await questionService.deleteQuestion(req.params.id as string, req.user!.id);
     res.status(204).end();
 };
