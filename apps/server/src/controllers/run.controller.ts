@@ -31,7 +31,7 @@ export const runCode = async (req: Request, res: Response) => {
 
     const result = await runService.runCode({ code, language, stdin });
 
-    await logSessionEvent(sessionId, participantId, "run_result", { ...result });
+    await logSessionEvent(sessionId, participantId, "run_result", { ...result, stdin, code });
 
     res.json({ success: true, result });
 };

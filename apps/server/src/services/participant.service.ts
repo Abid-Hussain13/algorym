@@ -1,8 +1,11 @@
 import type { SessionParticipant } from "@algorym/shared-types";
 import db from "../db/pool.js";
 import AppError from "../utils/AppError.js";
+import { assertValidUuid } from "../utils/uuid.js";
 
 export const getHostParticipant = async (sessionId: string, userId: string): Promise<SessionParticipant> => {
+    assertValidUuid(sessionId, "Session");
+    assertValidUuid(userId, "User");
     const queryString = `Select * from session_participants where session_id = $1 AND user_id = $2 AND role = 'host'`;
 
     const host = await db.query(queryString, [sessionId, userId]);
@@ -11,6 +14,8 @@ export const getHostParticipant = async (sessionId: string, userId: string): Pro
 }
 
 export const getParticipantBySession = async (sessionId: string, participantId: string): Promise<SessionParticipant> => {
+    assertValidUuid(sessionId, "Session");
+    assertValidUuid(participantId, "Participant");
     const { rows } = await db.query(`SELECT * FROM session_participants WHERE session_id = $1 AND id = $2`,
         [sessionId, participantId]
     );
@@ -19,6 +24,7 @@ export const getParticipantBySession = async (sessionId: string, participantId: 
 };
 
 export const getCandidateParticipant = async (sessionId: string): Promise<SessionParticipant> => {
+    assertValidUuid(sessionId, "Session");
     const { rows } = await db.query(
         `SELECT * FROM session_participants WHERE session_id = $1 AND role = 'guest' ORDER BY joined_at ASC LIMIT 1`,
         [sessionId]

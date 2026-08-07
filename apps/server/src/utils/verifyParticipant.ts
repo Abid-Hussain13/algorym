@@ -1,4 +1,5 @@
 import db from "../db/pool.js";
+import { assertValidUuid } from "../utils/uuid.js";
 
 export interface ParticipantVerification {
     sessionId: string;
@@ -7,6 +8,8 @@ export interface ParticipantVerification {
 }
 
 export const verifyParticipant = async ({ sessionId, participantId, userId }: ParticipantVerification): Promise<boolean> => {
+    assertValidUuid(sessionId, "Session");
+    assertValidUuid(participantId, "Participant");
     const result = await db.query<{ user_id: string | null }>(
         `SELECT user_id
          FROM session_participants

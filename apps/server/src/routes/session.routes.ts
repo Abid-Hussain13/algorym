@@ -11,6 +11,7 @@ import {
     createSessionSchema, getAllSessionsSchema, updateSessionSchema,
     joinSessionSchema, changeQuestionSchema
 } from "../utils/validation.js";
+import { getSessionEvents } from "../controllers/session.controller.js";
 
 const sessionRoute = Router();
 
@@ -31,5 +32,6 @@ sessionRoute.patch("/:id/cancel", protect, cancelSession);
 sessionRoute.patch("/:id/question", protect, validate(changeQuestionSchema), changeQuestion);
 sessionRoute.patch("/:id/notes", protect, saveNotes);
 sessionRoute.get("/:id/evaluation", protect, getEvaluation);
+sessionRoute.get("/:id/events", protect, getSessionEvents);
 
 export default sessionRoute;

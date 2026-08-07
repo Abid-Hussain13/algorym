@@ -1,5 +1,6 @@
 import db from "../db/pool.js";
 import AppError from "../utils/AppError.js";
+import { assertValidUuid } from "../utils/uuid.js";
 import type { Question } from "@algorym/shared-types";
 
 type CreateQuestionParams = Omit<Question, "id" | "created_at">;
@@ -24,6 +25,7 @@ export const getAllQuestions = async (owner_id: string): Promise<Question[]> => 
 };
 
 export const getQuestionById = async (id: string, owner_id: string): Promise<Question> => {
+    assertValidUuid(id, "Question");
     const result = await db.query(
         "SELECT * FROM questions WHERE id = $1 AND owner_id = $2",
         [id, owner_id]
@@ -37,6 +39,7 @@ export const updateQuestion = async (
     owner_id: string,
     params: CreateQuestionParams
 ): Promise<Question> => {
+    assertValidUuid(id, "Question");
     const { title, description, languages, difficulty, starter_code } = params;
     const result = await db.query(
         `UPDATE questions
@@ -50,6 +53,7 @@ export const updateQuestion = async (
 };
 
 export const deleteQuestion = async (id: string, owner_id: string): Promise<void> => {
+    assertValidUuid(id, "Question");
     const result = await db.query(
         "DELETE FROM questions WHERE id = $1 AND owner_id = $2",
         [id, owner_id]

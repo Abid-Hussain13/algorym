@@ -4,7 +4,7 @@ import * as service from "../services/session.service.js";
 import { getQuestionById } from "../services/questions.service.js";
 import { getHostParticipant, getCandidateParticipant } from "../services/participant.service.js";
 import { saveSessionNotes, getSessionEvaluation } from "../services/evaluation.service.js";
-import { logSessionEvent } from "../services/session-events.service.js";
+import * as sessionEventService from "../services/session-events.service.js";
 import AppError from "../utils/AppError.js";
 import type { AuthPayload } from "../types/index.js";
 
@@ -46,7 +46,7 @@ export const startSession = async (req: Request, res: Response) => {
     const session = await service.startSession(req.user!.id, req.params.id as string);
 
     const host = await getHostParticipant(session.id, req.user!.id);
-    await logSessionEvent(session.id, host.id, "session_started", { session });
+    await sessionEventService.logSessionEvent(session.id, host.id, "session_started", { session });
 
     res.json({ success: true, session });
 };
@@ -55,7 +55,7 @@ export const completeSession = async (req: Request, res: Response) => {
     const session = await service.completeSession(req.user!.id, req.params.id as string);
 
     const host = await getHostParticipant(session.id, req.user!.id);
-    await logSessionEvent(session.id, host.id, "session_completed", { session });
+    await sessionEventService.logSessionEvent(session.id, host.id, "session_completed", { session });
 
     res.json({ success: true, session });
 };
@@ -64,7 +64,7 @@ export const cancelSession = async (req: Request, res: Response) => {
     const session = await service.cancelSession(req.user!.id, req.params.id as string);
 
     const host = await getHostParticipant(session.id, req.user!.id);
-    await logSessionEvent(session.id, host.id, "session_cancelled", { session });
+    await sessionEventService.logSessionEvent(session.id, host.id, "session_cancelled", { session });
 
     res.json({ success: true, session });
 };
@@ -96,7 +96,7 @@ export const changeQuestion = async (req: Request, res: Response) => {
     const question = await getQuestionById(req.body.question_id, req.user!.id);
 
     const host = await getHostParticipant(session.id, req.user!.id);
-    await logSessionEvent(session.id, host.id, "question_change", {
+    await sessionEventService.logSessionEvent(session.id, host.id, "question_change", {
         question_id: question.id,
         title: question.title,
         description: question.description,
@@ -134,3 +134,19 @@ export const getEvaluation = async (req: Request, res: Response) => {
 
     res.json({ success: true, evaluation });
 };
+
+export const getSessionEvents = async (req: Request, res: Response) => {
+    const sessionId = req.params.id as string;
+
+    await service.getSessionById(req.user!.id, sessionId);
+    const events = await sessionEventService.getSessionEvents(sessionId);
+    const sessionEvents = events.map((r) => ({
+        id: r.id,
+        event_type: r.event_type,
+        payload: r.payload,
+        created_at: r.created_at,
+        actor: r.actor_id ? { id: r.actor_id, display_name: r.display_name, role: r.role } : null,
+    }));
+
+    res.json({ success: true, sessionEvents });
+}
