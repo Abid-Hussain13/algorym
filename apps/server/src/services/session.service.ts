@@ -1,7 +1,6 @@
 import db from "../db/pool.js";
 import { Session, SessionStatus } from "@algorym/shared-types";
 import { nanoid } from "nanoid";
-import { assertValidUuid } from "../utils/uuid.js";
 import AppError from "../utils/AppError.js";
 import { CreateSessionInput, GetAllSessionsQuery } from "../utils/validation.js";
 
@@ -116,7 +115,6 @@ export const getAllSessions = async (userId: string, params: GetAllSessionsQuery
 };
 
 export const getSessionById = async (userId: string, sessionId: string): Promise<Session> => {
-    assertValidUuid(sessionId, "Session");
     const queryString = `Select * from sessions where created_by = $1 AND id = $2`;
     const session = await db.query(queryString, [userId, sessionId]);
 
@@ -125,7 +123,6 @@ export const getSessionById = async (userId: string, sessionId: string): Promise
 }
 
 export const updateSession = async (userId: string, sessionId: string, data: Partial<CreateSessionInput>): Promise<Session> => {
-    assertValidUuid(sessionId, "Session");
     const existing = await db.query(
         "SELECT * FROM sessions WHERE id = $1 AND created_by = $2",
         [sessionId, userId]
@@ -165,7 +162,6 @@ export const updateSession = async (userId: string, sessionId: string, data: Par
 }
 
 export const deleteSession = async (userId: string, sessionId: string): Promise<void> => {
-    assertValidUuid(sessionId, "Session");
     const { rowCount } = await db.query(
         "DELETE FROM sessions WHERE id = $1 AND created_by = $2",
         [sessionId, userId]
@@ -175,7 +171,6 @@ export const deleteSession = async (userId: string, sessionId: string): Promise<
 }
 
 export const startSession = async (userId: string, sessionId: string): Promise<Session> => {
-    assertValidUuid(sessionId, "Session");
     const existing = await db.query(
         "SELECT * FROM sessions WHERE id = $1 AND created_by = $2",
         [sessionId, userId]
@@ -194,7 +189,6 @@ export const startSession = async (userId: string, sessionId: string): Promise<S
 }
 
 export const completeSession = async (userId: string, sessionId: string): Promise<Session> => {
-    assertValidUuid(sessionId, "Session");
     const existing = await db.query(
         "SELECT * FROM sessions WHERE id = $1 AND created_by = $2",
         [sessionId, userId]
@@ -213,7 +207,6 @@ export const completeSession = async (userId: string, sessionId: string): Promis
 };
 
 export const cancelSession = async (userId: string, sessionId: string): Promise<Session> => {
-    assertValidUuid(sessionId, "Session");
     const existing = await db.query(
         "SELECT * FROM sessions WHERE id = $1 AND created_by = $2",
         [sessionId, userId]
@@ -274,8 +267,6 @@ export const joinSession = async (data: JoinSessionData, userId?: string): Promi
 };
 
 export const changeQuestion = async (userId: string, sessionId: string, questionId: string): Promise<Session> => {
-    assertValidUuid(sessionId, "Session");
-    assertValidUuid(questionId, "Question");
     const existing = await db.query(
         "SELECT * FROM sessions WHERE id = $1 AND created_by = $2",
         [sessionId, userId]
@@ -294,7 +285,6 @@ export const changeQuestion = async (userId: string, sessionId: string, question
 };
 
 export const getSessionStatus = async (sessionId: string): Promise<string> => {
-    assertValidUuid(sessionId, "Session");
     const queryString = `SELECT status from sessions WHERE id = $1`;
     const sessionStatus = await db.query<{ status: string }>(queryString, [sessionId]);
     if (!sessionStatus.rows[0]) throw new AppError("Session not found", 404);

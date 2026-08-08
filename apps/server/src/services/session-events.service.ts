@@ -1,6 +1,5 @@
 import type { EventType, ParticipantRole } from "@algorym/shared-types";
 import db from "../db/pool.js";
-import { assertValidUuid } from "../utils/uuid.js";
 
 export interface SessionEventRow {
     id: string;
@@ -26,7 +25,6 @@ export const logSessionEvent = async (
 };
 
 export const getSessionEvents = async (sessionId: string): Promise<SessionEventRow[]> => {
-    assertValidUuid(sessionId, "Session");
     const { rows } = await db.query<SessionEventRow>(
         `SELECT e.id, e.event_type, e.payload, e.created_at,
                 p.id AS actor_id, p.display_name, p.role
