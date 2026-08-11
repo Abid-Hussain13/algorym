@@ -1,5 +1,4 @@
 import request from "supertest";
-// agent type = request.agent(app) return type
 import { describe, it, expect, beforeEach } from "vitest";
 import app from "../src/app.js";
 import { signupAgent, createQuestion, uniqueEmail } from "./helpers.js";
