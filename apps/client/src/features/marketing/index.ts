@@ -1,0 +1,1 @@
+export const marketingFeature = 'public pages: home hero, pricing, terms, privacy'

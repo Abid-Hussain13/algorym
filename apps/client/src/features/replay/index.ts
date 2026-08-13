@@ -1,0 +1,1 @@
+export const replayFeature = 'video-style replay built from trimmed session_events, never device-gated'

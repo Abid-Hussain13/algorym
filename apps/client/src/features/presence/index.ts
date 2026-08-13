@@ -1,0 +1,1 @@
+export const presenceFeature = 'live presence: identity ramp avatars, cursors, selections via Yjs awareness'

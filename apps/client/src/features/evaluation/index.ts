@@ -1,0 +1,1 @@
+export const evaluationFeature = 'interview-mode host evaluation: weak/average/strong + private notes'
