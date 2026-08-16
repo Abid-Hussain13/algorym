@@ -1,3 +1,13 @@
+import { Hero } from '@/components/marketing/Hero'
+import { HowItWorks } from '@/components/marketing/HowItWorks'
+import { EditorShowcase } from '@/components/marketing/EditorShowcase'
+
 export function HomePage() {
-  return <div className="p-6 font-body text-fg">Home page</div>
+  return (
+    <>
+      <Hero />
+      <HowItWorks />
+      <EditorShowcase />
+    </>
+  )
 }
