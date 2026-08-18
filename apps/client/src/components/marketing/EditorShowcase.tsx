@@ -1,7 +1,112 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Shield, Users, Eye, FileText, Terminal, Settings, Play } from 'lucide-react'
 
 const BEAM_COUNT = 58
+
+interface Question {
+  file: string
+  lines: React.ReactNode[]
+  notes: string
+}
+
+const questions: Question[] = [
+  {
+    file: 'question1.cpp',
+    lines: [
+      <>
+        <span className="ty">vector</span>
+        &lt;<span className="ty">int</span>&gt; <span className="fn">twoSum</span>(<span className="ty">vector</span>
+        &lt;<span className="ty">int</span>&gt;&amp; <span className="op">nums</span>, <span className="ty">int</span>{' '}
+        <span className="op">target</span>) {'{'}
+      </>,
+      <>
+        {'    '}<span className="ty">unordered_map</span>&lt;<span className="ty">int</span>, <span className="ty">int</span>&gt;{' '}
+        <span className="op">map</span>;
+      </>,
+      <>
+        {'    '}<span className="kw">for</span> (<span className="ty">int</span> <span className="op">i</span> ={' '}
+        <span className="nu">0</span>; <span className="op">i</span> &lt; <span className="op">nums</span>.
+        <span className="fn">size</span>(); <span className="op">i</span>++) {'{'}
+      </>,
+      <>
+        {'        '}<span className="ty">int</span> <span className="op">complement</span> = <span className="op">target</span> -{' '}
+        <span className="op">nums</span>[<span className="op">i</span>];
+      </>,
+      <>
+        {'        '}<span className="kw">if</span> (
+        <span className="ed-cursor guest">
+          <span className="ed-cursor-line"></span>
+          <span className="ed-cursor-label">Usman</span>
+        </span>
+        <span className="op">map</span>.<span className="fn">find</span>(<span className="op">complement</span>) !={' '}
+        <span className="op">map</span>.<span className="fn">end</span>()) {'{'}
+      </>,
+      <>
+        {'            '}<span className="kw">return</span> {'{'}<span className="op">map</span>[<span className="op">complement</span>],{' '}
+        <span className="op">i</span>{'}'};
+      </>,
+      <>{'        }'}</>,
+      <>
+        {'        '}
+        <span className="ed-sel">
+          <span className="op">map</span>[<span className="op">nums</span>[<span className="op">i</span>]] = <span className="op">i</span>;
+        </span>
+        <span className="ed-cursor host">
+          <span className="ed-cursor-line"></span>
+          <span className="ed-cursor-label">You (Host)</span>
+        </span>
+      </>,
+      <>{'    }'}</>,
+      <>
+        {'    '}<span className="kw">return</span> {'{}'};
+      </>,
+      <>{'}'}</>,
+    ],
+    notes: 'nums = [2, 7, 11, 15], target = 9',
+  },
+  {
+    file: 'question2.js',
+    lines: [
+      <>
+        <span className="kw">function</span> <span className="fn">containsDuplicate</span>(<span className="op">nums</span>){' '}
+        {'{'}
+      </>,
+      <>
+        {'  '}<span className="kw">const</span> <span className="op">seen</span> = <span className="kw">new</span>{' '}
+        <span className="fn">Set</span>();
+      </>,
+      <>
+        {'  '}<span className="kw">for</span> (<span className="kw">const</span> <span className="op">num</span>{' '}
+        <span className="kw">of</span> <span className="op">nums</span>) {'{'}
+      </>,
+      <>
+        {'    '}
+        <span className="ed-cursor host">
+          <span className="ed-cursor-line"></span>
+          <span className="ed-cursor-label">You (Host)</span>
+        </span>
+        <span className="kw">if</span> (<span className="op">seen</span>.<span className="fn">has</span>(
+        <span className="op">num</span>)) <span className="kw">return</span> <span className="nu">true</span>;
+      </>,
+      <>
+        {'    '}<span className="op">seen</span>.<span className="fn">add</span>(<span className="op">num</span>);
+      </>,
+      <>{'  }'}</>,
+      <>
+        {'  '}
+        <span className="ed-sel">
+          <span className="kw">return</span> <span className="nu">false</span>;
+        </span>
+        <span className="ed-cursor guest">
+          <span className="ed-cursor-line"></span>
+          <span className="ed-cursor-label">Usman</span>
+        </span>
+      </>,
+      <>{'}'}</>,
+    ],
+    notes: 'nums = [1, 2, 3, 1] → returns true',
+  },
+]
 
 function buildBeamPaths(): string[] {
   const paths: string[] = []
@@ -28,6 +133,9 @@ function easeInOut(t: number): number {
 export function EditorShowcase() {
   const beamsRef = useRef<SVGSVGElement>(null)
   const paths = useMemo(() => buildBeamPaths(), [])
+  const [activeTab, setActiveTab] = useState(0)
+
+  const question = questions[activeTab]
 
   useEffect(() => {
     const svg = beamsRef.current
@@ -165,15 +273,23 @@ export function EditorShowcase() {
                 <span></span>
                 <span></span>
               </div>
-              <div className="ed-tabs">
-                <div className="ed-tab active">
-                  <FileText aria-hidden="true" />
-                  question1.cpp
-                </div>
-                <div className="ed-tab">
-                  <FileText aria-hidden="true" />
-                  question2.js
-                </div>
+              <div className="ed-tabs" role="tablist" aria-label="Session questions">
+                {questions.map((q, i) => (
+                  <button
+                    key={q.file}
+                    type="button"
+                    className={`ed-tab ${activeTab === i ? 'active' : ''}`}
+                    role="tab"
+                    aria-selected={activeTab === i}
+                    aria-controls={`ed-pane-${i}`}
+                    id={`ed-tab-${i}`}
+                    tabIndex={activeTab === i ? 0 : -1}
+                    onClick={() => setActiveTab(i)}
+                  >
+                    <FileText aria-hidden="true" />
+                    {q.file}
+                  </button>
+                ))}
               </div>
               <div className="ed-topbar-right">
                 <button className="ed-run" type="button">
@@ -183,7 +299,7 @@ export function EditorShowcase() {
               </div>
             </div>
 
-            <div className="ed-body">
+            <div className="ed-body" id={`ed-pane-${activeTab}`} data-q={activeTab} role="tabpanel" aria-labelledby={`ed-tab-${activeTab}`}>
               <div className="ed-sidebar">
                 <FileText className="active" aria-hidden="true" />
                 <Terminal aria-hidden="true" />
@@ -191,7 +307,7 @@ export function EditorShowcase() {
               </div>
 
               <div className="ed-gutter">
-                {Array.from({ length: 10 }, (_, i) => (
+                {Array.from({ length: question.lines.length }, (_, i) => (
                   <span className="ln" key={i}>
                     {i + 1}
                   </span>
@@ -199,54 +315,11 @@ export function EditorShowcase() {
               </div>
 
               <div className="ed-code">
-                <span className="ln">
-                  <span className="ty">vector</span>
-                  &lt;<span className="ty">int</span>&gt; <span className="fn">twoSum</span>(<span className="ty">vector</span>
-                  &lt;<span className="ty">int</span>&gt;&amp; <span className="op">nums</span>, <span className="ty">int</span>{' '}
-                  <span className="op">target</span>) {'{'}
-                </span>
-                <span className="ln">
-                  {'    '}<span className="ty">unordered_map</span>&lt;<span className="ty">int</span>, <span className="ty">int</span>&gt;{' '}
-                  <span className="op">map</span>;
-                </span>
-                <span className="ln">
-                  {'    '}<span className="kw">for</span> (<span className="ty">int</span> <span className="op">i</span> ={' '}
-                  <span className="nu">0</span>; <span className="op">i</span> &lt; <span className="op">nums</span>.
-                  <span className="fn">size</span>(); <span className="op">i</span>++) {'{'}
-                </span>
-                <span className="ln">
-                  {'        '}<span className="ty">int</span> <span className="op">complement</span> = <span className="op">target</span> -{' '}
-                  <span className="op">nums</span>[<span className="op">i</span>];
-                </span>
-                <span className="ln">
-                  {'        '}<span className="kw">if</span> (
-                  <span className="ed-cursor guest">
-                    <span className="ed-cursor-line"></span>
-                    <span className="ed-cursor-label">Usman</span>
+                {question.lines.map((line, i) => (
+                  <span className="ln" key={i}>
+                    {line}
                   </span>
-                  <span className="op">map</span>.<span className="fn">find</span>(<span className="op">complement</span>) !={' '}
-                  <span className="op">map</span>.<span className="fn">end</span>()) {'{'}
-                </span>
-                <span className="ln">
-                  {'            '}<span className="kw">return</span> {'{'}<span className="op">map</span>[<span className="op">complement</span>],{' '}
-                  <span className="op">i</span>{'}'};
-                </span>
-                <span className="ln">{'        }'}</span>
-                <span className="ln">
-                  {'        '}
-                  <span className="ed-sel">
-                    <span className="op">map</span>[<span className="op">nums</span>[<span className="op">i</span>]] = <span className="op">i</span>;
-                  </span>
-                  <span className="ed-cursor host">
-                    <span className="ed-cursor-line"></span>
-                    <span className="ed-cursor-label">You (Host)</span>
-                  </span>
-                </span>
-                <span className="ln">{'    }'}</span>
-                <span className="ln">
-                  {'    '}<span className="kw">return</span> {'{}'};
-                </span>
-                <span className="ln">{'}'}</span>
+                ))}
               </div>
             </div>
 
@@ -257,7 +330,7 @@ export function EditorShowcase() {
                 <div className="ed-bottom-tab">Notes</div>
               </div>
               <div className="ed-bottom-content">
-                <span className="ed-notes">nums = [2, 7, 11, 15], target = 9</span>
+                <span className="ed-notes">{question.notes}</span>
               </div>
             </div>
           </div>

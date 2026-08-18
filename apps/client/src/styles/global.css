@@ -737,6 +737,8 @@
   gap: 5px;
   padding: 5px 12px;
   border-radius: var(--radius-sm);
+  border: 0;
+  background: transparent;
   font-size: 12px;
   font-weight: 500;
   color: var(--color-muted);
@@ -921,6 +923,28 @@
 .ed-cursor.guest .ed-cursor-label::after {
   border-top-color: var(--color-p-teal);
 }
+/* Question 2 — distinct cursor appearance */
+.ed-body[data-q="1"] .ed-cursor.host .ed-cursor-line {
+  background: var(--color-p-rose);
+}
+.ed-body[data-q="1"] .ed-cursor.host .ed-cursor-label {
+  background: var(--color-p-rose);
+}
+.ed-body[data-q="1"] .ed-cursor.host .ed-cursor-label::after {
+  border-top-color: var(--color-p-rose);
+}
+.ed-body[data-q="1"] .ed-cursor.guest .ed-cursor-line {
+  background: var(--color-p-violet);
+}
+.ed-body[data-q="1"] .ed-cursor.guest .ed-cursor-label {
+  background: var(--color-p-violet);
+}
+.ed-body[data-q="1"] .ed-cursor.guest .ed-cursor-label::after {
+  border-top-color: var(--color-p-violet);
+}
+.ed-body[data-q="1"] .ed-sel {
+  background: color-mix(in oklch, var(--color-p-rose) 20%, transparent);
+}
 @keyframes cursor-blink {
   0%, 100% { opacity: 1 }
   50% { opacity: 0 }
@@ -1004,5 +1028,312 @@
   }
   .editor-inner {
     padding: 0 16px;
+  }
+}
+
+/* ============ ROLES — CANDIDATE & INTERVIEWER ============ */
+.cs-sec {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 80px 40px 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.cs-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--color-accent-text);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cs-eyebrow::before,
+.cs-eyebrow::after {
+  content: "";
+  height: 1px;
+  width: 28px;
+  background: linear-gradient(90deg, transparent, var(--color-border-strong));
+}
+.cs-eyebrow::after {
+  background: linear-gradient(90deg, var(--color-border-strong), transparent);
+}
+.cs-eyebrow .live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-danger);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-danger) 30%, transparent);
+  animation: cs-pulse 1.8s ease infinite;
+}
+@keyframes cs-pulse {
+  0%, 100% { opacity: 1 }
+  50% { opacity: .35 }
+}
+.cs-title {
+  font-family: var(--font-display);
+  font-size: clamp(34px, 4.4vw, 52px);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  color: var(--color-fg);
+  text-align: center;
+  margin-top: 18px;
+  max-width: 18ch;
+}
+.cs-title em {
+  font-style: normal;
+  color: var(--color-accent);
+}
+.cs-lede {
+  font-size: 18px;
+  line-height: 1.65;
+  color: var(--color-muted);
+  text-align: center;
+  max-width: 640px;
+  margin-top: 18px;
+}
+.cs-tabs {
+  display: flex;
+  gap: 0;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 0;
+  margin-top: 52px;
+  margin-bottom: -1px;
+  position: relative;
+  z-index: 3;
+  background: transparent;
+}
+.cs-tab {
+  --tone: var(--color-accent);
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: .01em;
+  padding: 12px 22px 14px 25px;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: background var(--duration-2) var(--ease-default), color var(--duration-2) var(--ease-default), box-shadow var(--duration-2) var(--ease-default);
+  white-space: nowrap;
+}
+.cs-tab[data-tone="candidate"] {
+  --tone: var(--color-p-teal);
+}
+.cs-tab:hover {
+  background: color-mix(in oklch, var(--tone) 8%, var(--color-surface));
+  color: var(--color-fg);
+}
+.cs-tab .cs-tab-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--tone);
+  flex: none;
+  opacity: .95;
+  transition: all var(--duration-2) var(--ease-default);
+}
+.cs-tab.active {
+  background: var(--tone);
+  color: var(--color-on-accent);
+  box-shadow: 0 12px 24px -14px color-mix(in oklch, var(--tone) 80%, transparent);
+}
+.cs-tab.active .cs-tab-dot {
+  background: var(--color-on-accent);
+  opacity: 1;
+}
+.cs-shell {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 0;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  position: relative;
+  margin-top: 0;
+  transition: border-radius var(--duration-2) var(--ease-default), border-color var(--duration-2) var(--ease-default);
+}
+.cs-shell.cs-shell--open {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-top-color: transparent;
+}
+.cs-panes {
+  position: relative;
+  z-index: 1;
+  padding: 0;
+}
+.cs-pane {
+  position: relative;
+  z-index: 1;
+  display: none;
+  padding: 0;
+  animation: cs-fade-in var(--duration-3) var(--ease-default);
+}
+.cs-pane.active {
+  display: block;
+}
+.cs-pane.active::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 -40px;
+  pointer-events: none;
+  background: linear-gradient(180deg, color-mix(in oklch, var(--tone) 100%, var(--color-surface) 20%), color-mix(in oklch, var(--tone) 22%, var(--color-surface) 78%) 32%, color-mix(in oklch, var(--tone) 6%, var(--color-surface) 94%) 68%, var(--color-surface) 100%);
+  z-index: -1;
+}
+@keyframes cs-fade-in {
+  from { opacity: 0 }
+  to { opacity: 1 }
+}
+.cs-pane-row {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 28px 24px 40px;
+}
+.cs-pane-text {
+  flex: 0 0 58%;
+  min-width: 0;
+}
+.cs-pane-text h3 {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.4vw, 30px);
+  letter-spacing: -0.015em;
+  margin-top: 10px;
+  color: var(--color-fg);
+}
+.cs-pane-text .cs-pdescr {
+  color: var(--color-muted);
+  margin-top: 12px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.cs-cap-list {
+  list-style: none;
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 34px;
+}
+.cs-cap-list li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 13px 0 12px;
+  border-top: 1px solid var(--color-border);
+  font-size: 14px;
+  color: var(--color-fg);
+  line-height: 1.45;
+}
+.cs-cap-list li:nth-child(-n+2) {
+  border-top: 0;
+  padding-top: 0;
+}
+.cs-cap-list .cs-tick {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin-top: 8px;
+  border-radius: 50%;
+  background: var(--tone, var(--color-accent));
+  opacity: .85;
+}
+.cs-cap-list .cap-sub {
+  display: block;
+  color: var(--color-muted);
+  font-size: 12px;
+  margin-top: 3px;
+  opacity: .7;
+}
+.cs-pane-text .cs-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--tone, var(--color-accent));
+  font-family: var(--font-body);
+  letter-spacing: .01em;
+  transition: color var(--duration-1) var(--ease-default);
+}
+.cs-pane-text .cs-link svg {
+  transition: transform var(--duration-2) var(--ease-default);
+}
+.cs-pane-text .cs-link:hover {
+  color: var(--color-fg);
+  text-decoration: none;
+}
+.cs-pane-text .cs-link:hover svg {
+  transform: translateX(3px);
+}
+.cs-visual {
+  flex: 1 1 42%;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.cs-plain {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 40px rgb(0 0 0 / .18));
+}
+.cs-pane[data-tone="interviewer"] {
+  --tone: var(--color-accent);
+}
+.cs-pane[data-tone="candidate"] {
+  --tone: var(--color-p-teal);
+}
+@media (max-width: 900px) {
+  .cs-pane-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .cs-pane-text {
+    flex: none;
+  }
+  .cs-visual {
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+  }
+}
+@media (max-width: 600px) {
+  .cs-sec {
+    padding: 56px 20px 64px;
+  }
+  .cs-tabs {
+    flex-direction: column;
+    margin-bottom: -1px;
+  }
+  .cs-tab {
+    padding-left: 37px;
+  }
+  .cs-pane-row {
+    padding: 20px 16px 36px;
+  }
+  .cs-cap-list {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-eyebrow .live-dot {
+    animation: none;
+  }
+  .cs-pane {
+    animation: none;
   }
 }
