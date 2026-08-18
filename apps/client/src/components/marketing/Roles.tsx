@@ -81,10 +81,6 @@ export function Roles() {
 
   return (
     <section className="cs-sec" data-od-id="roles">
-      <p className="cs-eyebrow">
-        <span className="live-dot" aria-hidden="true" />
-        Live session
-      </p>
       <h2 className="cs-title">
         Two roles. <em>One live session.</em>
       </h2>

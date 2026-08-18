@@ -248,7 +248,9 @@ export function EditorShowcase() {
 
       <div className="editor-inner">
         <div className="editor-head">
-          <h2>A real editor, not a toy</h2>
+          <h2>
+            A real editor, <em>not a toy</em>
+          </h2>
           <p>Syntax highlighting, live cursors, and instant code execution. Everything two people need to conduct a serious interview.</p>
         </div>
 

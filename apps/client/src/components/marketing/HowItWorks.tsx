@@ -80,7 +80,9 @@ export function HowItWorks() {
     <div className="how-wrap">
       <section className="how" data-od-id="how-it-works" role="region" aria-label="How it works steps">
         <div className="how-head">
-          <h2>How it works</h2>
+          <h2>
+            How it <em>works</em>
+          </h2>
           <p>From invite to replay — five steps, one flow.</p>
         </div>
 
