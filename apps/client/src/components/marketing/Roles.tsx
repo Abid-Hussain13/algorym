@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react'
-import { ArrowRight } from 'lucide-react'
 
 type Tone = 'interviewer' | 'candidate'
 
@@ -14,7 +13,6 @@ interface RolePane {
   heading: string
   description: string
   caps: Cap[]
-  cta: string
   image: string
   alt: string
 }
@@ -34,7 +32,6 @@ const panes: RolePane[] = [
       { title: 'Run code, watch output live', sub: '5 languages' },
       { title: 'Evaluate the guest', sub: 'weak / average / strong' },
     ],
-    cta: 'Open the live room',
     image: '/interviewer.png',
     alt: 'Interviewer hosting a live coding session',
   },
@@ -52,7 +49,6 @@ const panes: RolePane[] = [
       { title: 'Run code & see results live', sub: 'stdin / stdout / status' },
       { title: 'Review & evaluate on any device', sub: 'never device-gated' },
     ],
-    cta: 'Join as a guest',
     image: '/candidate.png',
     alt: 'Candidate joining a live coding session as a guest',
   },
@@ -138,10 +134,6 @@ export function Roles() {
                       </li>
                     ))}
                   </ul>
-                  <a className="cs-link" href="#" onClick={(e) => e.preventDefault()}>
-                    {pane.cta}
-                    <ArrowRight aria-hidden="true" />
-                  </a>
                 </div>
                 <div className="cs-visual">
                   <img className="cs-plain" src={pane.image} alt={pane.alt} loading="lazy" />

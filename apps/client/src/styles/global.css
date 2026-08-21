@@ -247,6 +247,13 @@
     color-scheme: light;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 
   html[data-theme="dark"] {
@@ -1732,7 +1739,6 @@ html[data-theme="dark"] .rp-timeline-marker {
     color-mix(in oklch, var(--color-accent) 10%, var(--color-bg)) 45%,
     color-mix(in oklch, var(--color-accent) 10%, var(--color-bg)) 100%
   );
-  overflow: hidden;
 }
 .foot-inner {
   max-width: 1120px;
@@ -1837,8 +1843,8 @@ html[data-theme="dark"] .rp-timeline-marker {
 .foot-wordmark {
   display: block;
   font-family: var(--font-display);
-  font-size: clamp(88px, 24vw, 340px);
-  font-weight: 700;
+  font-size: clamp(88px, 23vw, 340px);
+  font-weight: 600;
   letter-spacing: -0.05em;
   line-height: 0.82;
   text-align: center;
@@ -1853,7 +1859,7 @@ html[data-theme="dark"] .rp-timeline-marker {
   background-clip: text;
   user-select: none;
   pointer-events: none;
-  padding-bottom: 0;
+  padding-bottom: 0.19em;
 }
 @media (max-width: 600px) {
   .foot-inner {

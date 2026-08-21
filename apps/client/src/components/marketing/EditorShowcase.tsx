@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Shield, Users, Eye, FileText, Terminal, Settings, Play } from 'lucide-react'
+import { IconEncrypted, IconPresence, IconPrivate, IconFileText, IconTerminal, IconSettings, IconRun } from '@/components/icons'
 
 const BEAM_COUNT = 58
 
@@ -256,15 +256,15 @@ export function EditorShowcase() {
 
         <div className="editor-wrap">
           <div className="ed-float f1">
-            <Shield aria-hidden="true" />
+            <IconEncrypted aria-hidden="true" />
             Encrypted in transit
           </div>
           <div className="ed-float f2">
-            <Users aria-hidden="true" />
+            <IconPresence aria-hidden="true" />
             Live presence
           </div>
           <div className="ed-float f3">
-            <Eye aria-hidden="true" />
+            <IconPrivate aria-hidden="true" />
             Private notes
           </div>
 
@@ -288,14 +288,14 @@ export function EditorShowcase() {
                     tabIndex={activeTab === i ? 0 : -1}
                     onClick={() => setActiveTab(i)}
                   >
-                    <FileText aria-hidden="true" />
+                    <IconFileText aria-hidden="true" />
                     {q.file}
                   </button>
                 ))}
               </div>
               <div className="ed-topbar-right">
                 <button className="ed-run" type="button">
-                  <Play aria-hidden="true" />
+                  <IconRun aria-hidden="true" />
                   Run
                 </button>
               </div>
@@ -303,9 +303,9 @@ export function EditorShowcase() {
 
             <div className="ed-body" id={`ed-pane-${activeTab}`} data-q={activeTab} role="tabpanel" aria-labelledby={`ed-tab-${activeTab}`}>
               <div className="ed-sidebar">
-                <FileText className="active" aria-hidden="true" />
-                <Terminal aria-hidden="true" />
-                <Settings aria-hidden="true" />
+                <IconFileText className="active" aria-hidden="true" />
+                <IconTerminal aria-hidden="true" />
+                <IconSettings aria-hidden="true" />
               </div>
 
               <div className="ed-gutter">

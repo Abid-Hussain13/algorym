@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Mail } from 'lucide-react'
+import { IconMail } from '@/components/icons'
 
 import { cn } from '@/lib/utils/cn'
 
@@ -12,24 +12,12 @@ const footerLinks = [
 
 export function Footer({ className }: { className?: string }) {
     return (
-        <footer className={cn('foot', className)}>
+        <footer className={cn('foot mt-[72px] md:mt-[96px]', className)}>
             <div className="foot-inner">
                 <div className="foot-top">
                     <div className="foot-brand">
                         <div className="foot-logo">
-                            <span className="foot-logo-mark" aria-hidden="true">
-                                <svg width="16" height="16" viewBox="0 0 24 24">
-                                    <path
-                                        d="M6 5h7a4 4 0 0 1 0 8h-3v6H6V5zm7 6h2a4 4 0 0 1 0 8h-2"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2.2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                </svg>
-                            </span>
-                            <span className="foot-name">Algorym</span>
+                            <img src="/logo.svg" alt="Algorym" className="h-25 w-auto" />
                         </div>
                         <p className="foot-tag">
                             Real-time algorithmic collaboration for live-coding interviews. Rehearse solo, pair live,
@@ -54,7 +42,7 @@ export function Footer({ className }: { className?: string }) {
                 <div className="foot-bottom">
                     <span className="foot-copy">© Algorym</span>
                     <a href="mailto:abidhussainme1@gmail.com" className="foot-mail">
-                        <Mail aria-hidden="true" />
+                        <IconMail aria-hidden="true" />
                         abidhussainme1@gmail.com
                     </a>
                 </div>

@@ -22,8 +22,8 @@ export function Hero() {
                             →
                         </span>
                     </Button>
-                    <Button variant="ghost" size="lg" className="max-[480px]:w-full max-[480px]:justify-center">
-                        See how it works
+                    <Button variant="ghost" size="lg" className="max-[480px]:w-full max-[480px]:justify-center" asChild>
+                        <a href="#how-it-works">See how it works</a>
                     </Button>
                 </div>
             </div>

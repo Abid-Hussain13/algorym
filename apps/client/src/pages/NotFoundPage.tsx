@@ -1,3 +1,9 @@
+import { NotFoundGlitch } from '@/components/ui/not-found-glitch'
+
 export function NotFoundPage() {
-  return <div className="p-6 font-body text-fg">404</div>
+  return (
+    <div className="flex min-h-svh flex-col items-center justify-center bg-bg text-fg">
+      <NotFoundGlitch />
+    </div>
+  )
 }

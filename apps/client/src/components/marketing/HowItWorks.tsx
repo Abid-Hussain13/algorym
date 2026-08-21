@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Link, Code, Star, Play } from 'lucide-react'
+import { IconCreateSession, IconShareLink, IconCodeTogether, IconEvaluate, IconReplay } from '@/components/icons'
 
 type Accent = 'violet' | 'teal' | 'amber' | 'rose' | 'accent'
 
@@ -21,7 +21,7 @@ const panels: Panel[] = [
     description: 'Pick a question, choose a mode, and set the time limit. You become the host automatically — nothing else to set up.',
     detail: 'Two modes: interview and practice. Create a session and it goes live immediately, ready for your guest.',
     accent: 'violet',
-    icon: Plus,
+    icon: IconCreateSession,
   },
   {
     id: 1,
@@ -30,7 +30,7 @@ const panels: Panel[] = [
     description: 'Send the tokenized invite link. Your guest joins right in the browser — no account, no install.',
     detail: 'Each link is tied to one session. The token in the URL is all a guest needs to join as a participant.',
     accent: 'teal',
-    icon: Link,
+    icon: IconShareLink,
   },
   {
     id: 2,
@@ -39,7 +39,7 @@ const panels: Panel[] = [
     description: 'Both of you edit the same document in real time — live cursors, presence, and instant code execution.',
     detail: 'Run code in 5 languages: JavaScript, Python, Java, C++, and Go. Verdicts stream back to both screens in real time.',
     accent: 'amber',
-    icon: Code,
+    icon: IconCodeTogether,
   },
   {
     id: 3,
@@ -48,7 +48,7 @@ const panels: Panel[] = [
     description: 'At the end, the host rates the guest: weak, average, or strong. Only the host ever sees this.',
     detail: 'The guest gets run verdicts and the session transcript — never the host\u2019s assessment. Evaluations stay private.',
     accent: 'rose',
-    icon: Star,
+    icon: IconEvaluate,
   },
   {
     id: 4,
@@ -57,7 +57,7 @@ const panels: Panel[] = [
     description: 'Rewatch the whole session like a video — every edit, comment, and run, in order.',
     detail: 'Built from the session event log. Scrub to any moment to review how the guest approached the problem.',
     accent: 'accent',
-    icon: Play,
+    icon: IconReplay,
   },
 ]
 
@@ -78,7 +78,7 @@ export function HowItWorks() {
 
   return (
     <div className="how-wrap">
-      <section className="how" data-od-id="how-it-works" role="region" aria-label="How it works steps">
+      <section className="how" id="how-it-works" data-od-id="how-it-works" role="region" aria-label="How it works steps">
         <div className="how-head">
           <h2>
             How it <em>works</em>

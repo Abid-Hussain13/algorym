@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f4702c"/>
+      <stop offset="100%" stop-color="#d45a1f"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- Brand mark -->
+  <g transform="translate(540, 200)" fill="none" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M0 0C0 0 60 -40 120 0C180 40 240 0 240 0"/>
+    <path d="M0 100C0 100 60 140 120 100C180 60 240 100 240 100"/>
+    <circle cx="120" cy="50" r="12" fill="white" stroke="none"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="600" y="400" text-anchor="middle" font-family="system-ui, sans-serif" font-size="72" font-weight="700" fill="white" letter-spacing="-2">Algorym</text>
+  <!-- Tagline -->
+  <text x="600" y="460" text-anchor="middle" font-family="system-ui, sans-serif" font-size="24" fill="rgba(255,255,255,0.85)">Real-time algorithmic collaboration for live-coding interviews</text>
+</svg>
