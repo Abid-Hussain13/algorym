@@ -941,7 +941,7 @@
   z-index: 30;
   width: 3px;
   height: 1.1em;
-  vertical-align: bottom;
+  vertical-align: middle;
 }
 .ed-cursor-line {
   display: block;
@@ -966,7 +966,7 @@
   white-space: nowrap;
   letter-spacing: .02em;
   opacity: 1;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 .ed-cursor-label::after {
   content: '';
