@@ -8,7 +8,7 @@ interface CTAProps {
     }
     title?: string
     description?: string
-    action?: {
+    action?: { 
         text: string
         href: string
     }
@@ -18,7 +18,7 @@ interface CTAProps {
 export function CTASection({
     badge = { text: 'Start collaborating' },
     title = 'Code together, live',
-    description = 'Real-time algorithmic collaboration — watch solutions evolve as you pair program.',
+    description = 'Real-time algorithmic collaboration, watch solutions evolve as you pair program.',
     action = { text: 'Get started', href: '/board' },
     className,
 }: CTAProps) {

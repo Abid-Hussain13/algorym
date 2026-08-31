@@ -81,7 +81,7 @@ export function Roles() {
         Two roles. <em>One live session.</em>
       </h2>
       <p className="cs-lede">
-        A host and a guest meet in one shared real-time editor — code together, run live, then
+        A host and a guest meet in one shared real-time editor code together, run live, then
         evaluate. Every session is built to make each side&rsquo;s experience unmistakable.
       </p>
 

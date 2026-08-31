@@ -11,7 +11,7 @@ const timelineItems = [
       </svg>
     ),
     title: 'Scrub frame by frame',
-    description: 'Navigate to any moment — question changes, code snapshots, run verdicts — with the timeline scrubber.',
+    description: 'Navigate to any moment question changes, code snapshots, run verdicts with the timeline scrubber.',
   },
   {
     icon: (
@@ -21,7 +21,7 @@ const timelineItems = [
       </svg>
     ),
     title: 'Code as it was',
-    description: 'Each run snapshot captures the full editor state — see exactly what the code looked like when it ran.',
+    description: 'Each run snapshot captures the full editor state see exactly what the code looked like when it ran.',
   },
   {
     icon: (
@@ -31,7 +31,7 @@ const timelineItems = [
       </svg>
     ),
     title: 'Verdict history',
-    description: 'Every run result — accepted, wrong answer, runtime error — marked on the timeline with color-coded badges.',
+    description: 'Every run result accepted, wrong answer, runtime error marked on the timeline with color-coded badges.',
   },
 ]
 
@@ -60,7 +60,7 @@ export function ReplaySection() {
       </h2>
       <p className="rp-lede">
         Recorded as video-style playback from persisted session events. Scrub through code changes, run results, and
-        question transitions — exactly as they happened.
+        question transitions exactly as they happened.
       </p>
 
       <div className="rp-layout" data-od-id="replay-layout">
