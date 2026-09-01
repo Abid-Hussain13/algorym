@@ -1,14 +1,10 @@
 import { cn } from '@/lib/utils/cn'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/Button'
 
 interface CTAProps {
-    badge?: {
-        text: string
-    }
     title?: string
     description?: string
-    action?: { 
+    action?: {
         text: string
         href: string
     }
@@ -16,7 +12,6 @@ interface CTAProps {
 }
 
 export function CTASection({
-    badge = { text: 'Start collaborating' },
     title = 'Code together, live',
     description = 'Real-time algorithmic collaboration, watch solutions evolve as you pair program.',
     action = { text: 'Get started', href: '/board' },
@@ -40,11 +35,6 @@ export function CTASection({
                     <div className="absolute inset-y-0 right-0 w-[80px] bg-[radial-gradient(ellipse_at_right_center,var(--color-accent-soft)_0%,transparent_70%)]" />
                 </div>
                 <div className="relative z-10 mx-auto flex max-w-container -translate-y-10 flex-col items-center gap-3 px-8 text-center sm:gap-3">
-                    {badge && (
-                        <Badge variant="outline" className="mb-5 border-[#d4d1c8] bg-white/70 text-[#6e6a60] backdrop-blur-sm opacity-0 animate-fade-in-up delay-100 sm:mb-6">
-                            <span className="text-[#6e6a60]">{badge.text}</span>
-                        </Badge>
-                    )}
 
                     <h2 className="text-3xl font-semibold text-[#2b2a26] drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)] sm:text-5xl opacity-0 animate-fade-in-up delay-200">
                         {title}
@@ -56,7 +46,7 @@ export function CTASection({
                         </p>
                     )}
 
-                    <Button variant="primary" size="lg" className="mt-4 opacity-0 animate-fade-in-up delay-500" asChild>
+                    <Button variant="primary" size="lg" className="mt-6 opacity-0 animate-fade-in-up delay-500" asChild>
                         <a href={action.href}>{action.text}</a>
                     </Button>
                 </div>
