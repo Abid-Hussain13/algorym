@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils/cn'
 
 const footerLinks = [
     { label: 'About Us', to: '/' },
-    { label: 'Contact', to: 'mailto:abidhussainme1@gmail.com' },
+    { label: 'Contact', to: '/contact' },
     { label: 'Privacy Policy', to: '/privacy' },
     { label: 'Terms of Service', to: '/terms' },
 ]
