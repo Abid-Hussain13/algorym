@@ -14,7 +14,7 @@ export function useSessions() {
     sessionsApi
       .list()
       .then((data) => {
-        if (!cancelled) setSessions(data)
+        if (!cancelled) setSessions(data.sessions)
       })
       .catch((err: unknown) => {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load sessions')

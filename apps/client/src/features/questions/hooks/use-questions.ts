@@ -14,7 +14,7 @@ export function useQuestions() {
     questionsApi
       .list()
       .then((data) => {
-        if (!cancelled) setQuestions(data)
+        if (!cancelled) setQuestions(data.questions)
       })
       .catch((err: unknown) => {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load questions')

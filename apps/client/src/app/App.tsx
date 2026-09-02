@@ -1,5 +1,6 @@
 import { Provider } from 'react-redux'
 import { BrowserRouter } from 'react-router-dom'
+import { Toaster } from 'sonner'
 
 import { AppRouter } from './router'
 import { ScrollToTop } from './ScrollToTop'
@@ -11,6 +12,7 @@ export function App() {
             <BrowserRouter>
                 <ScrollToTop />
                 <AppRouter />
+                <Toaster position="top-right" richColors />
             </BrowserRouter>
         </Provider>
     )
