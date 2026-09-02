@@ -4,7 +4,7 @@ import { IconMail } from '@/components/icons'
 import { cn } from '@/lib/utils/cn'
 
 const footerLinks = [
-    { label: 'About Us', to: '/' },
+    { label: 'About Us', to: '/about' },
     { label: 'Contact', to: '/contact' },
     { label: 'Privacy Policy', to: '/privacy' },
     { label: 'Terms of Service', to: '/terms' },

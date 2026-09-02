@@ -6,6 +6,8 @@ import { LiveLayout } from '@/app/layouts/LiveLayout'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { SessionDetailPage } from '@/pages/dashboard/SessionDetailPage'
 import { LiveRoomPage } from '@/pages/live/LiveRoomPage'
+import { AboutPage } from '@/pages/marketing/AboutPage'
+import { ContactPage } from '@/pages/marketing/ContactPage'
 import { HomePage } from '@/pages/marketing/HomePage'
 import { LegalPage } from '@/pages/marketing/LegalPage'
 import { PricingPage } from '@/pages/marketing/PricingPage'
@@ -16,6 +18,8 @@ export function AppRouter() {
         <Routes>
             <Route element={<MarketingLayout />}>
                 <Route index element={<HomePage />} />
+                <Route path="about" element={<AboutPage />} />
+                <Route path="contact" element={<ContactPage />} />
                 <Route path="pricing" element={<PricingPage />} />
                 <Route path="terms" element={<LegalPage variant="terms" />} />
                 <Route path="privacy" element={<LegalPage variant="privacy" />} />
