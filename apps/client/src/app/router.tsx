@@ -3,6 +3,8 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { DashboardLayout } from '@/app/layouts/DashboardLayout'
 import { MarketingLayout } from '@/app/layouts/MarketingLayout'
 import { LiveLayout } from '@/app/layouts/LiveLayout'
+import { LoginPage } from '@/pages/auth/Login'
+import { SignupPage } from '@/pages/auth/Signup'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { SessionDetailPage } from '@/pages/dashboard/SessionDetailPage'
 import { LiveRoomPage } from '@/pages/live/LiveRoomPage'
@@ -25,6 +27,8 @@ export function AppRouter() {
                 <Route path="privacy" element={<LegalPage variant="privacy" />} />
             </Route>
 
+            <Route path="login" element={<LoginPage />} />
+            <Route path="signup" element={<SignupPage />} />
 
             <Route element={<DashboardLayout />}>
                 <Route path="app" element={<DashboardPage />} />
