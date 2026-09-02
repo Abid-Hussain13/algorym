@@ -8,9 +8,9 @@ import { toast } from 'sonner'
 
 import { cn } from '@/lib/utils/cn'
 import { Button } from '@/components/ui/Button'
-import { authApi } from '@/lib'
 import { ApiError } from '@/lib/api/client'
 import { useNavigate } from 'react-router-dom'
+import { loginThunk, signupThunk, useAppDispatch } from '@/stores'
 
 // ─── Typewriter ──────────────────────────────────────────────────────────────
 
@@ -167,6 +167,7 @@ PasswordInput.displayName = 'PasswordInput'
 function SignInForm() {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const dispatch = useAppDispatch();
 
     const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
@@ -175,10 +176,13 @@ function SignInForm() {
         const email = formData.get('email') as string
         const password = formData.get('password') as string
         try {
-            await authApi.login({ email, password });
+            await dispatch(loginThunk({ email, password })).unwrap();
             navigate("/");
         } catch (e) {
+            console.error('Login error:', e);
             if (e instanceof ApiError) {
+                toast.error(e.message);
+            } else if (e instanceof Error) {
                 toast.error(e.message);
             } else {
                 toast.error("Something went wrong");
@@ -230,26 +234,27 @@ function SignInForm() {
 }
 
 function SignUpForm() {
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    const dispatch = useAppDispatch();
 
     const navigate = useNavigate();
     const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
         setLoading(true)
         setFieldErrors({})
+        const formData = new FormData(event.currentTarget)
+        const name = formData.get('name') as string
+        const email = formData.get('email') as string
+        const password = formData.get('password') as string
         try {
-            await authApi.signup({ name, email, password });
+            await dispatch(signupThunk({ name, email, password })).unwrap();
             navigate("/");
         } catch (e) {
-            if (e instanceof ApiError && e.errors) {
-                const map: Record<string, string> = {};
-                e.errors.forEach(err => map[err.field] = err.message);
-                setFieldErrors(map);
-            } else if (e instanceof ApiError) {
+            console.error('Signup error:', e);
+            if (e instanceof ApiError) {
+                toast.error(e.message);
+            } else if (e instanceof Error) {
                 toast.error(e.message);
             } else {
                 toast.error("Something went wrong");
@@ -275,10 +280,8 @@ function SignUpForm() {
                         name="name"
                         type="text"
                         placeholder="Your name"
-                        value={name}
                         required
                         autoComplete="name"
-                        onChange={(e) => setName(e.target.value)}
                     />
                     {fieldErrors.name && <p className="text-[12px] text-red-500">{fieldErrors.name}</p>}
                 </div>
@@ -288,11 +291,9 @@ function SignUpForm() {
                         id="email"
                         name="email"
                         type="email"
-                        value={email}
                         placeholder="you@example.com"
                         required
                         autoComplete="email"
-                        onChange={(e) => setEmail(e.target.value)}
                     />
                     {fieldErrors.email && <p className="text-[12px] text-red-500">{fieldErrors.email}</p>}
                 </div>
@@ -300,10 +301,8 @@ function SignUpForm() {
                     name="password"
                     label="Password"
                     required
-                    value={password}
                     autoComplete="new-password"
                     placeholder="At least 8 characters"
-                    onChange={(e) => setPassword(e.target.value)}
                 />
                 {fieldErrors.password && <p className="text-[12px] text-red-500">{fieldErrors.password}</p>}
                 <Button

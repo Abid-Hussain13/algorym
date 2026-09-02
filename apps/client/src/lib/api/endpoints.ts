@@ -1,7 +1,6 @@
 import { http } from '@/lib/api/client'
 
 import type {
-    AuthResponse,
     CreateQuestionBody,
     CreateSessionBody,
     JoinSessionBody,
@@ -11,13 +10,16 @@ import type {
     SessionEvaluation,
     SessionEvent,
     SignupBody,
+    User,
 } from '@algorym/shared-types'
 
+type UserSafe = Omit<User, 'password_hash'>
+
 export const authApi = {
-    signup: (body: SignupBody) => http.post<AuthResponse>('/api/auth/signup', body),
-    login: (body: LoginBody) => http.post<AuthResponse>('/api/auth/login', body),
+    signup: (body: SignupBody) => http.post<UserSafe>('/api/auth/signup', body),
+    login: (body: LoginBody) => http.post<UserSafe>('/api/auth/login', body),
     refresh: () => http.post<null>('/api/auth/refresh'),
-    me: () => http.get<AuthResponse['user']>('/api/auth/me'),
+    me: () => http.get<UserSafe>('/api/auth/me'),
 }
 
 export const questionsApi = {
