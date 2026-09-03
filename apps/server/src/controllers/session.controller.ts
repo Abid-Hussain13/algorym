@@ -13,7 +13,7 @@ export const createSession = async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const session = await service.createSession(userId, data);
 
-    res.status(201).json({ success: true, session });
+    res.status(201).json({ success: true, data: { session }, message: "Session created" });
 };
 
 export const getAllSessions = async (req: Request, res: Response) => {
@@ -21,19 +21,19 @@ export const getAllSessions = async (req: Request, res: Response) => {
     const params = (req as any).validatedQuery;
     const result = await service.getAllSessions(userId, params);
 
-    res.json({ success: true, ...result });
+    res.json({ success: true, data: { sessions: result.sessions, total: result.total, page: result.page, limit: result.limit }, message: "" });
 };
 
 export const getSessionById = async (req: Request, res: Response) => {
     const session = await service.getSessionById(req.user!.id, req.params.id as string);
 
-    res.json({ success: true, session });
+    res.json({ success: true, data: { session }, message: "" });
 };
 
 export const updateSession = async (req: Request, res: Response) => {
     const session = await service.updateSession(req.user!.id, req.params.id as string, req.body);
 
-    res.json({ success: true, session });
+    res.json({ success: true, data: { session }, message: "Session updated" });
 };
 
 export const deleteSession = async (req: Request, res: Response) => {
@@ -48,7 +48,7 @@ export const startSession = async (req: Request, res: Response) => {
     const host = await getHostParticipant(session.id, req.user!.id);
     await sessionEventService.logSessionEvent(session.id, host.id, "session_started", { session });
 
-    res.json({ success: true, session });
+    res.json({ success: true, data: { session }, message: "Session started" });
 };
 
 export const completeSession = async (req: Request, res: Response) => {
@@ -57,7 +57,7 @@ export const completeSession = async (req: Request, res: Response) => {
     const host = await getHostParticipant(session.id, req.user!.id);
     await sessionEventService.logSessionEvent(session.id, host.id, "session_completed", { session });
 
-    res.json({ success: true, session });
+    res.json({ success: true, data: { session }, message: "Session completed" });
 };
 
 export const cancelSession = async (req: Request, res: Response) => {
@@ -66,7 +66,7 @@ export const cancelSession = async (req: Request, res: Response) => {
     const host = await getHostParticipant(session.id, req.user!.id);
     await sessionEventService.logSessionEvent(session.id, host.id, "session_cancelled", { session });
 
-    res.json({ success: true, session });
+    res.json({ success: true, data: { session }, message: "Session cancelled" });
 };
 
 export const joinSession = async (req: Request, res: Response) => {
@@ -87,7 +87,7 @@ export const joinSession = async (req: Request, res: Response) => {
 
     const result = await service.joinSession(data, userId);
 
-    res.json({ success: true, ...result });
+    res.json({ success: true, data: { session: result.session, participant: result.participant }, message: "Joined session" });
 };
 
 export const changeQuestion = async (req: Request, res: Response) => {
@@ -104,7 +104,7 @@ export const changeQuestion = async (req: Request, res: Response) => {
         languages: question.languages,
     });
 
-    res.json({ success: true, session });
+    res.json({ success: true, data: { session }, message: "Question changed" });
 };
 
 export const saveNotes = async (req: Request, res: Response) => {
@@ -121,7 +121,7 @@ export const saveNotes = async (req: Request, res: Response) => {
 
     const evaluation = await saveSessionNotes(sessionId, host.id, candidate.id, notes ?? null);
 
-    res.json({ success: true, evaluation });
+    res.json({ success: true, data: { evaluation }, message: "Notes saved" });
 };
 
 export const getEvaluation = async (req: Request, res: Response) => {
@@ -132,7 +132,7 @@ export const getEvaluation = async (req: Request, res: Response) => {
 
     const evaluation = await getSessionEvaluation(sessionId);
 
-    res.json({ success: true, evaluation });
+    res.json({ success: true, data: { evaluation }, message: "" });
 };
 
 export const getSessionEvents = async (req: Request, res: Response) => {
@@ -148,5 +148,5 @@ export const getSessionEvents = async (req: Request, res: Response) => {
         actor: r.actor_id ? { id: r.actor_id, display_name: r.display_name, role: r.role } : null,
     }));
 
-    res.json({ success: true, sessionEvents });
+    res.json({ success: true, data: { sessionEvents }, message: "" });
 }

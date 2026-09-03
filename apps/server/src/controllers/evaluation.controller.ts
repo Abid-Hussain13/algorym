@@ -28,6 +28,6 @@ export const evaluateUser = async (req: Request, res: Response): Promise<void> =
         notes
     }
 
-    const evaluation = await evaluationService.evaluateUser(evaluateInput);
-    res.status(200).json({ success: true, message: "Candidate is evaluated", result: evaluation });
+    const result = await evaluationService.evaluateUser(evaluateInput);
+    res.status(200).json({ success: true, data: { result }, message: "Candidate evaluated" });
 }

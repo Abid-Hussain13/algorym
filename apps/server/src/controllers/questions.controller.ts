@@ -11,17 +11,17 @@ export const createQuestion = async (req: Request, res: Response) => {
         difficulty,
         starter_code,
     });
-    res.status(201).json({ question });
+    res.status(201).json({ success: true, data: { question }, message: "Question created" });
 };
 
 export const getAllQuestions = async (req: Request, res: Response) => {
     const questions = await questionService.getAllQuestions(req.user!.id);
-    res.json({ questions, count: questions.length });
+    res.json({ success: true, data: { questions }, message: "" });
 };
 
 export const getQuestion = async (req: Request, res: Response) => {
     const question = await questionService.getQuestionById(req.params.id as string, req.user!.id);
-    res.json({ question });
+    res.json({ success: true, data: { question }, message: "" });
 };
 
 export const updateQuestion = async (req: Request, res: Response) => {
@@ -34,7 +34,7 @@ export const updateQuestion = async (req: Request, res: Response) => {
         difficulty,
         starter_code,
     });
-    res.json({ question });
+    res.json({ success: true, data: { question }, message: "Question updated" });
 };
 
 export const deleteQuestion = async (req: Request, res: Response) => {
