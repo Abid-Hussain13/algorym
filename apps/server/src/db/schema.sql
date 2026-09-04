@@ -12,8 +12,23 @@ create table users (
     name text not null,
     email text not null unique,
     password_hash text not null,
+    email_verified boolean not null default false,
     created_at timestamptz not null default now()
 );
+
+create type token_type as enum ('email_verification', 'password_reset');
+
+create table tokens (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid not null references users(id) on delete cascade,
+    token text not null unique,
+    type token_type not null,
+    expires_at timestamptz not null,
+    created_at timestamptz not null default now()
+);
+
+create index idx_tokens_user on tokens(user_id);
+create index idx_tokens_token on tokens(token);
 
 create table questions (
     id uuid primary key default gen_random_uuid(),

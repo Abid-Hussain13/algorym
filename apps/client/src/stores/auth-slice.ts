@@ -4,7 +4,7 @@ import {
     type PayloadAction,
 } from '@reduxjs/toolkit'
 
-import { authApi } from '@/lib/api'
+import { authApi, ApiError } from '@/lib/api'
 
 import type { User } from '@algorym/shared-types'
 
@@ -24,17 +24,25 @@ const initialState: AuthState = {
 
 export const loginThunk = createAsyncThunk(
     'auth/login',
-    async ({ email, password }: { email: string; password: string }) => {
-        const user = await authApi.login({ email, password })
-        return user
+    async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
+        try {
+            return await authApi.login({ email, password })
+        } catch (e) {
+            if (e instanceof ApiError) return rejectWithValue(e)
+            throw e
+        }
     },
 )
 
 export const signupThunk = createAsyncThunk(
     'auth/signup',
-    async ({ name, email, password }: { name: string; email: string; password: string }) => {
-        const user = await authApi.signup({ name, email, password })
-        return user
+    async ({ name, email, password }: { name: string; email: string; password: string }, { rejectWithValue }) => {
+        try {
+            return await authApi.signup({ name, email, password })
+        } catch (e) {
+            if (e instanceof ApiError) return rejectWithValue(e)
+            throw e
+        }
     },
 )
 
@@ -43,15 +51,15 @@ export const loadMeThunk = createAsyncThunk('auth/loadMe', async () => {
     return user
 })
 
+export const logoutThunk = createAsyncThunk('auth/logout', async () => {
+    const logout = await authApi.logout();
+    return logout;
+})
+
 export const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
-        logout(state) {
-            state.user = null
-            state.status = 'unauthenticated'
-            state.error = null
-        },
         clearAuthError(state) {
             state.error = null
         },
@@ -93,10 +101,23 @@ export const authSlice = createSlice({
                 state.user = null
                 state.status = 'unauthenticated'
             })
+            .addCase(logoutThunk.pending, (state) => {
+                state.status = 'loading'
+            })
+            .addCase(logoutThunk.fulfilled, (state) => {
+                state.user = null
+                state.status = 'unauthenticated'
+                state.error = null
+            })
+            .addCase(logoutThunk.rejected, (state) => {
+                state.user = null
+                state.status = 'unauthenticated'
+                state.error = null
+            })
     },
 })
 
-export const { logout, clearAuthError } = authSlice.actions
+export const { clearAuthError } = authSlice.actions
 
 interface AuthRootState {
     auth: AuthState

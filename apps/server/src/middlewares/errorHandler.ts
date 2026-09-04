@@ -18,6 +18,7 @@ const errorHandler = (err: any, _req: Request, res: Response, _next: NextFunctio
     const response: Record<string, any> = {
         success: false,
         message,
+        statusCode,
     };
 
     if (err.errors) {

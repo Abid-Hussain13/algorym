@@ -4,7 +4,8 @@ import { ChevronDown, LogOut } from 'lucide-react'
 
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
 import { Button } from '@/components/ui/Button'
-import { useAppSelector, useAppDispatch, selectUser, selectAuthStatus, logout } from '@/stores'
+import { useAppSelector, useAppDispatch, selectUser, selectAuthStatus } from '@/stores'
+import { logoutThunk } from '@/stores/auth-slice'
 
 export function Navbar() {
     const user = useAppSelector(selectUser)
@@ -58,7 +59,7 @@ export function Navbar() {
                                     <button
                                         type="button"
                                         onClick={() => {
-                                            dispatch(logout())
+                                            dispatch(logoutThunk())
                                             setIsDropdownOpen(false)
                                         }}
                                         className="flex w-full items-center gap-2 px-3 py-2 text-sm text-fg transition-colors hover:text-accent"

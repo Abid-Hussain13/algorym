@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils/cn'
 import { Button } from '@/components/ui/Button'
 import { ApiError } from '@/lib/api/client'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { loginThunk, signupThunk, useAppDispatch } from '@/stores'
 
 // ─── Typewriter ──────────────────────────────────────────────────────────────
@@ -166,12 +166,14 @@ PasswordInput.displayName = 'PasswordInput'
 
 function SignInForm() {
     const [loading, setLoading] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
     const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
         setLoading(true)
+        setFieldErrors({})
         const formData = new FormData(event.currentTarget)
         const email = formData.get('email') as string
         const password = formData.get('password') as string
@@ -179,10 +181,11 @@ function SignInForm() {
             await dispatch(loginThunk({ email, password })).unwrap();
             navigate("/");
         } catch (e) {
-            console.error('Login error:', e);
-            if (e instanceof ApiError) {
-                toast.error(e.message);
-            } else if (e instanceof Error) {
+            if (e instanceof ApiError && e.errors?.length) {
+                const map: Record<string, string> = {};
+                e.errors.forEach(err => map[err.field] = err.message);
+                setFieldErrors(map);
+            } else if (e instanceof ApiError) {
                 toast.error(e.message);
             } else {
                 toast.error("Something went wrong");
@@ -211,6 +214,7 @@ function SignInForm() {
                         required
                         autoComplete="email"
                     />
+                    {fieldErrors.email && <p className="text-[12px] text-red-500">{fieldErrors.email}</p>}
                 </div>
                 <PasswordInput
                     name="password"
@@ -219,6 +223,12 @@ function SignInForm() {
                     autoComplete="current-password"
                     placeholder="Your password"
                 />
+                {fieldErrors.password && <p className="text-[12px] text-red-500">{fieldErrors.password}</p>}
+                <div className="text-right">
+                    <Link to="/forgot-password" className="text-[13px] text-accent-text hover:text-fg">
+                        Forgot password?
+                    </Link>
+                </div>
                 <Button
                     type="submit"
                     variant="primary"
@@ -251,10 +261,11 @@ function SignUpForm() {
             await dispatch(signupThunk({ name, email, password })).unwrap();
             navigate("/");
         } catch (e) {
-            console.error('Signup error:', e);
-            if (e instanceof ApiError) {
-                toast.error(e.message);
-            } else if (e instanceof Error) {
+            if (e instanceof ApiError && e.errors?.length) {
+                const map: Record<string, string> = {};
+                e.errors.forEach(err => map[err.field] = err.message);
+                setFieldErrors(map);
+            } else if (e instanceof ApiError) {
                 toast.error(e.message);
             } else {
                 toast.error("Something went wrong");

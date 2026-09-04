@@ -5,6 +5,9 @@ import { MarketingLayout } from '@/app/layouts/MarketingLayout'
 import { LiveLayout } from '@/app/layouts/LiveLayout'
 import { LoginPage } from '@/pages/auth/Login'
 import { SignupPage } from '@/pages/auth/Signup'
+import { ForgotPasswordPage } from '@/pages/auth/ForgotPassword'
+import { ResetPasswordPage } from '@/pages/auth/ResetPassword'
+import { VerifyEmailPage } from '@/pages/auth/VerifyEmail'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { SessionDetailPage } from '@/pages/dashboard/SessionDetailPage'
 import { LiveRoomPage } from '@/pages/live/LiveRoomPage'
@@ -29,6 +32,9 @@ export function AppRouter() {
 
             <Route path="login" element={<LoginPage />} />
             <Route path="signup" element={<SignupPage />} />
+            <Route path="forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="reset-password" element={<ResetPasswordPage />} />
+            <Route path="verify-email" element={<VerifyEmailPage />} />
 
             <Route element={<DashboardLayout />}>
                 <Route path="app" element={<DashboardPage />} />

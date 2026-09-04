@@ -20,6 +20,11 @@ export const authApi = {
     login: (body: LoginBody) => http.post<UserSafe>('/api/auth/login', body),
     refresh: () => http.post<null>('/api/auth/refresh'),
     me: () => http.get<UserSafe>('/api/auth/me'),
+    logout: () => http.post<null>('/api/auth/logout'),
+    forgotPassword: (body: { email: string }) => http.post<null>('/api/auth/forgot-password', body),
+    resetPassword: (body: { token: string; password: string }) => http.post<null>('/api/auth/reset-password', body),
+    verifyEmail: (token: string) => http.get<null>(`/api/auth/verify-email?token=${token}`),
+    resendVerification: () => http.post<null>('/api/auth/resend-verification'),
 }
 
 export const questionsApi = {

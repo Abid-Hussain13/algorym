@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import dotenv from "dotenv";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
@@ -8,6 +9,10 @@ import notFound from "./middlewares/notFound.js";
 
 const app = express();
 dotenv.config();
+app.use(cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

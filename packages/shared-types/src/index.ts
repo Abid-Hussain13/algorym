@@ -15,6 +15,7 @@ export interface User {
     name: string;
     email: string;
     password_hash: string;
+    email_verified: boolean;
     created_at: string;
 }
 
@@ -96,10 +97,21 @@ export interface LoginBody {
     password: string;
 }
 
-export interface AuthResponse {
-    user: Omit<User, 'password_hash'>;
-    token: string;
+export interface ApiResponse<T> {
+    success: boolean;
+    data: T;
+    message: string;
 }
+
+export type AuthResponse = { user: Omit<User, 'password_hash'> };
+
+export interface ApiErrorResponse {
+    success: false;
+    message: string;
+    statusCode: number;
+    errors?: Array<{ field: string; message: string }>;
+}
+
 
 export interface CreateQuestionBody {
     title: string;
