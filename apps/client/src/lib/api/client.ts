@@ -61,9 +61,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     })
 
     if (response.status === 401) {
-        // Skip refresh for auth check endpoints — caller handles "not logged in"
-        if (path === '/api/auth/me') {
-            throw new ApiError(401, 'Not authenticated');
+        // Don't refresh if we're already on the refresh endpoint
+        if (path === '/api/auth/refresh') {
+            throw new ApiError(401, 'Session expired, please login again');
         }
 
         // Refresh token
