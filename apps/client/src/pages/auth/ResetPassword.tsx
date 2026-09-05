@@ -43,7 +43,9 @@ export function ResetPasswordPage() {
             await authApi.resetPassword({ token, password })
             setSuccess(true)
         } catch (e) {
-            if (e instanceof ApiError) {
+            if (e instanceof ApiError && e.errors?.length) {
+                toast.error(e.errors[0].message)
+            } else if (e instanceof ApiError) {
                 toast.error(e.message)
             } else {
                 toast.error('Something went wrong')
