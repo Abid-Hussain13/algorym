@@ -93,7 +93,7 @@ export function ResetPasswordPage() {
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="At least 6 characters"
+                            placeholder="At least 8 characters"
                             required
                             minLength={6}
                             className="flex h-10 w-full rounded-[6px] border border-border-strong bg-surface px-3 py-2 text-[13px] text-fg placeholder:text-faint transition-all duration-[120ms] ease-default focus:border-accent focus:shadow-[0_0_0_3px_var(--color-focus)] focus:outline-none"

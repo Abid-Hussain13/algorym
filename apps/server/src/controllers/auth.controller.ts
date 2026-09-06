@@ -56,7 +56,7 @@ export const login = async (req: Request, res: Response) => {
     const refreshToken = generateRefreshToken(payload);
 
     setAuthCookies(res, accessToken, refreshToken);
-
+    console.log("i am in login controller. with success")
     res.json({ success: true, data: payload, message: "User logged in successfully" });
 };
 

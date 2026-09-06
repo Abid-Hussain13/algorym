@@ -8,6 +8,14 @@ const API_BASE = import.meta.env.VITE_API_URL;
 let isRefreshing = false;
 let failedQueue: Array<{ resolve: (value: void | PromiseLike<void>) => void; reject: (reason?: unknown) => void }> = [];
 
+const PUBLIC_AUTH_APIS = [
+    '/api/auth/login',
+    '/api/auth/signup',
+    '/api/auth/forgot-password',
+    '/api/auth/reset-password',
+    'api/auth/verify-email'
+]
+
 function onRefreshResolve(value: void | PromiseLike<void>) {
     failedQueue.forEach(queueItem => queueItem.resolve(value));
     failedQueue = [];
@@ -39,7 +47,7 @@ async function refreshToken(): Promise<void | null> {
         return result;
     } catch {
         // Refresh failed — logout user and reject all pending requests
-        const error = new Error('Refesh failed');
+        const error = new Error('Refresh failed');
         console.log(error);
         onRefreshReject(error);
         isRefreshing = false;
@@ -61,18 +69,25 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     })
 
     if (response.status === 401) {
-        // Don't refresh if we're already on the refresh endpoint
-        if (path === '/api/auth/refresh') {
-            throw new ApiError(401, 'Session expired, please login again');
-        }
+        if (!PUBLIC_AUTH_APIS.includes(path)) {
+            // Don't refresh if we're already on the refresh endpoint
+            if (path === '/api/auth/refresh') {
+                throw new ApiError(401, 'Session expired, please login again. from refresh path');
+            }
 
-        // Refresh token
-        try {
-            await refreshToken();
+            // Refresh token
+            try {
+                await refreshToken();
 
-            return request<T>(path, options);
-        } catch {
-            throw new ApiError(401, 'Session expired, please login again');
+                return request<T>(path, options);
+            } catch {
+                // For /api/auth/me, return a silent "not logged in" error
+                // Other endpoints get "session expired"
+                if (path === '/api/auth/me') {
+                    throw new ApiError(401, 'Not authenticated');
+                }
+                throw new ApiError(401, 'Session expired, please login again. from catch');
+            }
         }
     }
 
