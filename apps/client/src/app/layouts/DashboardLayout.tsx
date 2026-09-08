@@ -1,30 +1,6 @@
-// export function DashboardLayout() {
-//   return (
-//
-//   )
-// }
-
-
-"use client";
-
-import {
-    Building2,
-    ChevronRight,
-    ChevronsUpDown,
-    CircleUserRound,
-    Command,
-    Inbox,
-    LayoutGrid,
-    ListTodo,
-    NotebookTabs,
-    PanelLeft,
-    Search,
-    Sparkles,
-    Target,
-    Workflow,
-    X,
-} from "lucide-react";
 import { useState } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 import {
     AnimatedSidebar,
     AnimatedSidebarClose,
@@ -45,77 +21,84 @@ import {
     AnimatedSidebarRail,
     AnimatedSidebarTrigger,
 } from "@/components/motion/animated-sidebar";
+import { selectUser, logoutThunk } from "@/stores/auth-slice";
+import type { AppDispatch } from "@/stores/store";
+import { IconTerminal, IconCodeTogether } from "@/components/icons";
 
-const destinations = [
-    {
-        label: "People",
-        icon: CircleUserRound,
-        children: ["All people", "Recent activity", "Segments"],
-    },
-    {
-        label: "Companies",
-        icon: Building2,
-    },
-    {
-        label: "Opportunities",
-        icon: Target,
-        children: ["Pipeline", "Forecast", "Closed deals"],
-    },
-    {
-        label: "Tasks",
-        icon: ListTodo,
-    },
-    {
-        label: "Notes",
-        icon: NotebookTabs,
-    },
-    {
-        label: "Workflows",
-        icon: Workflow,
-        children: ["Automations", "Runs", "Templates"],
-    },
-    {
-        label: "Dashboard",
-        icon: LayoutGrid,
-    },
-] satisfies {
-    label: string;
-    icon: typeof CircleUserRound;
-    children?: string[];
-}[];
+const navIcons: Record<string, string> = {
+    grid: "M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z",
+    terminal: "M4 17l6-6-6-6M12 19h8",
+    file: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM14 2v6h6",
+    settings: "M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z",
+};
+
+const navItems = [
+    { label: "Dashboard", id: "dashboard", icon: "grid" },
+    { label: "Sessions", id: "sessions", icon: "terminal", children: ["All Sessions", "Active", "Completed"] },
+    { label: "Templates", id: "templates", icon: "file" },
+    { label: "Settings", id: "settings", icon: "settings" },
+] as const;
+
+function NavIcon({ icon, className }: { icon: string; className?: string }) {
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={className}
+        >
+            <path d={navIcons[icon] ?? navIcons.grid} />
+        </svg>
+    );
+}
 
 export function DashboardLayout() {
-    const [active, setActive] = useState("People");
+    const [active, setActive] = useState("dashboard");
     const [openSection, setOpenSection] = useState<string | null>(null);
+    const user = useSelector(selectUser);
+    const dispatch = useDispatch<AppDispatch>();
+    const navigate = useNavigate();
+
+    const userName = user?.name ?? "User";
+    const userEmail = user?.email ?? "";
+    const initials = userName
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
 
     return (
-        <div className="w-full px-0 py-2 sm:p-3">
-            <AnimatedSidebarProvider className="h-[720px] min-h-0 overflow-hidden rounded-2xl border border-foreground/[0.08] bg-background">
+        <div className="flex h-svh w-full overflow-hidden bg-bg">
+            <AnimatedSidebarProvider className="flex h-full w-full">
                 <AnimatedSidebar
-                    ariaLabel="Solace workspace"
+                    ariaLabel="Navigation"
                     collapsible="icon"
-                    className="min-h-0"
-                    panelClassName="h-full border-foreground/[0.08]"
+                    className="h-full"
+                    panelClassName="h-full"
                 >
                     <AnimatedSidebarHeader className="p-3 pb-2">
                         <div className="flex min-h-11 items-center gap-3 overflow-hidden px-2">
-                            <div className="grid size-7 shrink-0 place-items-center rounded-lg bg-foreground text-background">
-                                <Command aria-hidden="true" className="size-4" />
+                            <div className="grid size-7 shrink-0 place-items-center rounded-md bg-accent text-on-accent">
+                                <IconTerminal aria-hidden="true" className="size-4" />
                             </div>
                             <button
                                 type="button"
-                                className="flex min-w-0 flex-1 items-center gap-2 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-ring group-data-[state=collapsed]/sidebar:hidden"
+                                onClick={() => navigate("/app")}
+                                className="flex min-w-0 flex-1 items-center gap-2 text-left outline-none group-data-[state=collapsed]/sidebar:hidden"
                             >
-                                <span className="truncate text-sm font-semibold text-foreground">
-                                    Acme Inc
+                                <span className="truncate text-sm font-semibold text-fg">
+                                    Algorym
                                 </span>
-                                <ChevronsUpDown
-                                    aria-hidden="true"
-                                    className="size-3.5 shrink-0 text-muted-foreground"
-                                />
                             </button>
-                            <AnimatedSidebarClose className="ml-auto text-muted-foreground hover:bg-muted md:hidden">
-                                <X aria-hidden="true" className="size-4" />
+                            <AnimatedSidebarClose className="ml-auto text-muted hover:text-fg md:hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4">
+                                    <path d="M18 6 6 18M6 6l12 12" />
+                                </svg>
                             </AnimatedSidebarClose>
                         </div>
                     </AnimatedSidebarHeader>
@@ -126,27 +109,23 @@ export function DashboardLayout() {
                                 <AnimatedSidebarMenu>
                                     <AnimatedSidebarMenuItem>
                                         <AnimatedSidebarMenuButton
-                                            icon={<Search className="size-4" />}
-                                            onSelect={() => setActive("Search")}
+                                            icon={
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4">
+                                                    <circle cx="11" cy="11" r="8" />
+                                                    <path d="m21 21-4.3-4.3" />
+                                                </svg>
+                                            }
+                                            onSelect={() => setActive("search")}
                                         >
                                             Search
                                         </AnimatedSidebarMenuButton>
                                     </AnimatedSidebarMenuItem>
                                     <AnimatedSidebarMenuItem>
                                         <AnimatedSidebarMenuButton
-                                            icon={<Sparkles className="size-4" />}
-                                            onSelect={() => setActive("AI Assistant")}
+                                            icon={<IconCodeTogether className="size-4" />}
+                                            onSelect={() => setActive("sessions")}
                                         >
-                                            AI Assistant
-                                        </AnimatedSidebarMenuButton>
-                                    </AnimatedSidebarMenuItem>
-                                    <AnimatedSidebarMenuItem>
-                                        <AnimatedSidebarMenuButton
-                                            icon={<Inbox className="size-4" />}
-                                            badge="4"
-                                            onSelect={() => setActive("Inbox")}
-                                        >
-                                            Inbox
+                                            New Session
                                         </AnimatedSidebarMenuButton>
                                     </AnimatedSidebarMenuItem>
                                 </AnimatedSidebarMenu>
@@ -155,42 +134,43 @@ export function DashboardLayout() {
 
                         <AnimatedSidebarGroup className="pt-1">
                             <AnimatedSidebarGroupLabel>
-                                Workspaces
+                                Navigation
                             </AnimatedSidebarGroupLabel>
                             <AnimatedSidebarGroupContent>
                                 <AnimatedSidebarMenu>
-                                    {destinations.map(({ label, icon: Icon, children }) => (
-                                        <AnimatedSidebarMenuItem key={label}>
+                                    {navItems.map(({ label, id, icon, children }) => (
+                                        <AnimatedSidebarMenuItem key={id}>
                                             <AnimatedSidebarMenuButton
                                                 isActive={
-                                                    active === label ||
-                                                    children?.includes(active) === true
+                                                    active === id ||
+                                                    children?.some((c) => c.toLowerCase().replace(/\s+/g, "-") === active) === true
                                                 }
                                                 ariaExpanded={
-                                                    children ? openSection === label : undefined
+                                                    children ? openSection === id : undefined
                                                 }
-                                                icon={<Icon className="size-4" />}
+                                                icon={<NavIcon icon={icon} className="size-4" />}
                                                 onSelect={() => {
-                                                    setOpenSection((current) => {
-                                                        if (!children) {
-                                                            setActive(label);
-                                                            return null;
-                                                        }
-                                                        return current === label ? null : label;
-                                                    });
+                                                    if (children) {
+                                                        setOpenSection((current) =>
+                                                            current === id ? null : id
+                                                        );
+                                                    } else {
+                                                        setActive(id);
+                                                        setOpenSection(null);
+                                                    }
                                                 }}
                                             >
                                                 {label}
                                             </AnimatedSidebarMenuButton>
                                             {children ? (
                                                 <AnimatedSidebarMenuSub
-                                                    open={openSection === label}
+                                                    open={openSection === id}
                                                 >
                                                     {children.map((child) => (
                                                         <AnimatedSidebarMenuSubItem key={child}>
                                                             <AnimatedSidebarMenuSubButton
-                                                                isActive={active === child}
-                                                                onSelect={() => setActive(child)}
+                                                                isActive={active === child.toLowerCase().replace(/\s+/g, "-")}
+                                                                onSelect={() => setActive(child.toLowerCase().replace(/\s+/g, "-"))}
                                                             >
                                                                 {child}
                                                             </AnimatedSidebarMenuSubButton>
@@ -206,72 +186,45 @@ export function DashboardLayout() {
                     </AnimatedSidebarContent>
 
                     <AnimatedSidebarFooter className="gap-3 border-none p-3">
-
                         <button
                             type="button"
-                            className="flex min-h-11 w-full items-center gap-3 overflow-hidden rounded-xl p-1 text-left outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+                            onClick={() => dispatch(logoutThunk())}
+                            className="flex min-h-11 w-full items-center gap-3 overflow-hidden rounded-xl p-1 text-left outline-none transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent"
                         >
-                            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#d5ff66] text-xs font-semibold text-[#172000]">
-                                AS
+                            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-soft text-xs font-semibold text-accent-text">
+                                {initials}
                             </span>
                             <span className="min-w-0 flex-1 group-data-[state=collapsed]/sidebar:hidden">
-                                <span className="block truncate text-sm font-medium text-foreground">
-                                    Ava Stone
+                                <span className="block truncate text-sm font-medium text-fg">
+                                    {userName}
                                 </span>
-                                <span className="block truncate text-xs text-muted-foreground">
-                                    ava@solace.app
+                                <span className="block truncate text-xs text-muted">
+                                    {userEmail}
                                 </span>
                             </span>
-                            <ChevronRight
-                                aria-hidden="true"
-                                className="size-4 shrink-0 text-muted-foreground group-data-[state=collapsed]/sidebar:hidden"
-                            />
                         </button>
                     </AnimatedSidebarFooter>
 
                     <AnimatedSidebarRail />
                 </AnimatedSidebar>
 
-                <AnimatedSidebarInset className="min-h-0 bg-background">
-                    <header className="flex h-16 shrink-0 items-center gap-3 border-border border-b px-4">
-                        <AnimatedSidebarTrigger className="text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                            <PanelLeft aria-hidden="true" className="size-4" />
+                <AnimatedSidebarInset className="min-h-0">
+                    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-4">
+                        <AnimatedSidebarTrigger className="text-muted transition-colors hover:bg-surface-2 hover:text-fg">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4">
+                                <rect width="18" height="18" x="3" y="3" rx="2" />
+                                <path d="M9 3v18" />
+                            </svg>
                         </AnimatedSidebarTrigger>
                         <div className="h-5 w-px bg-border" />
-                        <p className="text-sm font-medium text-foreground">{active}</p>
+                        <p className="text-sm font-medium capitalize text-fg">{active}</p>
                     </header>
 
-                    <div className="flex min-h-0 flex-1 flex-col justify-between overflow-hidden p-5 sm:p-7">
-                        <div>
-                            <p className="text-xs font-medium text-muted-foreground">
-                                Wednesday, July 29
-                            </p>
-                            <h3 className="mt-2 max-w-md text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-                                Good morning, Ava.
-                            </h3>
-                            <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-                                Your workspace stays in place while the navigation folds down
-                                to a focused icon rail.
-                            </p>
-                        </div>
-
-                        <div className="flex items-end justify-between border-border border-t pt-4">
-                            <div>
-                                <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                                    Active view
-                                </p>
-                                <p className="mt-1 text-sm font-medium text-foreground">
-                                    {active}
-                                </p>
-                            </div>
-                            <p className="hidden text-xs text-muted-foreground sm:block">
-                                Press ⌘B to toggle
-                            </p>
-                        </div>
+                    <div className="flex-1 overflow-auto">
+                        <Outlet />
                     </div>
                 </AnimatedSidebarInset>
             </AnimatedSidebarProvider>
         </div>
     );
 }
-

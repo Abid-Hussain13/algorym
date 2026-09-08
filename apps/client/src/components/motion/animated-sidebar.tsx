@@ -1,7 +1,6 @@
 "use client";
 // beui.dev/components/motion/animated-sidebar
 
-import { ChevronRight } from "lucide-react";
 import {
     AnimatePresence,
     type HTMLMotionProps,
@@ -1120,7 +1119,9 @@ export function AnimatedSidebarMenuButton({
                     transition={context.reduce ? { duration: 0 } : SPRING_LAYOUT}
                     className="relative z-10 grid size-4 shrink-0 place-items-center text-muted-foreground"
                 >
-                    <ChevronRight className="size-3.5" />
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-3.5">
+                        <path d="m9 18 6-6-6-6" />
+                    </svg>
                 </motion.span>
             ) : null}
         </>
