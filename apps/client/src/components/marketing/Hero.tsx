@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/Button'
 import { HeroStage } from '@/components/marketing/HeroStage'
+import { Link } from 'react-router-dom'
 
 export function Hero() {
     return (
@@ -16,11 +17,8 @@ export function Hero() {
                     in ready.
                 </p>
                 <div className="animate-rise mt-6 flex flex-wrap items-center gap-3 [animation-delay:220ms] max-[1024px]:justify-center max-[480px]:flex-col max-[480px]:items-stretch">
-                    <Button variant="primary" size="lg" className="max-[480px]:w-full max-[480px]:justify-center">
-                        Get started
-                        <span className="font-mono text-[0.95em]" aria-hidden="true">
-                            →
-                        </span>
+                    <Button variant="primary" size="lg" className="max-[480px]:w-full max-[480px]:justify-center" asChild>
+                        <Link to="/app">Get Started →</Link>
                     </Button>
                     <Button variant="ghost" size="lg" className="max-[480px]:w-full max-[480px]:justify-center" asChild>
                         <a href="#how-it-works">See how it works</a>

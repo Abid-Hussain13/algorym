@@ -14,7 +14,7 @@ interface CTAProps {
 export function CTASection({
     title = 'Code together, live',
     description = 'Real-time algorithmic collaboration, watch solutions evolve as you pair program.',
-    action = { text: 'Get started', href: '/board' },
+    action = { text: 'Get started', href: '/app' },
     className,
 }: CTAProps) {
     return (

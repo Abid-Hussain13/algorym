@@ -39,6 +39,11 @@ export function Navbar() {
                 </Link>
                 <div className="ml-auto flex items-center gap-3 max-[480px]:ml-0 max-[480px]:w-full max-[480px]:justify-between max-[480px]:border-t max-[480px]:border-border max-[480px]:pt-2.5">
                     <ThemeToggle />
+                    {user ? <div>
+                        <Button asChild variant="primary" size="sm" className="">
+                            <Link to="/app">Dashbaord</Link>
+                        </Button>
+                    </div> : null}
                     {status === 'loading' || status === 'idle' ? (
                         <div className="h-8 w-20" />
                     ) : user ? (
@@ -46,7 +51,7 @@ export function Navbar() {
                             <button
                                 type="button"
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                className="group flex items-center gap-2 rounded-sm px-2 py-1"
+                                className="group flex items-center gap-2 rounded-sm  py-1"
                             >
                                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[15px] font-semibold text-white">
                                     {user.name.charAt(0).toUpperCase()}
