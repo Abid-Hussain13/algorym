@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 
 import { DashboardLayout } from '@/app/layouts/DashboardLayout'
 import { MarketingLayout } from '@/app/layouts/MarketingLayout'
@@ -17,6 +17,11 @@ import { HomePage } from '@/pages/marketing/HomePage'
 import { LegalPage } from '@/pages/marketing/LegalPage'
 import { PricingPage } from '@/pages/marketing/PricingPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+import { Settings } from '@/pages/dashboard/Settings'
+import { Reports } from '@/pages/dashboard/Reports'
+import { Questions } from '@/pages/dashboard/Questions'
+import { Sessions } from '@/pages/dashboard/Sessions'
+import { LiveRoom } from '@/pages/live/LiveRoom'
 
 export function AppRouter() {
     return (
@@ -38,11 +43,15 @@ export function AppRouter() {
 
             <Route element={<DashboardLayout />}>
                 <Route path="app" element={<DashboardPage />} />
+                <Route path="app/sessions" element={<Sessions />} />
+                <Route path="app/questions" element={<Questions />} />
+                <Route path="app/reports" element={<Reports />} />
+                <Route path="app/settings" element={<Settings />} />
                 <Route path="app/sessions/:sessionId" element={<SessionDetailPage />} />
             </Route>
 
             <Route path="live" element={<LiveLayout />}>
-                <Route index element={<Navigate to="/app" replace />} />
+                <Route index element={<LiveRoom />} />
                 <Route path=":sessionId" element={<LiveRoomPage />} />
             </Route>
 

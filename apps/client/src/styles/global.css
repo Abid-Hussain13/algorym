@@ -14,11 +14,17 @@
   --color-border: oklch(0.92 0.008 85);
   --color-border-strong: oklch(0.85 0.012 85);
 
+  /* shadcn compat aliases — map sidebar component classes to design system tokens */
+  --color-background: var(--color-surface);
+  --color-foreground: var(--color-fg);
+  --color-muted-foreground: var(--color-muted);
+  --color-ring: var(--color-accent);
+
   --color-accent: oklch(0.7 0.19 50);
   --color-accent-hover: oklch(0.66 0.19 50);
   --color-accent-active: oklch(0.61 0.19 48);
   --color-accent-text: oklch(0.56 0.17 48);
-  --color-accent-soft: oklch(0.7 0.19 50 / 0.12);
+  --color-accent-soft: oklch(0.7 0.19 50 / 0.10);
   --color-on-accent: oklch(1 0 0);
 
   --color-success: oklch(0.55 0.15 150);
@@ -210,6 +216,12 @@
   --color-border: rgb(255 255 255 / 0.1);
   --color-border-strong: rgb(255 255 255 / 0.18);
 
+  /* shadcn compat aliases — map sidebar component classes to design system tokens */
+  --color-background: var(--color-surface);
+  --color-foreground: var(--color-fg);
+  --color-muted-foreground: var(--color-muted);
+  --color-ring: var(--color-accent);
+
   --color-accent: oklch(0.78 0.17 50);
   --color-accent-hover: oklch(0.82 0.16 50);
   --color-accent-active: oklch(0.86 0.14 50);
@@ -248,6 +260,26 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar — design system tokens */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-strong) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 999px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--color-muted);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1880,4 +1912,35 @@ html[data-theme="dark"] .rp-timeline-marker {
   .foot-wordmark {
     font-size: clamp(56px, 22vw, 140px);
   }
+}
+
+/* ============ SIDEBAR — ACTIVE PILL OVERRIDE ============ */
+/* The animated pill (motion.span with layoutId) sits on top of the button.
+   Make it transparent so the button's own bg-accent-soft shows through. */
+[data-slot="sidebar-menu"] li .absolute.inset-0.rounded-xl {
+  background: transparent !important;
+}
+
+/* Hover and active — identical accent coloring, instant transition to kill gray flash */
+[data-slot="sidebar-menu"] li button:hover,
+[data-slot="sidebar-menu"] li a:hover,
+[data-slot="sidebar-menu"] li button[aria-current="page"],
+[data-slot="sidebar-menu"] li a[aria-current="page"] {
+  background: var(--color-accent-soft) !important;
+  color: var(--color-accent-text) !important;
+  transition: none !important;
+}
+
+/* Collapsed sidebar — center navlink icons, remove invisible text from layout */
+[data-slot="sidebar"][data-state="collapsed"] [data-slot="sidebar-menu"] li button,
+[data-slot="sidebar"][data-state="collapsed"] [data-slot="sidebar-menu"] li a {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  gap: 0;
+}
+/* Hide the text label completely so it doesn't affect grid centering */
+[data-slot="sidebar"][data-state="collapsed"] [data-slot="sidebar-menu"] li button .truncate,
+[data-slot="sidebar"][data-state="collapsed"] [data-slot="sidebar-menu"] li a .truncate {
+  display: none;
 }

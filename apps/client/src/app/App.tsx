@@ -6,6 +6,7 @@ import { Toaster } from 'sonner'
 import { AppRouter } from './router'
 import { ScrollToTop } from './ScrollToTop'
 import { store, useAppDispatch, loadMeThunk } from '@/stores'
+import { useTheme } from '@/hooks/use-theme'
 
 function AuthLoader() {
     const dispatch = useAppDispatch()
@@ -17,10 +18,16 @@ function AuthLoader() {
     return null
 }
 
+function ThemeApplier() {
+    useTheme()
+    return null
+}
+
 export function App() {
     return (
         <Provider store={store}>
             <BrowserRouter>
+                <ThemeApplier />
                 <AuthLoader />
                 <ScrollToTop />
                 <AppRouter />
