@@ -199,7 +199,7 @@ export const completeSession = async (userId: string, sessionId: string): Promis
     if (session.status !== "live") throw new AppError("Only live sessions can be completed", 400);
 
     const { rows } = await db.query(
-        `UPDATE sessions SET status = 'completed' WHERE id = $1 AND created_by = $2 RETURNING *`,
+        `UPDATE sessions SET status = 'completed', ended_at = now() WHERE id = $1 AND created_by = $2 RETURNING *`,
         [sessionId, userId]
     );
 

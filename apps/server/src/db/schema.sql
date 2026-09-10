@@ -52,6 +52,7 @@ create table sessions (
     scheduled_at timestamptz,
     duration_minutes integer,
     started_at timestamptz,
+    ended_at timestamptz,
     expires_at timestamptz,
     created_at timestamptz not null default now()
 );

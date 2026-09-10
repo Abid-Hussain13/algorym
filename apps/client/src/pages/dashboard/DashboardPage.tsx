@@ -5,25 +5,28 @@ import { MonthlyEvaluation } from "@/components/dashboard/evaluation-card";
 
 const statCards = [
     {
-        label: "Total Sessions",
-        value: "24",
+        label: "Session",
+        value: "7",
         icon: "M4 17l6-6-6-6M12 19h8",
-        trend: "+12%",
+        trend: "+3",
         trendDirection: "up" as const,
+        comparison: "up last month",
     },
     {
-        label: "This Month",
-        value: "8",
-        icon: "M18 20V10M12 20V4M6 20v-6",
-        trend: "+20%",
+        label: "Average Duration",
+        value: "45 min",
+        icon: "M12 2v10l4.5 4.5",
+        trend: "+11%",
         trendDirection: "up" as const,
+        comparison: "up last month",
     },
     {
         label: "Completion Rate",
-        value: "87%",
+        value: "83%",
         icon: "M20 6 9 17l-5-5",
-        trend: "+3.2%",
+        trend: "20 out of 25",
         trendDirection: "up" as const,
+        comparison: "",
     },
 ];
 

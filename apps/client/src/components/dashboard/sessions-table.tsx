@@ -61,19 +61,19 @@ export function SessionsTable() {
                                 key={session.id}
                                 className="border-b border-border last:border-0 transition-colors hover:bg-surface"
                             >
-                                <td className="px-5 py-3 font-medium text-fg">{session.title}</td>
-                                <td className="px-5 py-3 text-muted">{session.candidate}</td>
-                                <td className="px-5 py-3 text-muted">{session.date}</td>
-                                <td className="px-5 py-3">
+                                <td className="px-5 py-4 font-medium text-fg">{session.title}</td>
+                                <td className="px-5 py-1 text-muted">{session.candidate}</td>
+                                <td className="px-5 py-1 text-muted">{session.date}</td>
+                                <td className="px-5 py-1">
                                     <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${statusStyles[session.status]}`}>
                                         {statusLabels[session.status]}
                                     </span>
                                 </td>
-                                <td className="px-5 py-3">
+                                <td className="px-4 py-1">
                                     <button
                                         type="button"
                                         onClick={() => navigate(`/app/sessions/${session.id}`)}
-                                        className="grid size-7 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-fg"
+                                        className="grid px-2 py-2 place-items-center rounded-lg text-muted transition-colors hover:text-fg"
                                         aria-label={`Open ${session.title}`}
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4">

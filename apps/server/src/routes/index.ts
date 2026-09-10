@@ -4,6 +4,7 @@ import questionRoute from "./questions.routes.js";
 import sessionRoute from "./session.routes.js";
 import runRoute from "./run.routes.js";
 import evaluationRoute from "./evaluation.routes.js";
+import dashboardRoute from "./dashboard.routes.js";
 
 const router = Router();
 
@@ -12,5 +13,7 @@ router.use("/question", questionRoute);
 router.use("/session", sessionRoute);
 router.use("/run", runRoute);
 router.use('/evaluation', evaluationRoute);
+
+router.use('/dashboard', dashboardRoute)
 
 export default router;
