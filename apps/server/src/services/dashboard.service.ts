@@ -1,30 +1,6 @@
+import { dashboardStatsType } from "@algorym/shared-types";
 import db from "../db/pool.js";
 
-export interface dashboardStatsType {
-    stats: {
-        sessions: number,
-        sessionTrend: number,
-        avgDurationThisMonth: number | null,
-        durationTrend: number | null,
-        completionPercentage: number,
-        thisMonthCompletedSessions: number
-    },
-    sessions: Array<{
-        id: string,
-        title: string,
-        status: string,
-        date: string,
-        candidateEmail: string
-    }>,
-    evaluation: {
-        date: string,
-        totalCandiateRatings: number,
-        buckets: Array<{
-            label: string,
-            count: number
-        }>
-    }
-}
 
 export interface recentSessionType {
     id: string,
@@ -120,7 +96,7 @@ export const getDashboardStats = async (userId: string): Promise<dashboardStatsT
         count: r.count
     }))
 
-    const totalCandiateRatings = formatRating.reduce((sum, r) => sum + r.count, 0);
+    const totalCandidates = formatRating.reduce((sum, r) => sum + r.count, 0);
 
     return {
         stats: {
@@ -144,7 +120,7 @@ export const getDashboardStats = async (userId: string): Promise<dashboardStatsT
             date: new Date().toLocaleDateString("en-US", {
                 month: "long", year: "numeric"
             }),
-            totalCandiateRatings,
+            totalCandidates,
             buckets: formatRating
         }
     }

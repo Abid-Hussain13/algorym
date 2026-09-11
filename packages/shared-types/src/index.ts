@@ -182,3 +182,30 @@ export type WsMessage =
     | { type: 'session_cancelled'; payload: SessionStatePayload }
     | { type: 'join'; payload: Record<string, never> }
     | { type: 'leave'; payload: Record<string, never> };
+
+
+export interface dashboardStatsType {
+    stats: {
+        sessions: number,
+        sessionTrend: number,
+        avgDurationThisMonth: number | null,
+        durationTrend: number | null,
+        completionPercentage: number,
+        thisMonthCompletedSessions: number
+    },
+    sessions: Array<{
+        id: string,
+        title: string,
+        status: SessionStatus,
+        date: string,
+        candidateEmail: string
+    }>,
+    evaluation: {
+        date: string,
+        totalCandidates: number,
+        buckets: Array<{
+            label: string,
+            count: number
+        }>
+    }
+}
