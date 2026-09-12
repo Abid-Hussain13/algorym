@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { SessionsTable } from "@/components/dashboard/sessions-table";
 import { MonthlyEvaluation } from "@/components/dashboard/evaluation-card";
 import { useCallback, useEffect, useState } from "react";
-import { http } from "@/lib";
+import { dashboardApi } from "@/lib/api/endpoints";
 import { toast } from "sonner";
 import type { dashboardStatsType } from "@algorym/shared-types";
 import { Spinner } from "@/components/ui/Spinner";
@@ -16,7 +16,7 @@ export function DashboardPage() {
     const fetchDashboard = useCallback(() => {
         setLoading(true);
         setError(null);
-        http.get<dashboardStatsType>('/api/dashboard/stats')
+        dashboardApi.getStats()
             .then(setData)
             .catch((err) => {
                 const message = err instanceof Error ? err.message : "Failed to load dashboard";

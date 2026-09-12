@@ -3,12 +3,17 @@ import { http } from '@/lib/api/client'
 import type {
     CreateQuestionBody,
     CreateSessionBody,
+    dashboardStatsType,
     JoinSessionBody,
     LoginBody,
+    Pagination,
     Question,
     Session,
     SessionEvaluation,
     SessionEvent,
+    SessionListItem,
+    SessionListParams,
+    SessionListResponse,
     SignupBody,
     User,
 } from '@algorym/shared-types'
@@ -37,12 +42,21 @@ export const questionsApi = {
 }
 
 export const sessionsApi = {
-    list: () => http.get<{ sessions: Session[]; total: number; page: number; limit: number }>('/api/session'),
+    list: (params?: SessionListParams) => {
+        const searchParams = new URLSearchParams()
+        if (params?.search) searchParams.set('search', params.search)
+        if (params?.mode) searchParams.set('mode', params.mode)
+        if (params?.sort_by) searchParams.set('sort_by', params.sort_by)
+        if (params?.page) searchParams.set('page', String(params.page))
+        const query = searchParams.toString()
+        return http.get<SessionListResponse>(`/api/session${query ? `?${query}` : ''}`)
+    },
     get: (id: string) => http.get<{ session: Session }>(`/api/session/${id}`),
     create: (body: CreateSessionBody) => http.post<{ session: Session }>('/api/session', body),
     join: (token: string, body: JoinSessionBody) =>
-        http.post<{ session: Session }>(`/api/session/join`, body, {
-            headers: { 'X-Session-Token': token },
+        http.post<{ session: Session }>(`/api/session/join`, {
+            ...body,
+            access_token: token,
         }),
     update: (id: string, body: Partial<Session>) =>
         http.patch<{ session: Session }>(`/api/session/${id}`, body),
@@ -72,4 +86,8 @@ export const evaluationApi = {
         rating: 'weak' | 'average' | 'strong'
         notes?: string
     }) => http.post<{ result: unknown }>('/api/evaluation', body),
+}
+
+export const dashboardApi = {
+    getStats: () => http.get<dashboardStatsType>('/api/dashboard/stats'),
 }

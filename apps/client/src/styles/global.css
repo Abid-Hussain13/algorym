@@ -29,6 +29,7 @@
 
   --color-success: oklch(0.55 0.15 150);
   --color-warn: oklch(0.62 0.14 66);
+  --color-warning: oklch(0.62 0.14 66);
   --color-danger: oklch(0.56 0.19 22);
   --color-info: oklch(0.55 0.16 250);
   --color-focus: oklch(0.56 0.17 48 / 0.35);
@@ -231,6 +232,7 @@
 
   --color-success: oklch(0.75 0.16 150);
   --color-warn: oklch(0.78 0.15 66);
+  --color-warning: oklch(0.78 0.15 66);
   --color-danger: oklch(0.74 0.17 20);
   --color-info: oklch(0.72 0.13 245);
   --color-focus: oklch(0.82 0.16 55 / 0.4);

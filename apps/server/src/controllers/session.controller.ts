@@ -19,9 +19,16 @@ export const createSession = async (req: Request, res: Response) => {
 export const getAllSessions = async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const params = (req as any).validatedQuery;
-    const result = await service.getAllSessions(userId, params);
+    const result = await service.getSessionsList(userId, params);
 
-    res.json({ success: true, data: { sessions: result.sessions, total: result.total, page: result.page, limit: result.limit }, message: "" });
+    res.json({
+        success: true,
+        data: {
+            sessions: result.sessions,
+            pagination: result.pagination,
+        },
+        message: "",
+    });
 };
 
 export const getSessionById = async (req: Request, res: Response) => {
@@ -79,7 +86,6 @@ export const joinSession = async (req: Request, res: Response) => {
         if (token) {
             const decoded = jwt.verify(token, process.env.JWT_SECRET!) as AuthPayload;
             userId = decoded.id;
-            data.email = decoded.email;
         }
     } catch {
         // token invalid or expired — treat as guest

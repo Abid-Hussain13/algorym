@@ -130,9 +130,41 @@ export interface CreateSessionBody {
 }
 
 export interface JoinSessionBody {
-    email: string;
+    access_token: string;
+    email?: string;
     display_name?: string;
     consent_to_contact: boolean;
+}
+
+export interface SessionListParams {
+    search?: string;
+    mode?: string;
+    sort_by?: string;
+    page?: number;
+}
+
+export interface SessionListItem {
+    id: string;
+    role_context: string | null;
+    mode: string;
+    status: string;
+    created_at: string;
+    candidate_name: string | null;
+    candidate_email: string | null;
+    languages: string[] | null;
+    rating: string | null;
+}
+
+export interface Pagination {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+}
+
+export interface SessionListResponse {
+    sessions: SessionListItem[];
+    pagination: Pagination;
 }
 
 export interface CodeSnapshotPayload {

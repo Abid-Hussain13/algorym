@@ -16,7 +16,7 @@ const statusStyles: Record<Session["status"], string> = {
     completed: "bg-success/10 text-success",
     live: "bg-accent-soft text-accent-text",
     scheduled: "bg-info/10 text-info",
-    cancelled: "bg-warning/10 text-warning",
+    cancelled: "bg-muted/10 text-muted",
     expired: "bg-danger/10 text-danger",
 };
 
@@ -57,49 +57,49 @@ export function SessionsTable({ sessions }: SessionsTableProps) {
                     <p className="text-xs text-muted">Create your first session to get started</p>
                 </div>
             ) : (
-            <div className="overflow-auto">
-                <table className="w-full text-left text-sm">
-                    <thead>
-                        <tr className="border-b border-border">
-                            <th className="px-5 py-2.5 font-medium text-muted">Session</th>
-                            <th className="px-5 py-2.5 font-medium text-muted">Candidate Email</th>
-                            <th className="px-5 py-2.5 font-medium text-muted">Date</th>
-                            <th className="px-5 py-2.5 font-medium text-muted">Status</th>
-                            <th className="w-12 px-5 py-2.5"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {sessions.map((session) => (
-                            <tr
-                                key={session.id}
-                                className="border-b border-border last:border-0 transition-colors hover:bg-surface"
-                            >
-                                <td className="px-5 py-4 font-medium text-fg">{session.title}</td>
-                                <td className="px-5 py-1 text-muted">{session.candidateEmail}</td>
-                                <td className="px-5 py-1 text-muted">{session.date}</td>
-                                <td className="px-5 py-1">
-                                    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${statusStyles[session.status]}`}>
-                                        {statusLabels[session.status]}
-                                    </span>
-                                </td>
-                                <td className="px-4 py-1">
-                                    <button
-                                        type="button"
-                                        onClick={() => navigate(`/app/sessions/${session.id}`)}
-                                        className="grid px-2 py-2 place-items-center rounded-lg text-muted transition-colors hover:text-fg"
-                                        aria-label={`Open ${session.title}`}
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4">
-                                            <path d="M7 7h10v10" />
-                                            <path d="M7 17 17 7" />
-                                        </svg>
-                                    </button>
-                                </td>
+                <div className="overflow-auto">
+                    <table className="w-full text-left text-sm">
+                        <thead>
+                            <tr className="border-b border-border">
+                                <th className="px-5 py-2.5 font-medium text-muted">Session</th>
+                                <th className="px-5 py-2.5 font-medium text-muted">Candidate Email</th>
+                                <th className="px-5 py-2.5 font-medium text-muted">Date</th>
+                                <th className="px-5 py-2.5 font-medium text-muted">Status</th>
+                                <th className="w-12 px-5 py-2.5"></th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            {sessions.map((session) => (
+                                <tr
+                                    key={session.id}
+                                    className="border-b border-border last:border-0 transition-colors hover:bg-surface"
+                                >
+                                    <td className="px-5 py-4 font-medium text-fg">{session.title}</td>
+                                    <td className="px-5 py-1 text-muted">{session.candidateEmail}</td>
+                                    <td className="px-5 py-1 text-muted">{session.date}</td>
+                                    <td className="px-5 py-1">
+                                        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${statusStyles[session.status]}`}>
+                                            {statusLabels[session.status]}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => navigate(`/app/sessions/${session.id}`)}
+                                            className="grid px-2 py-2 place-items-center rounded-lg text-muted transition-colors hover:text-fg"
+                                            aria-label={`Open ${session.title}`}
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4">
+                                                <path d="M7 7h10v10" />
+                                                <path d="M7 17 17 7" />
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
         </div>
     );

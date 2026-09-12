@@ -1,4 +1,4 @@
-import { dashboardStatsType } from "@algorym/shared-types";
+import { dashboardStatsType, SessionStatus } from "@algorym/shared-types";
 import db from "../db/pool.js";
 
 
@@ -110,7 +110,7 @@ export const getDashboardStats = async (userId: string): Promise<dashboardStatsT
         sessions: recentSessions.map((s) => ({
             id: s.id,
             title: s.role_context,
-            status: s.status,
+            status: s.status as SessionStatus,
             date: new Date(s.created_at).toLocaleDateString("en-US", {
                 month: "short", day: "numeric", year: "numeric",
             }),

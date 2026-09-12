@@ -23,5 +23,5 @@ CREATE TABLE IF NOT EXISTS tokens (
 
 CREATE INDEX IF NOT EXISTS idx_tokens_user ON tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_tokens_token ON tokens(token);
-Alter table sessions set column if not exists ended_at timestampz;
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS ended_at timestamptz;
 

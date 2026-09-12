@@ -1,5 +1,5 @@
 import db from "../db/pool.js";
-import { Session, SessionStatus } from "@algorym/shared-types";
+import { Pagination, Session, SessionListItem, SessionListResponse, SessionStatus } from "@algorym/shared-types";
 import { nanoid } from "nanoid";
 import AppError from "../utils/AppError.js";
 import { CreateSessionInput, GetAllSessionsQuery } from "../utils/validation.js";
@@ -13,6 +13,7 @@ interface GetAllSessionsResult {
         totalPages: number;
     };
 }
+
 
 export const createSession = async (userId: string, data: CreateSessionInput): Promise<Session> => {
     const { question_id, mode, role_context, scheduled_at, duration_minutes } = data;
@@ -84,8 +85,8 @@ export const getAllSessions = async (userId: string, params: GetAllSessionsQuery
     }
 
     const whereClause = conditions.join(" AND ");
-    const sortBy = params.sort_by;
-    const order = params.order;
+    const sortBy = params.sort_by === "date_desc" ? "created_at" : params.sort_by === "date_asc" ? "created_at" : "created_at";
+    const order = params.sort_by === "date_asc" ? "ASC" : "DESC";
 
     const countQuery = `SELECT COUNT(*) FROM sessions WHERE ${whereClause}`;
     const dataQuery = `SELECT s.*, EXISTS(
@@ -95,6 +96,96 @@ export const getAllSessions = async (userId: string, params: GetAllSessionsQuery
                       WHERE ${whereClause}
                       ORDER BY ${sortBy} ${order}
                       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+
+    const [countResult, dataResult] = await Promise.all([
+        db.query(countQuery, values),
+        db.query(dataQuery, [...values, limit, offset]),
+    ]);
+
+    const total = parseInt(countResult.rows[0].count, 10);
+
+    return {
+        sessions: dataResult.rows,
+        pagination: {
+            page: params.page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+        },
+    };
+};
+
+export const getSessionsList = async (userId: string, params: GetAllSessionsQuery): Promise<SessionListResponse> => {
+    const limit = 20;
+    const offset = (params.page - 1) * limit;
+
+    const conditions: string[] = ["s.created_by = $1"];
+    const values: (string | number)[] = [userId];
+    let paramIndex = 2;
+
+    if (params.search) {
+        conditions.push(`(
+            s.role_context ILIKE '%' || $${paramIndex} || '%'
+            OR sp.display_name ILIKE '%' || $${paramIndex} || '%'
+            OR sp.email ILIKE '%' || $${paramIndex} || '%'
+        )`);
+        values.push(params.search);
+        paramIndex++;
+    }
+
+    if (params.mode) {
+        conditions.push(`s.mode = $${paramIndex}`);
+        values.push(params.mode);
+        paramIndex++;
+    }
+
+    if (params.status) {
+        conditions.push(`s.status = $${paramIndex}`);
+        values.push(params.status);
+        paramIndex++;
+    }
+
+    const whereClause = conditions.join(" AND ");
+
+    let orderClause: string;
+    switch (params.sort_by) {
+        case "date_asc":
+            orderClause = "s.created_at ASC";
+            break;
+        case "status":
+            orderClause = "s.status ASC";
+            break;
+        case "rating":
+            orderClause = `CASE WHEN se.rating = 'strong' THEN 1
+                             WHEN se.rating = 'average' THEN 2
+                             WHEN se.rating = 'weak' THEN 3
+                             ELSE 4 END ASC`;
+            break;
+        case "date_desc":
+        default:
+            orderClause = "s.created_at DESC";
+            break;
+    }
+
+    const countQuery = `SELECT COUNT(*)
+        FROM sessions s
+        LEFT JOIN session_participants sp ON sp.session_id = s.id AND sp.role = 'guest'
+        WHERE ${whereClause}`;
+
+    const dataQuery = `SELECT
+            s.id, s.role_context, s.mode, s.status, s.created_at,
+            sp.display_name AS candidate_name,
+            sp.email AS candidate_email,
+            q.languages,
+            se.rating
+        FROM sessions s
+        LEFT JOIN session_participants sp ON sp.session_id = s.id AND sp.role = 'guest'
+        LEFT JOIN session_evaluations se ON se.session_id = s.id
+            AND se.evaluated_participant_id = sp.id
+        LEFT JOIN questions q ON q.id = s.question_id
+        WHERE ${whereClause}
+        ORDER BY ${orderClause}
+        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
 
     const [countResult, dataResult] = await Promise.all([
         db.query(countQuery, values),
@@ -243,24 +334,51 @@ export const joinSession = async (data: JoinSessionData, userId?: string): Promi
         throw new AppError("Session is not open for joining", 400);
     }
 
-    let email = data.email;
-    let displayName = data.display_name;
-
+    // Duplicate-join guard: check if this user already participated
     if (userId) {
-        const user = await db.query("SELECT name, email FROM users WHERE id = $1", [userId]);
-        if (user.rows[0]) {
-            if (!email) email = user.rows[0].email;
-            displayName = user.rows[0].name;
+        const existingParticipant = await db.query(
+            "SELECT id FROM session_participants WHERE session_id = $1 AND user_id = $2",
+            [session.id, userId]
+        );
+        if (existingParticipant.rows[0]) {
+            throw new AppError("You have already joined this session", 400);
         }
     }
 
-    if (!email) throw new AppError("Email is required to join a session", 400);
-    if (!displayName) throw new AppError("Name is required to join a session", 400);
+    // Determine role and fill in fields
+    const isHost = userId && session.created_by === userId;
+
+    let email: string;
+    let displayName: string;
+    let role: "host" | "guest";
+    let consent: boolean;
+
+    if (isHost) {
+        // Host: pull info from users table, consent is implicit
+        role = "host";
+        consent = true;
+
+        const user = await db.query("SELECT name, email FROM users WHERE id = $1", [userId]);
+        if (!user.rows[0]) throw new AppError("User not found", 404);
+
+        email = user.rows[0].email;
+        displayName = user.rows[0].name;
+    } else {
+        // Guest: require email + display_name from request body
+        role = "guest";
+        consent = data.consent_to_contact;
+
+        email = data.email ?? "";
+        displayName = data.display_name ?? "";
+
+        if (!email) throw new AppError("Email is required to join a session", 400);
+        if (!displayName) throw new AppError("Name is required to join a session", 400);
+    }
 
     const { rows } = await db.query(
         `INSERT INTO session_participants (session_id, user_id, email, display_name, role, consent_to_contact, consent_timestamp)
-         VALUES ($1, $2, $3, $4, 'guest', $5, now()) RETURNING *`,
-        [session.id, userId || null, email, displayName || null, data.consent_to_contact]
+         VALUES ($1, $2, $3, $4, $5, $6, now()) RETURNING *`,
+        [session.id, userId || null, email, displayName, role, consent]
     );
 
     return { session, participant: rows[0] };

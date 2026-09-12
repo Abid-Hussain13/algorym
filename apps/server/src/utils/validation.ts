@@ -38,10 +38,11 @@ export const createSessionSchema = z.object({
 });
 
 export const getAllSessionsSchema = z.object({
+    search: z.string().optional(),
+    mode: z.enum(["interview", "practice"]).optional(),
     status: z.enum(["scheduled", "live", "completed", "cancelled", "expired"]).optional(),
+    sort_by: z.enum(["date_desc", "date_asc", "status", "rating"]).default("date_desc"),
     page: z.coerce.number().int().min(1).default(1),
-    sort_by: z.enum(["created_at", "scheduled_at", "started_at", "duration_minutes"]).default("created_at"),
-    order: z.enum(["asc", "desc"]).default("desc"),
 });
 
 export const updateSessionSchema = createSessionSchema.partial();
