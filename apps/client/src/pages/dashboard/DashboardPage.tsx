@@ -2,40 +2,18 @@ import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/Button";
 import { SessionsTable } from "@/components/dashboard/sessions-table";
 import { MonthlyEvaluation } from "@/components/dashboard/evaluation-card";
-import { useCallback, useEffect, useState } from "react";
-import { dashboardApi } from "@/lib/api/endpoints";
-import { toast } from "sonner";
-import type { dashboardStatsType } from "@algorym/shared-types";
+import { useDashboardStats } from "@/features/dashboard";
 import { Spinner } from "@/components/ui/Spinner";
 
 export function DashboardPage() {
-    const [data, setData] = useState<dashboardStatsType | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
+    const { data, isLoading, error, refetch } = useDashboardStats();
 
-    const fetchDashboard = useCallback(() => {
-        setLoading(true);
-        setError(null);
-        dashboardApi.getStats()
-            .then(setData)
-            .catch((err) => {
-                const message = err instanceof Error ? err.message : "Failed to load dashboard";
-                setError(message);
-                toast.error(message);
-            })
-            .finally(() => setLoading(false));
-    }, []);
-
-    useEffect(() => {
-        fetchDashboard();
-    }, [fetchDashboard]);
-
-    if (loading) return (
+    if (isLoading) return (
         <div className="flex h-full items-center justify-center">
             <Spinner size="lg" />
         </div>
     );
-    if (!data) return (
+    if (error || !data) return (
         <div className="flex h-full flex-col items-center justify-center gap-4 p-6">
             <div className="grid size-12 place-items-center rounded-full bg-danger/10">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-6 text-danger">
@@ -46,9 +24,9 @@ export function DashboardPage() {
             </div>
             <div className="flex flex-col items-center gap-1 text-center">
                 <p className="text-sm font-medium text-fg">Something went wrong</p>
-                <p className="text-xs text-muted">{error || "Failed to load dashboard data"}</p>
+                <p className="text-xs text-muted">{error?.message || "Failed to load dashboard data"}</p>
             </div>
-            <Button variant="primary" size="sm" onClick={fetchDashboard}>
+            <Button variant="primary" size="sm" onClick={() => refetch()}>
                 Try Again
             </Button>
         </div>

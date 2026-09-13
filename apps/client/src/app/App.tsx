@@ -2,11 +2,13 @@ import { useEffect } from 'react'
 import { Provider } from 'react-redux'
 import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from 'sonner'
+import { QueryClientProvider } from '@tanstack/react-query'
 
 import { AppRouter } from './router'
 import { ScrollToTop } from './ScrollToTop'
 import { store, useAppDispatch, loadMeThunk } from '@/stores'
 import { useTheme } from '@/hooks/use-theme'
+import { queryClient } from '@/lib/query-client'
 
 function AuthLoader() {
     const dispatch = useAppDispatch()
@@ -23,16 +25,20 @@ function ThemeApplier() {
     return null
 }
 
+
 export function App() {
     return (
-        <Provider store={store}>
-            <BrowserRouter>
-                <ThemeApplier />
-                <AuthLoader />
-                <ScrollToTop />
-                <AppRouter />
-                <Toaster position="top-right" richColors />
-            </BrowserRouter>
-        </Provider>
+        <QueryClientProvider client={queryClient}>
+            <Provider store={store}>
+                <BrowserRouter>
+                    <ThemeApplier />
+                    <AuthLoader />
+                    <ScrollToTop />
+                    <AppRouter />
+                    <Toaster position="top-right" richColors />
+                </BrowserRouter>
+            </Provider>
+        </QueryClientProvider >
+
     )
 }

@@ -1,31 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { sessionsApi } from '@/lib/api/endpoints'
+import type { SessionListParams } from '@algorym/shared-types'
 
-import { sessionsApi } from '@/lib/api'
-
-import type { Session } from '@algorym/shared-types'
-
-export function useSessions() {
-  const [sessions, setSessions] = useState<Session[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    sessionsApi
-      .list()
-      .then((data) => {
-        if (!cancelled) setSessions(data.sessions)
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load sessions')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  return { sessions, loading, error }
+export function useSessions(params: SessionListParams) {
+    return useQuery({
+        queryKey: ['sessions', params],
+        queryFn: () => sessionsApi.list(params),
+    })
 }

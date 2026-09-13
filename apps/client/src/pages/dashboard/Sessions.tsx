@@ -1,14 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { sessionsApi } from "@/lib/api/endpoints";
 import { Button } from "@/components/ui/Button";
 import { Dropdown } from "@/components/ui/dropdown";
 import { Spinner } from "@/components/ui/Spinner";
-import type {
-    SessionListItem,
-    SessionListParams,
-} from "@algorym/shared-types";
+import { useSessions, useDeleteSession } from "@/features/sessions";
 
 const SORT_OPTIONS = [
     { value: "date_desc", label: "Newest First" },
@@ -59,69 +55,40 @@ const MODE_BADGES: Record<string, string> = {
 export function Sessions() {
     const navigate = useNavigate();
 
-    const [sessions, setSessions] = useState<SessionListItem[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [pagination, setPagination] = useState({
-        page: 1,
-        limit: 20,
-        total: 0,
-        totalPages: 1,
-    });
-
     const [search, setSearch] = useState("");
     const [mode, setMode] = useState("");
     const [sortBy, setSortBy] = useState("date_desc");
     const [page, setPage] = useState(1);
+    const [appliedFilters, setAppliedFilters] = useState({
+        search: "",
+        mode: "",
+        sort_by: "date_desc",
+        page: 1,
+    });
 
-    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const { data, isLoading, error } = useSessions(appliedFilters);
+    const deleteSession = useDeleteSession();
 
-    const fetchSessions = useCallback(
-        async (params: SessionListParams) => {
-            setLoading(true);
-            setError(null);
-            try {
-                const result = await sessionsApi.list(params);
-                setSessions(result.sessions);
-                setPagination(result.pagination);
-            } catch (err) {
-                const message =
-                    err instanceof Error ? err.message : "Failed to load sessions";
-                setError(message);
-                toast.error(message);
-            } finally {
-                setLoading(false);
-            }
-        },
-        []
-    );
-
-    useEffect(() => {
-        fetchSessions({ search, mode, sort_by: sortBy, page });
-    }, [fetchSessions, page]);
+    const sessions = data?.sessions ?? [];
+    const pagination = data?.pagination ?? { page: 1, limit: 20, total: 0, totalPages: 1 };
 
     const handleSearch = () => {
         setPage(1);
-        fetchSessions({ search, mode, sort_by: sortBy, page: 1 });
+        setAppliedFilters({ search, mode, sort_by: sortBy, page: 1 });
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Enter") handleSearch();
     };
 
-    const handleDelete = async (id: string) => {
-        setDeletingId(id);
-        try {
-            await sessionsApi.remove(id);
-            setSessions((prev) => prev.filter((s) => s.id !== id));
-            toast.success("Session deleted");
-        } catch (err) {
-            const message =
-                err instanceof Error ? err.message : "Failed to delete session";
-            toast.error(message);
-        } finally {
-            setDeletingId(null);
-        }
+    const handleDelete = (id: string) => {
+        deleteSession.mutate(id, {
+            onSuccess: () => toast.success("Session deleted"),
+            onError: (err) => {
+                const message = err instanceof Error ? err.message : "Failed to delete session";
+                toast.error(message);
+            },
+        });
     };
 
     const formatDate = (dateStr: string) => {
@@ -218,7 +185,7 @@ export function Sessions() {
 
             {/* Content */}
             <div className="flex-1 overflow-hidden rounded-xl border border-border bg-surface-2 shadow-sm">
-                {loading ? (
+                {isLoading ? (
                     <div className="flex h-full min-h-[400px] items-center justify-center">
                         <Spinner size="lg" />
                     </div>
@@ -243,7 +210,7 @@ export function Sessions() {
                         <p className="text-sm font-medium text-fg">
                             Something went wrong
                         </p>
-                        <p className="text-xs text-muted">{error}</p>
+                        <p className="text-xs text-muted">{error.message}</p>
                         <Button variant="primary" size="sm" onClick={handleSearch}>
                             Try Again
                         </Button>
@@ -268,7 +235,7 @@ export function Sessions() {
                         </svg>
                         <p className="text-sm font-medium text-fg">No sessions found</p>
                         <p className="text-xs text-muted">
-                            {search || mode
+                            {appliedFilters.search || appliedFilters.mode
                                 ? "Try adjusting your filters"
                                 : "Create your first session to get started"}
                         </p>
@@ -382,11 +349,11 @@ export function Sessions() {
                                                     <button
                                                         type="button"
                                                         onClick={() => handleDelete(session.id)}
-                                                        disabled={deletingId === session.id}
+                                                        disabled={deleteSession.isPending}
                                                         className="grid size-7 place-items-center rounded-md text-muted transition-colors hover:text-danger disabled:opacity-50"
                                                         aria-label="Delete session"
                                                     >
-                                                        {deletingId === session.id ? (
+                                                        {deleteSession.isPending ? (
                                                             <Spinner size="sm" />
                                                         ) : (
                                                             <svg
@@ -457,11 +424,11 @@ export function Sessions() {
                                             <button
                                                 type="button"
                                                 onClick={() => handleDelete(session.id)}
-                                                disabled={deletingId === session.id}
+                                                disabled={deleteSession.isPending}
                                                 className="grid size-7 place-items-center rounded-md text-muted transition-colors hover:bg-danger/10 hover:text-danger disabled:opacity-50"
                                                 aria-label="Delete session"
                                             >
-                                                {deletingId === session.id ? (
+                                                {deleteSession.isPending ? (
                                                     <Spinner size="sm" />
                                                 ) : (
                                                     <svg

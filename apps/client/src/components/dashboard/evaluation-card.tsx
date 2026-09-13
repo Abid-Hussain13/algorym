@@ -23,12 +23,23 @@ function getColorForRange(label: string): { bg: string; text: string; bar: strin
     return { bg: "bg-border", text: "text-muted", bar: "bg-muted" };
 }
 
+const DEFAULT_BUCKETS: RatingBucket[] = [
+    { label: "Strong", count: 0 },
+    { label: "Average", count: 0 },
+    { label: "Weak", count: 0 },
+];
+
 export function MonthlyEvaluation({
     date,
     totalCandidates,
     buckets,
 }: MonthlyEvaluationProps) {
-    const maxCount = Math.max(...buckets.map((b) => b.count), 1);
+    const mergedBuckets = DEFAULT_BUCKETS.map((def) => {
+        const found = buckets.find((b) => b.label === def.label);
+        return found ?? def;
+    });
+
+    const maxCount = Math.max(...mergedBuckets.map((b) => b.count), 1);
 
     return (
         <div className="flex w-full flex-col gap-4 rounded-xl border border-border bg-surface-2 p-5 shadow-sm">
@@ -43,19 +54,28 @@ export function MonthlyEvaluation({
             </div>
 
             {totalCandidates === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-2 py-6 text-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-8 text-muted">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                    </svg>
-                    <p className="text-sm text-muted">No candidates rated yet</p>
-                    <p className="text-xs text-muted">Complete a session to rate candidates</p>
+                <div className="flex flex-col gap-3">
+                    {mergedBuckets.map((bucket) => {
+                        const colors = getColorForRange(bucket.label);
+                        return (
+                            <div key={bucket.label} className="flex flex-col gap-1.5">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <span className={`inline-flex size-2 rounded-full ${colors.bar}`} />
+                                        <span className="text-xs font-medium text-muted">{bucket.label}</span>
+                                    </div>
+                                    <span className={`text-xs font-semibold tabular-nums ${colors.text}`}>
+                                        0
+                                    </span>
+                                </div>
+                                <div className="h-2 w-full overflow-hidden rounded-full bg-border" />
+                            </div>
+                        );
+                    })}
                 </div>
             ) : (
             <div className="flex flex-col gap-3">
-                {buckets.map((bucket) => {
+                {mergedBuckets.map((bucket) => {
                     const colors = getColorForRange(bucket.label);
                     const pct = (bucket.count / maxCount) * 100;
                     return (
