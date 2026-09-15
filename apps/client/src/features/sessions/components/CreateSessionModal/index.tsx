@@ -102,8 +102,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
         createSession.mutate(body, {
             onSuccess: () => {
                 toast.success("Session created successfully");
-                reset();
-                handleClose(false);
+                setStep(4);
             },
             onError: (err) => {
                 const message = err instanceof Error ? err.message : "Failed to create session";
