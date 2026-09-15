@@ -72,6 +72,7 @@ export const sessionsApi = {
         http.get<{ evaluation: SessionEvaluation }>(`/api/session/${id}/evaluation`),
     events: (id: string) =>
         http.get<{ sessionEvents: SessionEvent[] }>(`/api/session/${id}/events`),
+    scheduledSessions: () => http.get<{ sessions: Array<{ scheduled_at: string; duration_minutes: number | null }> }>('/api/session/scheduled')
 }
 
 export const runApi = {

@@ -7,13 +7,20 @@ import { saveSessionNotes, getSessionEvaluation } from "../services/evaluation.s
 import * as sessionEventService from "../services/session-events.service.js";
 import AppError from "../utils/AppError.js";
 import type { AuthPayload } from "../types/index.js";
+import { ApiResponse } from "@algorym/shared-types";
 
 export const createSession = async (req: Request, res: Response) => {
-    const data = req.body;
-    const userId = req.user!.id;
-    const session = await service.createSession(userId, data);
-
-    res.status(201).json({ success: true, data: { session }, message: "Session created" });
+    try {
+        const data = req.body;
+        const userId = req.user!.id;
+        const session = await service.createSession(userId, data);
+        res.status(201).json({ success: true, data: { session }, message: "Session created" });
+    } catch (err: any) {
+        if (err.statusCode) {
+            return res.status(err.statusCode).json({ success: false, message: err.message, statusCode: err.statusCode });
+        }
+        throw err;
+    }
 };
 
 export const getAllSessions = async (req: Request, res: Response) => {
@@ -155,4 +162,10 @@ export const getSessionEvents = async (req: Request, res: Response) => {
     }));
 
     res.json({ success: true, data: { sessionEvents }, message: "" });
+}
+
+export const scheduledSessions = async (req: Request, res: Response) => {
+    const userId = req.user!.id;
+    const sessions = await service.scheduledSessions(userId);
+    res.json({ success: true, data: { sessions }, message: "" });
 }

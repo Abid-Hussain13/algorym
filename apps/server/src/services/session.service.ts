@@ -27,6 +27,24 @@ export const createSession = async (userId: string, data: CreateSessionInput): P
         startTime = new Date(scheduled_at);
         status = "scheduled";
         startedAt = null;
+
+        const endCheck = duration_minutes
+            ? new Date(startTime.getTime() + duration_minutes * 60000)
+            : new Date(startTime.getTime() + 30 * 60000);
+
+        const overlapCheck = await db.query(
+            `SELECT id FROM sessions
+             WHERE created_by = $1
+               AND status = 'scheduled'
+               AND scheduled_at IS NOT NULL
+               AND scheduled_at < $2
+               AND (scheduled_at + COALESCE(duration_minutes, 30) * interval '1 minute') > $3`,
+            [userId, endCheck.toISOString(), startTime.toISOString()]
+        );
+
+        if (overlapCheck.rows.length > 0) {
+            throw new AppError("You already have a session scheduled during this time", 409);
+        }
     } else {
         startTime = new Date();
         status = "live";
@@ -409,3 +427,8 @@ export const getSessionStatus = async (sessionId: string): Promise<string> => {
     return sessionStatus.rows[0].status;
 }
 
+export const scheduledSessions = async (userId: string) => {
+    const queryString = `SELECT scheduled_at, duration_minutes FROM sessions WHERE created_by = $1 AND status = 'scheduled' AND scheduled_at IS NOT NULL`;
+    const { rows } = await db.query(queryString, [userId]);
+    return rows.map(s => ({ scheduled_at: s.scheduled_at as string, duration_minutes: s.duration_minutes as number | null }));
+}

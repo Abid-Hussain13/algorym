@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { Dropdown } from "@/components/ui/dropdown";
 import { Spinner } from "@/components/ui/Spinner";
-import { useSessions, useDeleteSession } from "@/features/sessions";
+import { useSessions, useDeleteSession, CreateSessionModal } from "@/features/sessions";
 
 const SORT_OPTIONS = [
     { value: "date_desc", label: "Newest First" },
@@ -54,6 +54,7 @@ const MODE_BADGES: Record<string, string> = {
 
 export function Sessions() {
     const navigate = useNavigate();
+    const [createOpen, setCreateOpen] = useState(false);
 
     const [search, setSearch] = useState("");
     const [mode, setMode] = useState("");
@@ -107,7 +108,7 @@ export function Sessions() {
                 <h1 className="font-display text-2xl font-semibold tracking-tight text-fg">
                     Sessions
                 </h1>
-                <Button variant="primary" size="sm" onClick={() => navigate("/app/sessions/new")}>
+                <Button variant="primary" size="sm" onClick={() => setCreateOpen(true)}>
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
@@ -581,6 +582,8 @@ export function Sessions() {
                     </>
                 )}
             </div>
+
+            <CreateSessionModal open={createOpen} onOpenChange={setCreateOpen} />
         </div>
     );
 }

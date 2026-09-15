@@ -49,7 +49,6 @@ export function AppRouter() {
                 <Route path="app/settings" element={<Settings />} />
                 <Route path="app/sessions/:sessionId" element={<SessionDetailPage />} />
             </Route>
-
             <Route path="live" element={<LiveLayout />}>
                 <Route index element={<LiveRoom />} />
                 <Route path=":sessionId" element={<LiveRoomPage />} />

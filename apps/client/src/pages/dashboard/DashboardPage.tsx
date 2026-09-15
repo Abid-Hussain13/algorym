@@ -1,11 +1,12 @@
+import { useState } from "react";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/Button";
-import { SessionsTable } from "@/components/dashboard/sessions-table";
-import { MonthlyEvaluation } from "@/components/dashboard/evaluation-card";
-import { useDashboardStats } from "@/features/dashboard";
+import { SessionsTable, MonthlyEvaluation, useDashboardStats } from "@/features/dashboard";
 import { Spinner } from "@/components/ui/Spinner";
+import { CreateSessionModal } from "@/features/sessions";
 
 export function DashboardPage() {
+    const [createOpen, setCreateOpen] = useState(false);
     const { data, isLoading, error, refetch } = useDashboardStats();
 
     if (isLoading) return (
@@ -42,31 +43,31 @@ export function DashboardPage() {
         trendDirection?: "up" | "down";
         comparison?: string;
     }> = [
-        {
-            label: "Sessions",
-            value: String(stats.sessions),
-            icon: "M4 17l6-6-6-6M12 19h8",
-            trend: stats.sessions > 0 ? (stats.sessionTrend > 0 ? `+${stats.sessionTrend}` : stats.sessionTrend === 0 ? "0" : `${stats.sessionTrend}`) : undefined,
-            trendDirection: stats.sessions > 0 ? (stats.sessionTrend >= 0 ? "up" : "down") : undefined,
-            comparison: "vs. last month",
-        },
-        {
-            label: "Average Duration",
-            value: stats.avgDurationThisMonth ? `${stats.avgDurationThisMonth} min` : "N/A",
-            icon: "M12 2v10l4.5 4.5",
-            trend: stats.durationTrend !== null ? `${stats.durationTrend > 0 ? "+" : ""}${stats.durationTrend}%` : undefined,
-            trendDirection: stats.durationTrend !== null ? (stats.durationTrend >= 0 ? "up" : "down") : undefined,
-            comparison: "vs. last month",
-        },
-        {
-            label: "Completion Rate",
-            value: `${stats.completionPercentage}%`,
-            icon: "M20 6 9 17l-5-5",
-            trend: stats.sessions > 0 ? `${stats.thisMonthCompletedSessions} out of ${stats.sessions}` : undefined,
-            trendDirection: "up",
-            comparison: "",
-        },
-    ];
+            {
+                label: "Sessions",
+                value: String(stats.sessions),
+                icon: "M4 17l6-6-6-6M12 19h8",
+                trend: stats.sessions > 0 ? (stats.sessionTrend > 0 ? `+${stats.sessionTrend}` : stats.sessionTrend === 0 ? "0" : `${stats.sessionTrend}`) : undefined,
+                trendDirection: stats.sessions > 0 ? (stats.sessionTrend >= 0 ? "up" : "down") : undefined,
+                comparison: "vs. last month",
+            },
+            {
+                label: "Average Duration",
+                value: stats.avgDurationThisMonth ? `${stats.avgDurationThisMonth} min` : "N/A",
+                icon: "M12 2v10l4.5 4.5",
+                trend: stats.durationTrend !== null ? `${stats.durationTrend > 0 ? "+" : ""}${stats.durationTrend}%` : undefined,
+                trendDirection: stats.durationTrend !== null ? (stats.durationTrend >= 0 ? "up" : "down") : undefined,
+                comparison: "vs. last month",
+            },
+            {
+                label: "Completion Rate",
+                value: `${stats.completionPercentage}%`,
+                icon: "M20 6 9 17l-5-5",
+                trend: stats.sessions > 0 ? `${stats.thisMonthCompletedSessions} out of ${stats.sessions}` : undefined,
+                trendDirection: "up",
+                comparison: "",
+            },
+        ];
 
     return (
         <div className="flex flex-col gap-6 p-6">
@@ -74,7 +75,7 @@ export function DashboardPage() {
                 <h1 className="font-display text-2xl font-semibold tracking-tight text-fg">
                     Dashboard
                 </h1>
-                <Button variant="primary" size="sm">
+                <Button variant="primary" size="sm" onClick={() => setCreateOpen(true)}>
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
@@ -105,6 +106,8 @@ export function DashboardPage() {
                     <MonthlyEvaluation {...evaluation} />
                 </div>
             </div>
+
+            <CreateSessionModal open={createOpen} onOpenChange={setCreateOpen} />
         </div>
     );
 }

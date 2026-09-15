@@ -1,2 +1,4 @@
 export { useSessions } from './hooks/use-sessions'
-export { useDeleteSession } from './hooks/use-session-mutations'
+export { useCreateSession, useDeleteSession } from './hooks/use-session-mutations'
+export { useScheduledSession } from './hooks/use-scheduled-session'
+export { CreateSessionModal } from './components/CreateSessionModal'

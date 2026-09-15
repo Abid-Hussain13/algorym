@@ -19,6 +19,8 @@ const buttonVariants = cva(
                 sm: 'px-[15px] py-[7px] text-[13px]',
                 md: 'px-5 py-[11px] text-sm',
                 lg: 'px-[26px] py-[13px] text-[15px]',
+                'icon-sm': 'size-7 p-0',
+                icon: 'size-9 p-0',
             },
         },
         defaultVariants: {
@@ -65,3 +67,5 @@ export function Button({
         </Comp>
     )
 }
+
+export { buttonVariants }

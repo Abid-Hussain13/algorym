@@ -230,7 +230,7 @@ export interface dashboardStatsType {
         title: string,
         status: SessionStatus,
         date: string,
-        candidateEmail: string
+        name: string
     }>,
     evaluation: {
         date: string,
@@ -241,3 +241,4 @@ export interface dashboardStatsType {
         }>
     }
 }
+

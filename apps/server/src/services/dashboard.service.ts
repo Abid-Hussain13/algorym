@@ -7,7 +7,7 @@ export interface recentSessionType {
     role_context: string,
     status: string,
     created_at: string,
-    email: string
+    name: string
 }
 export interface monthRatingType {
     rating: string,
@@ -37,7 +37,7 @@ export const getCompletedSessionsInRange = async (userId: string, startDate: str
 }
 
 export const getRecentSessions = async (userId: string): Promise<recentSessionType[]> => {
-    const queryString = `Select s.id, s.role_context, s.status, s.created_at, sp.email from sessions s Left 
+    const queryString = `Select s.id, s.role_context, s.status, s.created_at, sp.display_name AS name from sessions s Left 
                         Join session_participants sp on 
                         sp.session_id = s.id AND sp.role = 'guest' WHERE
                         s.created_by = $1 Order by s.created_at DESC LIMIT 10`;
@@ -114,7 +114,7 @@ export const getDashboardStats = async (userId: string): Promise<dashboardStatsT
             date: new Date(s.created_at).toLocaleDateString("en-US", {
                 month: "short", day: "numeric", year: "numeric",
             }),
-            candidateEmail: s.email
+            name: s.name
         })),
         evaluation: {
             date: new Date().toLocaleDateString("en-US", {

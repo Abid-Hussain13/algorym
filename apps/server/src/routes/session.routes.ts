@@ -3,7 +3,8 @@ import {
     createSession, getAllSessions, getSessionById,
     updateSession, deleteSession, startSession,
     completeSession, cancelSession, joinSession, changeQuestion,
-    saveNotes, getEvaluation
+    saveNotes, getEvaluation,
+    scheduledSessions
 } from "../controllers/session.controller.js";
 import { protect } from "../middlewares/protect.js";
 import { validate, validateQuery } from "../middlewares/validate.js";
@@ -21,6 +22,7 @@ sessionRoute.post("/join", validate(joinSessionSchema), joinSession);
 // CRUD
 sessionRoute.post("/", protect, validate(createSessionSchema), createSession);
 sessionRoute.get("/", protect, validateQuery(getAllSessionsSchema), getAllSessions);
+sessionRoute.get("/scheduled", protect, scheduledSessions);
 sessionRoute.get("/:id", protect, getSessionById);
 sessionRoute.patch("/:id", protect, validate(updateSessionSchema), updateSession);
 sessionRoute.delete("/:id", protect, deleteSession);

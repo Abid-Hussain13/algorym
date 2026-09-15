@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 interface Session {
     id: string;
     title: string;
-    candidateEmail: string;
+    name: string;
     date: string;
     status: 'scheduled' | 'live' | 'completed' | 'cancelled' | 'expired';
 }
@@ -62,7 +62,7 @@ export function SessionsTable({ sessions }: SessionsTableProps) {
                         <thead>
                             <tr className="border-b border-border">
                                 <th className="px-5 py-2.5 font-medium text-muted">Session</th>
-                                <th className="px-5 py-2.5 font-medium text-muted">Candidate Email</th>
+                                <th className="px-5 py-2.5 font-medium text-muted">Candidate</th>
                                 <th className="px-5 py-2.5 font-medium text-muted">Date</th>
                                 <th className="px-5 py-2.5 font-medium text-muted">Status</th>
                                 <th className="w-12 px-5 py-2.5"></th>
@@ -75,7 +75,7 @@ export function SessionsTable({ sessions }: SessionsTableProps) {
                                     className="border-b border-border last:border-0 transition-colors hover:bg-surface"
                                 >
                                     <td className="px-5 py-4 font-medium text-fg">{session.title}</td>
-                                    <td className="px-5 py-1 text-muted">{session.candidateEmail}</td>
+                                    <td className="px-5 py-1 text-muted">{session.name}</td>
                                     <td className="px-5 py-1 text-muted">{session.date}</td>
                                     <td className="px-5 py-1">
                                         <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${statusStyles[session.status]}`}>
