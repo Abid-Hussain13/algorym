@@ -10,6 +10,7 @@ export function useCreateSession() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sessions'] })
             queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+            queryClient.invalidateQueries({ queryKey: ['scheduledSession'] })
         },
     })
 }
@@ -22,6 +23,7 @@ export function useDeleteSession() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sessions'] })
             queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+            queryClient.invalidateQueries({ queryKey: ['scheduledSession'] })
         },
     })
 }
