@@ -8,6 +8,8 @@ import type {
     LoginBody,
     Pagination,
     Question,
+    QuestionListParams,
+    QuestionListResponse,
     Session,
     SessionEvaluation,
     SessionEvent,
@@ -33,7 +35,15 @@ export const authApi = {
 }
 
 export const questionsApi = {
-    list: () => http.get<{ questions: Question[] }>('/api/question'),
+    list: (params?: QuestionListParams) => {
+        const searchParams = new URLSearchParams()
+        if (params?.search) searchParams.set('search', params.search)
+        if (params?.difficulty) searchParams.set('difficulty', params.difficulty)
+        if (params?.sort_by) searchParams.set('sort_by', params.sort_by)
+        if (params?.page) searchParams.set('page', String(params.page))
+        const query = searchParams.toString()
+        return http.get<QuestionListResponse>(`/api/question${query ? `?${query}` : ''}`)
+    },
     get: (id: string) => http.get<{ question: Question }>(`/api/question/${id}`),
     create: (body: CreateQuestionBody) => http.post<{ question: Question }>('/api/question', body),
     update: (id: string, body: CreateQuestionBody) =>

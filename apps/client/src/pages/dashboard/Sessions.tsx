@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { Dropdown } from "@/components/ui/dropdown";
 import { Spinner } from "@/components/ui/Spinner";
-import { useSessions, useDeleteSession, CreateSessionModal } from "@/features/sessions";
+import { useSessions, useDeleteSession, CreateSessionModal, EditSessionModal } from "@/features/sessions";
 
 const SORT_OPTIONS = [
     { value: "date_desc", label: "Newest First" },
@@ -55,6 +55,8 @@ const MODE_BADGES: Record<string, string> = {
 export function Sessions() {
     const navigate = useNavigate();
     const [createOpen, setCreateOpen] = useState(false);
+    const [editOpen, setEditOpen] = useState(false);
+    const [editSessionId, setEditSessionId] = useState<string | null>(null);
 
     const [search, setSearch] = useState("");
     const [mode, setMode] = useState("");
@@ -90,6 +92,11 @@ export function Sessions() {
                 toast.error(message);
             },
         });
+    };
+
+    const handleEdit = (id: string) => {
+        setEditSessionId(id);
+        setEditOpen(true);
     };
 
     const formatDate = (dateStr: string) => {
@@ -330,7 +337,7 @@ export function Sessions() {
                                                         onClick={() =>
                                                             navigate(`/app/sessions/${session.id}`)
                                                         }
-                                                        className="grid size-7 place-items-center rounded-md text-muted transition-colors hover:text-fg"
+                                                        className="grid size-6 place-items-center rounded text-muted transition-colors hover:text-fg"
                                                         aria-label="View details"
                                                     >
                                                         <svg
@@ -349,9 +356,29 @@ export function Sessions() {
                                                     </button>
                                                     <button
                                                         type="button"
+                                                        onClick={() => handleEdit(session.id)}
+                                                        className="grid size-6 place-items-center rounded text-muted transition-colors hover:text-fg"
+                                                        aria-label="Edit session"
+                                                    >
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="1.7"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            className="size-3.5"
+                                                        >
+                                                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                                                            <path d="m15 5 4 4" />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        type="button"
                                                         onClick={() => handleDelete(session.id)}
                                                         disabled={deleteSession.isPending}
-                                                        className="grid size-7 place-items-center rounded-md text-muted transition-colors hover:text-danger disabled:opacity-50"
+                                                        className="grid size-6 place-items-center rounded text-muted transition-colors hover:text-danger disabled:opacity-50"
                                                         aria-label="Delete session"
                                                     >
                                                         {deleteSession.isPending ? (
@@ -405,7 +432,7 @@ export function Sessions() {
                                                 onClick={() =>
                                                     navigate(`/app/sessions/${session.id}`)
                                                 }
-                                                className="grid size-7 place-items-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-fg"
+                                                className="grid size-6 place-items-center rounded text-muted transition-colors hover:text-fg"
                                                 aria-label="View details"
                                             >
                                                 <svg
@@ -424,9 +451,29 @@ export function Sessions() {
                                             </button>
                                             <button
                                                 type="button"
+                                                onClick={() => handleEdit(session.id)}
+                                                className="grid size-6 place-items-center rounded text-muted transition-colors hover:text-fg"
+                                                aria-label="Edit session"
+                                            >
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1.7"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    className="size-3.5"
+                                                >
+                                                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                                                    <path d="m15 5 4 4" />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                type="button"
                                                 onClick={() => handleDelete(session.id)}
                                                 disabled={deleteSession.isPending}
-                                                className="grid size-7 place-items-center rounded-md text-muted transition-colors hover:bg-danger/10 hover:text-danger disabled:opacity-50"
+                                                className="grid size-6 place-items-center rounded text-muted transition-colors hover:text-danger disabled:opacity-50"
                                                 aria-label="Delete session"
                                             >
                                                 {deleteSession.isPending ? (
@@ -584,6 +631,14 @@ export function Sessions() {
             </div>
 
             <CreateSessionModal open={createOpen} onOpenChange={setCreateOpen} />
+            <EditSessionModal
+                open={editOpen}
+                sessionId={editSessionId}
+                onOpenChange={(v) => {
+                    setEditOpen(v);
+                    if (!v) setEditSessionId(null);
+                }}
+            />
         </div>
     );
 }

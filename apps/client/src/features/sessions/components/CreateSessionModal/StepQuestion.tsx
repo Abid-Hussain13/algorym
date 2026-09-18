@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils/cn";
 import { Spinner } from "@/components/ui/Spinner";
 import { DIFFICULTY_BADGES } from "@/features/sessions/constants";
+import { AVAILABLE_LANGUAGES, LANGUAGE_COLORS } from "@/features/questions/constants";
 
 interface Question {
     id: string;
@@ -17,6 +18,8 @@ interface StepQuestionProps {
     onSearchChange: (v: string) => void;
     questionId: string | undefined;
     onQuestionSelect: (id: string | undefined) => void;
+    selectedLanguage: string | undefined;
+    onLanguageSelect: (lang: string) => void;
     isLoading: boolean;
 }
 
@@ -27,8 +30,12 @@ export function StepQuestion({
     onSearchChange,
     questionId,
     onQuestionSelect,
+    selectedLanguage,
+    onLanguageSelect,
     isLoading,
 }: StepQuestionProps) {
+    const selectedQuestion = questions.find((q) => q.id === questionId);
+
     return (
         <div className="flex flex-col gap-3">
             <div className="relative">
@@ -76,7 +83,13 @@ export function StepQuestion({
                         <button
                             key={q.id}
                             type="button"
-                            onClick={() => onQuestionSelect(q.id)}
+                            onClick={() => {
+                                onQuestionSelect(q.id);
+                                // Auto-select first language when selecting a question
+                                if (q.languages.length > 0) {
+                                    onLanguageSelect(q.languages[0]);
+                                }
+                            }}
                             className={cn(
                                 "flex items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-all",
                                 questionId === q.id
@@ -106,6 +119,33 @@ export function StepQuestion({
                             </div>
                         </button>
                     ))}
+                </div>
+            )}
+
+            {/* Language picker — shown when a question is selected */}
+            {selectedQuestion && selectedQuestion.languages.length > 0 && (
+                <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3">
+                    <p className="text-xs font-medium text-muted">Select language for this session</p>
+                    <div className="flex flex-wrap gap-2">
+                        {selectedQuestion.languages.map((lang) => {
+                            const langInfo = AVAILABLE_LANGUAGES.find((l) => l.value === lang);
+                            return (
+                                <button
+                                    key={lang}
+                                    type="button"
+                                    onClick={() => onLanguageSelect(lang)}
+                                    className={cn(
+                                        "inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-all border",
+                                        selectedLanguage === lang
+                                            ? `${LANGUAGE_COLORS[lang]} border-current ring-1 ring-current`
+                                            : "border-border bg-surface text-muted hover:border-border-strong"
+                                    )}
+                                >
+                                    {langInfo?.label ?? lang}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
             )}
         </div>

@@ -15,6 +15,20 @@ export function useCreateSession() {
     })
 }
 
+export function useUpdateSession() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({ id, body }: { id: string; body: Partial<CreateSessionBody> }) =>
+            sessionsApi.update(id, body),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['sessions'] })
+            queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+            queryClient.invalidateQueries({ queryKey: ['scheduledSession'] })
+        },
+    })
+}
+
 export function useDeleteSession() {
     const queryClient = useQueryClient()
 

@@ -1,3 +1,7 @@
+import { DIFFICULTY_BADGES } from "@/lib/constants";
+
+export { DIFFICULTY_BADGES };
+
 export const DURATION_OPTIONS = [
     { value: 30, label: "30 min" },
     { value: 45, label: "45 min" },
@@ -18,9 +22,3 @@ export const TIME_SLOTS = Array.from({ length: 48 }, (_, i) => {
     const label = `${h12}:${String(m).padStart(2, "0")} ${period}`;
     return { value, label, period };
 });
-
-export const DIFFICULTY_BADGES: Record<string, string> = {
-    easy: "bg-success/10 text-success",
-    medium: "bg-info/10 text-info",
-    hard: "bg-danger/10 text-danger",
-};

@@ -12,8 +12,7 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { useQuestions } from "@/features/questions";
-import { useCreateSession } from "@/features/sessions";
-import { useScheduleOverlap, useAutoSwitchTime, computeScheduledISO } from "@/features/sessions/hooks/use-schedule-overlap";
+import { useCreateSession, useScheduleOverlap, useAutoSwitchTime, computeScheduledISO } from "@/features/sessions";
 import type { CreateSessionBody } from "@algorym/shared-types";
 import { StepMode } from "./StepMode";
 import { StepQuestion } from "./StepQuestion";
@@ -32,6 +31,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
     const [step, setStep] = useState(0);
     const [mode, setMode] = useState<"interview" | "practice">("interview");
     const [questionId, setQuestionId] = useState<string | undefined>();
+    const [language, setLanguage] = useState<string>("");
     const [duration, setDuration] = useState(60);
     const [scheduledDate, setScheduledDate] = useState<Date | undefined>();
     const [scheduledTime, setScheduledTime] = useState("09:00");
@@ -70,6 +70,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
         setStep(0);
         setMode("interview");
         setQuestionId(undefined);
+        setLanguage("");
         setDuration(60);
         setScheduledDate(undefined);
         setScheduledTime("09:00");
@@ -95,6 +96,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
             mode,
             duration_minutes: duration,
             question_id: questionId,
+            language: language || undefined,
             role_context: roleContext || undefined,
             scheduled_at: scheduledISO,
         };
@@ -110,7 +112,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
                 handleClose(false);
             },
         });
-    }, [mode, duration, questionId, roleContext, scheduledISO, scheduledDate, scheduledTime, createSession, reset, handleClose, isTimeSlotBlocked]);
+    }, [mode, duration, questionId, language, roleContext, scheduledISO, scheduledDate, scheduledTime, createSession, reset, handleClose, isTimeSlotBlocked]);
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
@@ -151,7 +153,18 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
                             questionSearch={questionSearch}
                             onSearchChange={setQuestionSearch}
                             questionId={questionId}
-                            onQuestionSelect={setQuestionId}
+                            onQuestionSelect={(id) => {
+                                setQuestionId(id);
+                                // Reset language when question changes
+                                if (id) {
+                                    const q = questions.find((q) => q.id === id);
+                                    setLanguage(q?.languages[0] ?? "");
+                                } else {
+                                    setLanguage("");
+                                }
+                            }}
+                            selectedLanguage={language}
+                            onLanguageSelect={setLanguage}
                             isLoading={questionsLoading}
                         />
                     )}
@@ -178,6 +191,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
                             duration={duration}
                             roleContext={roleContext}
                             selectedQuestion={selectedQuestion}
+                            language={language}
                             scheduledDate={scheduledDate}
                             scheduledTime={scheduledTime}
                         />

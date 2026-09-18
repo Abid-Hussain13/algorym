@@ -25,12 +25,15 @@ export const createQuestionSchema = z.object({
     description: z.string().min(1, "Description is required"),
     languages: z.array(z.string()).min(1, "At least one language is required"),
     difficulty: z.enum(["easy", "medium", "hard"], { message: "Difficulty must be easy, medium, or hard" }),
-    starter_code: z.string().optional(),
+    starter_code: z.record(z.string(), z.string()).optional(),
 });
+
+export const updateQuestionSchema = createQuestionSchema.partial();
 
 export const createSessionSchema = z.object({
     question_id: z.string().optional(),
     mode: z.enum(["interview", "practice"]),
+    language: z.string().optional(),
     role_context: z.string().optional(),
     scheduled_at: z.iso.datetime({ offset: true }).optional(),
     duration_minutes: z.number().min(10, "Session should be longer than 10 minutes").max(301, "Session should be under 5 hours").optional(),
@@ -54,8 +57,16 @@ export const joinSessionSchema = z.object({
     consent_to_contact: z.boolean(),
 });
 
+export const getAllQuestionsSchema = z.object({
+    search: z.string().optional(),
+    difficulty: z.enum(["easy", "medium", "hard"]).optional(),
+    sort_by: z.enum(["date_desc", "date_asc", "title_desc", "title_asc"]).default("date_desc"),
+    page: z.coerce.number().int().min(1).default(1)
+})
+
 export const changeQuestionSchema = z.object({
     question_id: z.uuid("Invalid question ID format"),
+    language: z.string().min(1, "Language is required"),
 });
 
 export const runCodeSchema = z.object({
@@ -83,3 +94,4 @@ export type CreateSessionInput = z.infer<typeof createSessionSchema>;
 export type GetAllSessionsQuery = z.infer<typeof getAllSessionsSchema>;
 export type RunCodeInput = z.infer<typeof runCodeSchema>;
 export type EvaluatedUserInput = z.infer<typeof evaluatedUserSchema>;
+export type getAllQuestionsQuery = z.infer<typeof getAllQuestionsSchema>;

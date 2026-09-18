@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as questionService from "../services/questions.service.js";
+import { validateQuery } from "../middlewares/validate.js";
 
 export const createQuestion = async (req: Request, res: Response) => {
     const { title, description, languages, difficulty, starter_code } = req.body;
@@ -15,8 +16,18 @@ export const createQuestion = async (req: Request, res: Response) => {
 };
 
 export const getAllQuestions = async (req: Request, res: Response) => {
-    const questions = await questionService.getAllQuestions(req.user!.id);
-    res.json({ success: true, data: { questions }, message: "" });
+    const userId = req.user!.id;
+    const params = (req as any).validatedQuery;
+
+    const data = await questionService.getAllQuestions(userId, params);
+    res.json({
+        success: true,
+        data: {
+            questions: data.questions,
+            pagination: data.pagination
+        },
+        message: ""
+    });
 };
 
 export const getQuestion = async (req: Request, res: Response) => {
@@ -27,7 +38,6 @@ export const getQuestion = async (req: Request, res: Response) => {
 export const updateQuestion = async (req: Request, res: Response) => {
     const { title, description, languages, difficulty, starter_code } = req.body;
     const question = await questionService.updateQuestion(req.params.id as string, req.user!.id, {
-        owner_id: req.user!.id,
         title,
         description,
         languages,

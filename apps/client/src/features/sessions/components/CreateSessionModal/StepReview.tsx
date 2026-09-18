@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { cn } from "@/lib/utils/cn";
 import { DURATION_OPTIONS } from "@/features/sessions/constants";
+import { AVAILABLE_LANGUAGES } from "@/features/questions/constants";
 import { formatTime12 } from "./TimePicker";
 
 interface Question {
@@ -14,6 +15,7 @@ interface StepReviewProps {
     duration: number;
     roleContext: string;
     selectedQuestion: Question | undefined;
+    language: string;
     scheduledDate: Date | undefined;
     scheduledTime: string;
 }
@@ -23,6 +25,7 @@ export function StepReview({
     duration,
     roleContext,
     selectedQuestion,
+    language,
     scheduledDate,
     scheduledTime,
 }: StepReviewProps) {
@@ -71,6 +74,14 @@ export function StepReview({
                             <span className="text-muted">Difficulty</span>
                             <span className={cn("text-xs font-medium px-1.5 py-0.5 rounded", "bg-success/10 text-success")}>
                                 {selectedQuestion.difficulty}
+                            </span>
+                        </div>
+                    )}
+                    {selectedQuestion && language && (
+                        <div className="flex justify-between">
+                            <span className="text-muted">Language</span>
+                            <span className="font-medium text-fg">
+                                {AVAILABLE_LANGUAGES.find((l) => l.value === language)?.label ?? language}
                             </span>
                         </div>
                     )}

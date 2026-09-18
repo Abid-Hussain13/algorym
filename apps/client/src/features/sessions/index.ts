@@ -1,5 +1,7 @@
 export { useSessions } from './hooks/use-sessions'
-export { useCreateSession, useDeleteSession } from './hooks/use-session-mutations'
+export { useCreateSession, useUpdateSession, useDeleteSession } from './hooks/use-session-mutations'
 export { useScheduledSession } from './hooks/use-scheduled-session'
+export { useScheduleOverlap, useAutoSwitchTime, computeScheduledISO } from './hooks/use-schedule-overlap'
 export { CreateSessionModal } from './components/CreateSessionModal'
+export { EditSessionModal } from './components/EditSessionModal'
 export { DURATION_OPTIONS, TIME_SLOTS, DIFFICULTY_BADGES } from './constants'

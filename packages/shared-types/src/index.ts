@@ -26,7 +26,7 @@ export interface Question {
     description: string;
     languages: string[];
     difficulty: DifficultyLevel;
-    starter_code: string | null;
+    starter_code: Record<string, string> | null;
     created_at: string;
 }
 
@@ -38,6 +38,7 @@ export interface Session {
     status: SessionStatus;
     access_token: string;
     role_context: string | null;
+    language: string | null;
     scheduled_at: string | null;
     duration_minutes: number | null;
     started_at: string | null;
@@ -118,13 +119,26 @@ export interface CreateQuestionBody {
     description: string;
     languages: string[];
     difficulty: DifficultyLevel;
-    starter_code?: string;
+    starter_code?: Record<string, string>;
+}
+
+export interface QuestionListParams {
+    search?: string;
+    difficulty?: string;
+    sort_by?: string;
+    page?: number;
+}
+
+export interface QuestionListResponse {
+    questions: Question[];
+    pagination: Pagination;
 }
 
 export interface CreateSessionBody {
     mode: SessionMode;
     duration_minutes?: number;
     question_id?: string;
+    language?: string;
     role_context?: string;
     scheduled_at?: string;
 }
@@ -189,8 +203,9 @@ export interface QuestionChangePayload {
     question_id: string;
     title: string;
     description: string;
-    starter_code: string;
+    starter_code: Record<string, string>;
     languages: string[];
+    language: string;
 }
 
 export interface SessionStatePayload {

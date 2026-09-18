@@ -16,7 +16,7 @@ interface GetAllSessionsResult {
 
 
 export const createSession = async (userId: string, data: CreateSessionInput): Promise<Session> => {
-    const { question_id, mode, role_context, scheduled_at, duration_minutes } = data;
+    const { question_id, mode, role_context, scheduled_at, duration_minutes, language } = data;
     const access_token = nanoid(12);
 
     let startTime: Date;
@@ -56,11 +56,11 @@ export const createSession = async (userId: string, data: CreateSessionInput): P
 
     try {
         await db.query("BEGIN")
-        const queryString = `Insert into sessions(created_by, question_id, mode, access_token, role_context, 
+        const queryString = `Insert into sessions(created_by, question_id, mode, access_token, role_context, language,
                             duration_minutes, scheduled_at, expires_at, status, started_at)
-                            Values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) Returning *;`;
+                            Values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) Returning *;`;
         const { rows } = await db.query(queryString, [userId, question_id || null, mode, access_token,
-            role_context || null, duration_minutes, scheduledAtISO, expiresAt, status, startedAt]);
+            role_context || null, language || null, duration_minutes, scheduledAtISO, expiresAt, status, startedAt]);
 
         const session = rows[0];
 
@@ -244,6 +244,7 @@ export const updateSession = async (userId: string, sessionId: string, data: Par
     }
     const mode = data.mode ?? session.mode;
     const questionId = data.question_id ?? session.question_id;
+    const language = data.language ?? session.language;
     const roleContext = data.role_context ?? session.role_context;
     const scheduledAt = data.scheduled_at ?? session.scheduled_at;
     const durationMinutes = data.duration_minutes ?? session.duration_minutes;
@@ -251,14 +252,15 @@ export const updateSession = async (userId: string, sessionId: string, data: Par
 
     const { rows } = await db.query(
         `UPDATE sessions
-         SET question_id = $1, mode = $2, role_context = $3,
-             scheduled_at = $4, duration_minutes = $5, expires_at = $6
-         WHERE id = $7 AND created_by = $8
+         SET question_id = $1, mode = $2, role_context = $3, language = $4,
+             scheduled_at = $5, duration_minutes = $6, expires_at = $7
+         WHERE id = $8 AND created_by = $9
          RETURNING *`,
         [
             questionId,
             mode,
             roleContext,
+            language,
             scheduledAt,
             durationMinutes,
             expiresAt,
@@ -402,7 +404,7 @@ export const joinSession = async (data: JoinSessionData, userId?: string): Promi
     return { session, participant: rows[0] };
 };
 
-export const changeQuestion = async (userId: string, sessionId: string, questionId: string): Promise<Session> => {
+export const changeQuestion = async (userId: string, sessionId: string, questionId: string, language: string): Promise<Session> => {
     const existing = await db.query(
         "SELECT * FROM sessions WHERE id = $1 AND created_by = $2",
         [sessionId, userId]
@@ -413,8 +415,8 @@ export const changeQuestion = async (userId: string, sessionId: string, question
     if (session.status !== "live") throw new AppError("Can only change question in a live session", 400);
 
     const { rows } = await db.query(
-        `UPDATE sessions SET question_id = $1 WHERE id = $2 AND created_by = $3 RETURNING *`,
-        [questionId, sessionId, userId]
+        `UPDATE sessions SET question_id = $1, language = $2 WHERE id = $3 AND created_by = $4 RETURNING *`,
+        [questionId, language, sessionId, userId]
     );
 
     return rows[0];

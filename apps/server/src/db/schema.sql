@@ -37,7 +37,7 @@ create table questions (
     description text not null,
     languages text[] not null,
     difficulty difficulty_level not null,
-    starter_code text,
+    starter_code jsonb,
     created_at timestamptz not null default now()
 );
 
@@ -49,6 +49,7 @@ create table sessions (
     status session_status not null default 'scheduled',
     access_token text not null unique,
     role_context text,
+    language text,
     scheduled_at timestamptz,
     duration_minutes integer,
     started_at timestamptz,

@@ -7,7 +7,6 @@ import { saveSessionNotes, getSessionEvaluation } from "../services/evaluation.s
 import * as sessionEventService from "../services/session-events.service.js";
 import AppError from "../utils/AppError.js";
 import type { AuthPayload } from "../types/index.js";
-import { ApiResponse } from "@algorym/shared-types";
 
 export const createSession = async (req: Request, res: Response) => {
     try {
@@ -104,17 +103,19 @@ export const joinSession = async (req: Request, res: Response) => {
 };
 
 export const changeQuestion = async (req: Request, res: Response) => {
-    const session = await service.changeQuestion(req.user!.id, req.params.id as string, req.body.question_id);
+    const { question_id, language } = req.body;
+    const session = await service.changeQuestion(req.user!.id, req.params.id as string, question_id, language);
 
-    const question = await getQuestionById(req.body.question_id, req.user!.id);
+    const question = await getQuestionById(question_id, req.user!.id);
 
     const host = await getHostParticipant(session.id, req.user!.id);
     await sessionEventService.logSessionEvent(session.id, host.id, "question_change", {
         question_id: question.id,
         title: question.title,
         description: question.description,
-        starter_code: question.starter_code ?? "",
+        starter_code: question.starter_code ?? {},
         languages: question.languages,
+        language,
     });
 
     res.json({ success: true, data: { session }, message: "Question changed" });
