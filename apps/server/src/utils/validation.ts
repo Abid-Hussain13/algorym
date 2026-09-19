@@ -80,6 +80,10 @@ export const runCodeSchema = z.object({
 });
 
 
+export const reportsQuerySchema = z.object({
+    range: z.enum(["7d", "30d", "90d"]).default("30d"),
+});
+
 export const evaluatedUserSchema = z.object({
     sessionId: z.uuid("Invalid session ID format"),
     participantId: z.uuid("Invalid participant ID format"),
@@ -95,3 +99,4 @@ export type GetAllSessionsQuery = z.infer<typeof getAllSessionsSchema>;
 export type RunCodeInput = z.infer<typeof runCodeSchema>;
 export type EvaluatedUserInput = z.infer<typeof evaluatedUserSchema>;
 export type getAllQuestionsQuery = z.infer<typeof getAllQuestionsSchema>;
+export type ReportsQuery = z.infer<typeof reportsQuerySchema>;

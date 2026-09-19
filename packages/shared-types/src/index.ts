@@ -231,6 +231,38 @@ export type WsMessage =
     | { type: 'leave'; payload: Record<string, never> };
 
 
+export type ReportsRange = '7d' | '30d' | '90d';
+
+export interface ReportsStats {
+    totalSessions: number;
+    avgDurationMinutes: number | null;
+    completionRate: number;
+}
+
+export interface SessionsOverTimePoint {
+    date: string;
+    count: number;
+}
+
+export interface LanguageDistributionItem {
+    language: string;
+    count: number;
+    percentage: number;
+}
+
+export interface EvaluationDistributionItem {
+    rating: EvaluationRating;
+    count: number;
+    percentage: number;
+}
+
+export interface ReportsResponse {
+    stats: ReportsStats;
+    sessionsOverTime: SessionsOverTimePoint[];
+    languageDistribution: LanguageDistributionItem[];
+    evaluationDistribution: EvaluationDistributionItem[];
+}
+
 export interface dashboardStatsType {
     stats: {
         sessions: number,

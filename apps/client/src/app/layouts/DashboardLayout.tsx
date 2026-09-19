@@ -16,7 +16,7 @@ import {
     AnimatedSidebarRail,
     AnimatedSidebarTrigger,
 } from "@/components/motion/animated-sidebar";
-import { selectUser, logoutThunk } from "@/stores/auth-slice";
+import { selectUser, selectAuthStatus, logoutThunk } from "@/stores/auth-slice";
 import type { AppDispatch } from "@/stores/store";
 
 const navIcons: Record<string, string> = {
@@ -49,6 +49,7 @@ export function DashboardLayout() {
     const location = useLocation();
     const navigate = useNavigate();
     const user = useSelector(selectUser);
+    const authStatus = useSelector(selectAuthStatus);
     const dispatch = useDispatch<AppDispatch>();
     const [sidebarOpen, setSidebarOpen] = useState(() => {
         const stored = localStorage.getItem("sidebar-open");
@@ -80,7 +81,17 @@ export function DashboardLayout() {
             .find((item) => location.pathname.startsWith(item.to))?.id ?? "dashboard";
 
     const userName = user?.name ?? "User";
-    if (userName === "User") navigate('/');
+    if (authStatus === "unauthenticated") navigate('/');
+
+    if (authStatus === "loading" || authStatus === "idle") {
+        return (
+            <div className="flex h-svh w-full items-center justify-center bg-bg">
+                <div className="size-8 animate-spin rounded-full border-2 border-border border-t-accent" />
+            </div>
+        );
+    }
+
+    if (!user) return null;
     const initials = userName
         .split(" ")
         .map((w) => w[0])

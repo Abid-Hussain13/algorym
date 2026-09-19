@@ -5,6 +5,7 @@ import sessionRoute from "./session.routes.js";
 import runRoute from "./run.routes.js";
 import evaluationRoute from "./evaluation.routes.js";
 import dashboardRoute from "./dashboard.routes.js";
+import reportsRoute from "./reports.routes.js";
 
 const router = Router();
 
@@ -15,5 +16,6 @@ router.use("/run", runRoute);
 router.use('/evaluation', evaluationRoute);
 
 router.use('/dashboard', dashboardRoute)
+router.use('/reports', reportsRoute)
 
 export default router;

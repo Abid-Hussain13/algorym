@@ -6,14 +6,14 @@ import type {
     dashboardStatsType,
     JoinSessionBody,
     LoginBody,
-    Pagination,
     Question,
     QuestionListParams,
     QuestionListResponse,
+    ReportsRange,
+    ReportsResponse,
     Session,
     SessionEvaluation,
     SessionEvent,
-    SessionListItem,
     SessionListParams,
     SessionListResponse,
     SignupBody,
@@ -101,4 +101,8 @@ export const evaluationApi = {
 
 export const dashboardApi = {
     getStats: () => http.get<dashboardStatsType>('/api/dashboard/stats'),
+}
+
+export const reportsApi = {
+    get: (range: ReportsRange) => http.get<ReportsResponse>(`/api/reports?range=${range}`),
 }
