@@ -8,7 +8,6 @@ import {
     DialogHeader,
     DialogTitle,
     DialogDescription,
-    DialogFooter,
 } from "@/components/ui/dialog"
 import { useDeleteAccount } from "@/features/user"
 
@@ -49,8 +48,8 @@ export function DeleteAccountModal({ open, onOpenChange }: DeleteAccountModalPro
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
-            <DialogContent>
-                <DialogHeader>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader className="px-6 pt-6 pb-0">
                     <DialogTitle className="text-danger">Delete Account</DialogTitle>
                     <DialogDescription>
                         This permanently deletes your account and all associated data including
@@ -72,7 +71,7 @@ export function DeleteAccountModal({ open, onOpenChange }: DeleteAccountModalPro
                     />
                 </div>
 
-                <DialogFooter>
+                <div className="flex justify-end gap-2 px-6 pb-6">
                     <Button variant="ghost" size="sm" onClick={handleClose}>
                         Cancel
                     </Button>
@@ -86,7 +85,7 @@ export function DeleteAccountModal({ open, onOpenChange }: DeleteAccountModalPro
                     >
                         Delete Account
                     </Button>
-                </DialogFooter>
+                </div>
             </DialogContent>
         </Dialog>
     )

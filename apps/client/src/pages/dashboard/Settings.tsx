@@ -106,7 +106,7 @@ export function Settings() {
     }
 
     return (
-        <div className="flex flex-col gap-6 p-6 max-w-2xl">
+        <div className="flex flex-col gap-6 p-6 max-w-2xl mx-auto">
             <h1 className="font-display text-2xl font-semibold tracking-tight text-fg">
                 Settings
             </h1>

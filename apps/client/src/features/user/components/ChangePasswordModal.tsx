@@ -7,7 +7,6 @@ import {
     DialogHeader,
     DialogTitle,
     DialogDescription,
-    DialogFooter,
 } from "@/components/ui/dialog"
 import { useChangePassword } from "@/features/user"
 
@@ -70,8 +69,8 @@ export function ChangePasswordModal({ open, onOpenChange }: ChangePasswordModalP
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
-            <DialogContent>
-                <DialogHeader>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader className="px-6 pt-6 pb-0">
                     <DialogTitle>Change Password</DialogTitle>
                     <DialogDescription>
                         Enter your current password and choose a new one.
@@ -125,7 +124,7 @@ export function ChangePasswordModal({ open, onOpenChange }: ChangePasswordModalP
                     </div>
                 </div>
 
-                <DialogFooter>
+                <div className="flex justify-end gap-2 px-6 pb-6">
                     <Button variant="ghost" size="sm" onClick={handleClose}>
                         Cancel
                     </Button>
@@ -137,7 +136,7 @@ export function ChangePasswordModal({ open, onOpenChange }: ChangePasswordModalP
                     >
                         Save
                     </Button>
-                </DialogFooter>
+                </div>
             </DialogContent>
         </Dialog>
     )
