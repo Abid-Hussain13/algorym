@@ -106,7 +106,7 @@ export function Settings() {
     }
 
     return (
-        <div className="flex flex-col gap-6 p-6 max-w-2xl mx-auto">
+        <div className="flex flex-col gap-6 p-6 max-w-2xl">
             <h1 className="font-display text-2xl font-semibold tracking-tight text-fg">
                 Settings
             </h1>
@@ -143,7 +143,7 @@ export function Settings() {
                                 readOnly
                                 className="flex-1 rounded-lg border border-border bg-inset px-3 py-2 text-sm text-fg cursor-not-allowed opacity-70"
                             />
-                            <Button variant="default" size="sm" onClick={() => setPasswordOpen(true)}>
+                            <Button variant="primary" size="sm" onClick={() => setPasswordOpen(true)}>
                                 Change
                             </Button>
                         </div>
@@ -211,18 +211,26 @@ export function Settings() {
 
             {/* Account */}
             <SectionCard title="Account">
-                <Button variant="ghost" size="sm" onClick={handleSignOut} className="self-start text-muted hover:text-danger">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                        <polyline points="16 17 21 12 16 7" />
-                        <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                    Sign Out
-                </Button>
+                <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex flex-col gap-1">
+                            <span className="text-sm text-muted">Sign out of your account on this device.</span>
+                            <span className="text-xs text-faint">You will need to sign in again to access your account.</span>
+                        </div>
+                        <Button variant="primary" size="sm" onClick={handleSignOut} className="shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-4">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                <polyline points="16 17 21 12 16 7" />
+                                <line x1="21" y1="12" x2="9" y2="12" />
+                            </svg>
+                            Sign Out
+                        </Button>
+                    </div>
+                </div>
             </SectionCard>
 
             {/* Danger Zone */}
-            <div className="flex flex-col gap-4 rounded-xl border border-danger/30 bg-danger/5 p-5">
+            <div className="flex items-center justify-between gap-4 rounded-xl border border-danger/30 bg-danger/5 p-5">
                 <div className="flex flex-col gap-1">
                     <h2 className="text-sm font-semibold text-danger">Danger Zone</h2>
                     <p className="text-xs text-muted leading-relaxed">
@@ -234,7 +242,7 @@ export function Settings() {
                     variant="default"
                     size="sm"
                     onClick={() => setDeleteOpen(true)}
-                    className="self-start border-danger/30 text-danger hover:bg-danger/10 hover:border-danger/50"
+                    className="shrink-0 border-danger/30 text-danger hover:bg-danger/10 hover:border-danger/50"
                 >
                     Delete Account
                 </Button>
