@@ -1,3 +1,7 @@
 export { useUserPreferences, useUpdatePreferences, useChangePassword, useDeleteAccount } from './hooks/use-user'
 export { ChangePasswordModal } from './components/ChangePasswordModal'
 export { DeleteAccountModal } from './components/DeleteAccountModal'
+export { ProfileSection } from './components/ProfileSection'
+export { PreferencesSection } from './components/PreferencesSection'
+export { AccountSection } from './components/AccountSection'
+export { DangerZoneSection } from './components/DangerZoneSection'
