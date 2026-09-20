@@ -85,10 +85,6 @@ export function StepQuestion({
                             type="button"
                             onClick={() => {
                                 onQuestionSelect(q.id);
-                                // Auto-select first language when selecting a question
-                                if (q.languages.length > 0) {
-                                    onLanguageSelect(q.languages[0]);
-                                }
                             }}
                             className={cn(
                                 "flex items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-all",

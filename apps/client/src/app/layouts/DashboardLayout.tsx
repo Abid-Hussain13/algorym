@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import {
     AnimatedSidebar,
     AnimatedSidebarContent,
@@ -16,8 +16,7 @@ import {
     AnimatedSidebarRail,
     AnimatedSidebarTrigger,
 } from "@/components/motion/animated-sidebar";
-import { selectUser, selectAuthStatus, logoutThunk } from "@/stores/auth-slice";
-import type { AppDispatch } from "@/stores/store";
+import { selectUser, selectAuthStatus } from "@/stores/auth-slice";
 
 const navIcons: Record<string, string> = {
     grid: "M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z",
@@ -50,7 +49,6 @@ export function DashboardLayout() {
     const navigate = useNavigate();
     const user = useSelector(selectUser);
     const authStatus = useSelector(selectAuthStatus);
-    const dispatch = useDispatch<AppDispatch>();
     const [sidebarOpen, setSidebarOpen] = useState(() => {
         const stored = localStorage.getItem("sidebar-open");
         return stored !== null ? stored === "true" : true;
@@ -186,7 +184,7 @@ export function DashboardLayout() {
                             <div className="flex items-center gap-2">
                                 <button
                                     type="button"
-                                    onClick={() => dispatch(logoutThunk())}
+                                    onClick={() => navigate("/dashboard/settings")}
                                     className="flex min-h-11 flex-1 items-center gap-3 overflow-hidden rounded-xl p-1 text-left outline-none transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent"
                                 >
                                     <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-soft text-xs font-semibold uppercase text-accent-text">
@@ -211,7 +209,7 @@ export function DashboardLayout() {
                         ) : (
                             <button
                                 type="button"
-                                onClick={() => dispatch(logoutThunk())}
+                                onClick={() => navigate("/dashboard/settings")}
                                 className="flex w-full items-center justify-center rounded-xl p-1 outline-none transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent"
                             >
                                 <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-soft text-xs font-semibold uppercase text-accent-text">

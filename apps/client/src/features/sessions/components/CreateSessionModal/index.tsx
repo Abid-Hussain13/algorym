@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils/cn";
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { useQuestions } from "@/features/questions";
 import { useCreateSession, useScheduleOverlap, useAutoSwitchTime, computeScheduledISO } from "@/features/sessions";
+import { useUserPreferences } from "@/features/user";
 import type { CreateSessionBody } from "@algorym/shared-types";
 import { StepMode } from "./StepMode";
 import { StepQuestion } from "./StepQuestion";
@@ -39,10 +40,18 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
     const [questionSearch, setQuestionSearch] = useState("");
 
     const { data: questionsData, isLoading: questionsLoading } = useQuestions();
+    const { data: prefs } = useUserPreferences();
     const { scheduledDates, isTimeSlotBlocked } = useScheduleOverlap();
     const createSession = useCreateSession();
 
     useAutoSwitchTime(scheduledDate, duration, scheduledTime, setScheduledTime, isTimeSlotBlocked);
+
+    // Set default duration from user preferences when modal opens
+    useEffect(() => {
+        if (open && prefs?.default_duration_minutes) {
+            setDuration(prefs.default_duration_minutes);
+        }
+    }, [open, prefs?.default_duration_minutes]);
 
     const questions = questionsData?.questions ?? [];
 
@@ -155,10 +164,18 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
                             questionId={questionId}
                             onQuestionSelect={(id) => {
                                 setQuestionId(id);
-                                // Reset language when question changes
                                 if (id) {
                                     const q = questions.find((q) => q.id === id);
-                                    setLanguage(q?.languages[0] ?? "");
+                                    if (q && q.languages.length > 0) {
+                                        const preferred = prefs?.default_language;
+                                        setLanguage(
+                                            preferred && q.languages.includes(preferred)
+                                                ? preferred
+                                                : q.languages[0]
+                                        );
+                                    } else {
+                                        setLanguage("");
+                                    }
                                 } else {
                                     setLanguage("");
                                 }

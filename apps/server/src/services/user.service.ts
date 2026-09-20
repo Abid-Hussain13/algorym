@@ -36,7 +36,7 @@ export const getPreferences = async (userId: string): Promise<UserPreferences> =
 
 export const upsertPreferences = async (
     userId: string,
-    prefs: { theme?: string; default_language?: string; default_duration_minutes?: number }
+    prefs: { theme?: string; default_language?: string | null; default_duration_minutes?: number | null }
 ): Promise<UserPreferences> => {
     const existing = await getPreferences(userId);
 

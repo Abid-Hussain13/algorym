@@ -108,8 +108,8 @@ export const changePasswordSchema = z.object({
 
 export const updatePreferencesSchema = z.object({
     theme: z.enum(["light", "dark", "system"]).optional(),
-    default_language: z.string().optional(),
-    default_duration_minutes: z.number().min(10).max(301).optional(),
+    default_language: z.string().nullable().optional(),
+    default_duration_minutes: z.number().min(10).max(301).nullable().optional(),
 });
 
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;

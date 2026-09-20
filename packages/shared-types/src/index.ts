@@ -299,8 +299,8 @@ export interface UserPreferences {
 
 export interface UpdatePreferencesBody {
     theme?: ThemePreference;
-    default_language?: string;
-    default_duration_minutes?: number;
+    default_language?: string | null;
+    default_duration_minutes?: number | null;
 }
 
 export interface ChangePasswordBody {

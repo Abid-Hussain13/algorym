@@ -8,6 +8,8 @@ import { useAuth } from "@/features/auth"
 import { useTheme } from "@/hooks/use-theme"
 import { logoutThunk } from "@/stores/auth-slice"
 import type { AppDispatch } from "@/stores/store"
+import { AVAILABLE_LANGUAGES } from "@/features/questions/constants"
+import { DURATION_OPTIONS } from "@/features/sessions/constants"
 import {
     useUserPreferences,
     useUpdatePreferences,
@@ -20,22 +22,6 @@ const THEME_OPTIONS: Array<{ value: ThemePreference; label: string }> = [
     { value: "light", label: "Light" },
     { value: "dark", label: "Dark" },
     { value: "system", label: "System" },
-]
-
-const DURATION_OPTIONS = [
-    { value: 30, label: "30 min" },
-    { value: 45, label: "45 min" },
-    { value: 60, label: "60 min" },
-    { value: 90, label: "90 min" },
-    { value: 120, label: "2 hours" },
-]
-
-const LANGUAGE_OPTIONS = [
-    { value: "python", label: "Python" },
-    { value: "javascript", label: "JavaScript" },
-    { value: "java", label: "Java" },
-    { value: "cpp", label: "C++" },
-    { value: "go", label: "Go" },
 ]
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
@@ -81,7 +67,7 @@ export function Settings() {
 
     const handleLanguageChange = (language: string) => {
         updatePrefs.mutate(
-            { default_language: language || undefined },
+            { default_language: language || null },
             { onSuccess: () => toast.success("Default language updated") }
         )
     }
@@ -106,7 +92,7 @@ export function Settings() {
     }
 
     return (
-        <div className="flex flex-col gap-6 p-6 max-w-2xl">
+        <div className="flex flex-col gap-6 p-6">
             <h1 className="font-display text-2xl font-semibold tracking-tight text-fg">
                 Settings
             </h1>
@@ -182,7 +168,7 @@ export function Settings() {
                             className="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm text-fg outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent/30 cursor-pointer"
                         >
                             <option value="">None</option>
-                            {LANGUAGE_OPTIONS.map((opt) => (
+                            {AVAILABLE_LANGUAGES.map((opt) => (
                                 <option key={opt.value} value={opt.value}>
                                     {opt.label}
                                 </option>
@@ -194,11 +180,10 @@ export function Settings() {
 
                     <FieldRow label="Default Duration">
                         <select
-                            value={prefs?.default_duration_minutes ?? ""}
+                            value={prefs?.default_duration_minutes ?? 60}
                             onChange={(e) => handleDurationChange(Number(e.target.value))}
                             className="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-sm text-fg outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent/30 cursor-pointer"
                         >
-                            <option value="">None</option>
                             {DURATION_OPTIONS.map((opt) => (
                                 <option key={opt.value} value={opt.value}>
                                     {opt.label}
