@@ -100,3 +100,17 @@ export type RunCodeInput = z.infer<typeof runCodeSchema>;
 export type EvaluatedUserInput = z.infer<typeof evaluatedUserSchema>;
 export type getAllQuestionsQuery = z.infer<typeof getAllQuestionsSchema>;
 export type ReportsQuery = z.infer<typeof reportsQuerySchema>;
+
+export const changePasswordSchema = z.object({
+    current_password: z.string().min(1, "Current password is required"),
+    new_password: z.string().min(8, "New password must be at least 8 characters"),
+});
+
+export const updatePreferencesSchema = z.object({
+    theme: z.enum(["light", "dark", "system"]).optional(),
+    default_language: z.string().optional(),
+    default_duration_minutes: z.number().min(10).max(301).optional(),
+});
+
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;

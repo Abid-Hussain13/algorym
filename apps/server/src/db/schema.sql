@@ -94,3 +94,12 @@ create index idx_participants_session on session_participants(session_id);
 create index idx_events_session on session_events(session_id);
 create unique index idx_evaluations_session_candidate
     on session_evaluations(session_id, evaluated_participant_id);
+
+create table user_preferences (
+    user_id uuid primary key references users(id) on delete cascade,
+    theme text not null default 'system',
+    default_language text,
+    default_duration_minutes integer,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+);

@@ -1,6 +1,7 @@
 import { http } from '@/lib/api/client'
 
 import type {
+    ChangePasswordBody,
     CreateQuestionBody,
     CreateSessionBody,
     dashboardStatsType,
@@ -17,7 +18,9 @@ import type {
     SessionListParams,
     SessionListResponse,
     SignupBody,
+    UpdatePreferencesBody,
     User,
+    UserPreferences,
 } from '@algorym/shared-types'
 
 type UserSafe = Omit<User, 'password_hash'>
@@ -105,4 +108,11 @@ export const dashboardApi = {
 
 export const reportsApi = {
     get: (range: ReportsRange) => http.get<ReportsResponse>(`/api/reports?range=${range}`),
+}
+
+export const userApi = {
+    changePassword: (body: ChangePasswordBody) => http.patch<null>('/api/user/password', body),
+    getPreferences: () => http.get<UserPreferences>('/api/user/preferences'),
+    updatePreferences: (body: UpdatePreferencesBody) => http.put<UserPreferences>('/api/user/preferences', body),
+    deleteAccount: () => http.delete<null>('/api/user'),
 }

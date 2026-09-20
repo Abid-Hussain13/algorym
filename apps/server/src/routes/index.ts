@@ -6,6 +6,7 @@ import runRoute from "./run.routes.js";
 import evaluationRoute from "./evaluation.routes.js";
 import dashboardRoute from "./dashboard.routes.js";
 import reportsRoute from "./reports.routes.js";
+import userRoute from "./user.routes.js";
 
 const router = Router();
 
@@ -17,5 +18,6 @@ router.use('/evaluation', evaluationRoute);
 
 router.use('/dashboard', dashboardRoute)
 router.use('/reports', reportsRoute)
+router.use('/user', userRoute)
 
 export default router;

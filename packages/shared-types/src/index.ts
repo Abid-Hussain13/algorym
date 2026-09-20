@@ -289,3 +289,22 @@ export interface dashboardStatsType {
     }
 }
 
+export type ThemePreference = 'light' | 'dark' | 'system';
+
+export interface UserPreferences {
+    theme: ThemePreference;
+    default_language: string | null;
+    default_duration_minutes: number | null;
+}
+
+export interface UpdatePreferencesBody {
+    theme?: ThemePreference;
+    default_language?: string;
+    default_duration_minutes?: number;
+}
+
+export interface ChangePasswordBody {
+    current_password: string;
+    new_password: string;
+}
+
