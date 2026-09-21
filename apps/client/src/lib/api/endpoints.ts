@@ -5,6 +5,8 @@ import type {
     CreateQuestionBody,
     CreateSessionBody,
     dashboardStatsType,
+    GenerateQuestionBody,
+    GenerateQuestionResponse,
     JoinSessionBody,
     LoginBody,
     Question,
@@ -52,6 +54,8 @@ export const questionsApi = {
     update: (id: string, body: CreateQuestionBody) =>
         http.put<{ question: Question }>(`/api/question/${id}`, body),
     remove: (id: string) => http.delete<void>(`/api/question/${id}`),
+    generate: (body: GenerateQuestionBody) =>
+        http.post<GenerateQuestionResponse>('/api/question/generate', body),
 }
 
 export const sessionsApi = {

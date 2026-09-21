@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { questionsApi } from '@/lib/api/endpoints'
-import type { CreateQuestionBody } from '@algorym/shared-types'
+import type { CreateQuestionBody, GenerateQuestionBody } from '@algorym/shared-types'
 
 export function useCreateQuestion() {
     const queryClient = useQueryClient()
@@ -33,5 +33,11 @@ export function useDeleteQuestion() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['questions'] })
         },
+    })
+}
+
+export function useGenerateQuestion() {
+    return useMutation({
+        mutationFn: (body: GenerateQuestionBody) => questionsApi.generate(body),
     })
 }

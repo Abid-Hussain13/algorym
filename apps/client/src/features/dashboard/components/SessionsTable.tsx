@@ -74,8 +74,8 @@ export function SessionsTable({ sessions }: SessionsTableProps) {
                                     key={session.id}
                                     className="border-b border-border last:border-0 transition-colors hover:bg-surface"
                                 >
-                                    <td className="px-5 py-4 font-medium text-fg">{session.title}</td>
-                                    <td className="px-5 py-1 text-muted">{session.name}</td>
+                                    <td className="px-5 py-4 font-medium text-fg">{session.title || "Session"}</td>
+                                    <td className="px-5 py-1 text-muted">{session.name || "—"}</td>
                                     <td className="px-5 py-1 text-muted">{session.date}</td>
                                     <td className="px-5 py-1">
                                         <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${statusStyles[session.status]}`}>

@@ -1,5 +1,5 @@
 export { useQuestions } from './hooks/use-questions'
-export { useCreateQuestion, useUpdateQuestion, useDeleteQuestion } from './hooks/use-question-mutations'
+export { useCreateQuestion, useUpdateQuestion, useDeleteQuestion, useGenerateQuestion } from './hooks/use-question-mutations'
 export { SORT_OPTIONS, DIFFICULTY_OPTIONS, DIFFICULTY_BADGES, DIFFICULTY_LABELS, LANGUAGE_COLORS, AVAILABLE_LANGUAGES } from './constants'
 export { QuestionCard } from './components/QuestionCard'
 export { QuestionFormModal } from './components/QuestionFormModal'

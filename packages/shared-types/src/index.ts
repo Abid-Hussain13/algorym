@@ -308,3 +308,13 @@ export interface ChangePasswordBody {
     new_password: string;
 }
 
+export interface GenerateQuestionBody {
+    title: string;
+    languages: string[];
+}
+
+export interface GenerateQuestionResponse {
+    description: string;
+    starter_code: Record<string, string>;
+}
+
