@@ -191,16 +191,14 @@ export const getSessionsList = async (userId: string, params: GetAllSessionsQuer
         WHERE ${whereClause}`;
 
     const dataQuery = `SELECT
-            s.id, s.role_context, s.mode, s.status, s.created_at,
+            s.id, s.role_context, s.mode, s.status, s.language, s.created_at,
             sp.display_name AS candidate_name,
             sp.email AS candidate_email,
-            q.languages,
             se.rating
         FROM sessions s
         LEFT JOIN session_participants sp ON sp.session_id = s.id AND sp.role = 'guest'
         LEFT JOIN session_evaluations se ON se.session_id = s.id
             AND se.evaluated_participant_id = sp.id
-        LEFT JOIN questions q ON q.id = s.question_id
         WHERE ${whereClause}
         ORDER BY ${orderClause}
         LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;

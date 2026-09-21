@@ -55,7 +55,7 @@ export function SessionListTable({ sessions, onEdit, onDelete, isDeleting }: Ses
                                 {session.candidate_name || session.candidate_email || "—"}
                             </td>
                             <td className="px-5 py-3.5 text-muted">
-                                {session.languages?.join(', ') || "—"}
+                                {session.language || "—"}
                             </td>
                             <td className="px-5 py-3.5">
                                 <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${STATUS_BADGES[session.status] || ""}`}>

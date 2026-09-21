@@ -47,7 +47,6 @@ export interface Session {
     created_at: string;
     candidate_name?: string | null;
     candidate_email?: string | null;
-    languages?: string[];
     rating?: string | null;
 }
 

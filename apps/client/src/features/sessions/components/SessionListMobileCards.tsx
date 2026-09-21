@@ -92,11 +92,11 @@ export function SessionListMobileCards({ sessions, onEdit, onDelete, isDeleting 
                                 {RATING_LABELS[session.rating] || session.rating}
                             </span>
                         )}
-                        {session.languages?.[0] && (
-                            <span className="inline-flex items-center rounded-md bg-surface-2 px-2 py-0.5 text-xs font-medium text-muted">
-                                {session.languages[0]}
-                            </span>
-                        )}
+                        {session.language && (
+                                            <span className="inline-flex items-center rounded-md bg-surface-2 px-2 py-0.5 text-xs font-medium text-muted">
+                                                {session.language}
+                                            </span>
+                                        )}
                     </div>
                     <p className="text-xs text-muted">
                         {formatDate(session.created_at)}
