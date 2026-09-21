@@ -42,8 +42,13 @@ export interface Session {
     scheduled_at: string | null;
     duration_minutes: number | null;
     started_at: string | null;
+    ended_at: string | null;
     expires_at: string | null;
     created_at: string;
+    candidate_name?: string | null;
+    candidate_email?: string | null;
+    languages?: string[];
+    rating?: string | null;
 }
 
 export interface SessionParticipant {

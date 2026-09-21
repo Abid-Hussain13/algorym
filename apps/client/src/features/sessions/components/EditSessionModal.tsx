@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { sessionsApi, questionsApi } from "@/lib/api/endpoints";
-import { useUpdateSession } from "@/features/sessions";
+import { useUpdateSession, useCancelSession } from "@/features/sessions";
 import { DURATION_OPTIONS } from "@/features/sessions/constants";
 import { AVAILABLE_LANGUAGES, LANGUAGE_COLORS } from "@/features/questions/constants";
 import type { Session, CreateSessionBody } from "@algorym/shared-types";
@@ -38,6 +38,7 @@ export function EditSessionModal({ open, sessionId, onOpenChange }: EditSessionM
     });
 
     const updateSession = useUpdateSession();
+    const cancelSession = useCancelSession();
     const session = sessionData?.session;
 
     const [mode, setMode] = useState<"interview" | "practice">("interview");
@@ -46,6 +47,7 @@ export function EditSessionModal({ open, sessionId, onOpenChange }: EditSessionM
     const [questionId, setQuestionId] = useState<string | undefined>();
     const [language, setLanguage] = useState<string>("");
     const [questionSearch, setQuestionSearch] = useState("");
+    const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
 
     useEffect(() => {
         if (session && open) {
@@ -112,6 +114,20 @@ export function EditSessionModal({ open, sessionId, onOpenChange }: EditSessionM
     }, [sessionId, mode, duration, roleContext, questionId, language, updateSession, handleClose]);
 
     const isScheduled = session?.status === "scheduled";
+
+    const handleCancel = useCallback(() => {
+        if (!sessionId) return;
+        cancelSession.mutate(sessionId, {
+            onSuccess: () => {
+                toast.success("Session cancelled");
+                setConfirmCancelOpen(false);
+                handleClose(false);
+            },
+            onError: (err) => {
+                toast.error(err instanceof Error ? err.message : "Failed to cancel session");
+            },
+        });
+    }, [sessionId, cancelSession, handleClose]);
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
@@ -317,7 +333,19 @@ export function EditSessionModal({ open, sessionId, onOpenChange }: EditSessionM
 
                 <DialogFooter className="px-6 pb-5 pt-3 border-t border-border">
                     <div className="flex items-center justify-between w-full">
-                        <div />
+                        <div>
+                            {isScheduled && (
+                                <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={() => setConfirmCancelOpen(true)}
+                                    disabled={updateSession.isPending}
+                                    className="border-danger/50 text-danger hover:bg-danger/10 hover:border-danger"
+                                >
+                                    Cancel Session
+                                </Button>
+                            )}
+                        </div>
                         <div className="flex items-center gap-2">
                             <Button
                                 variant="ghost"
@@ -325,21 +353,47 @@ export function EditSessionModal({ open, sessionId, onOpenChange }: EditSessionM
                                 onClick={() => handleClose(false)}
                                 disabled={updateSession.isPending}
                             >
-                                Cancel
+                                Close
                             </Button>
-                            <Button
-                                variant="primary"
-                                size="sm"
-                                loading={updateSession.isPending}
-                                onClick={handleSave}
-                                disabled={!isScheduled}
-                            >
-                                Save Changes
-                            </Button>
+                            {isScheduled && (
+                                <Button
+                                    variant="primary"
+                                    size="sm"
+                                    loading={updateSession.isPending}
+                                    onClick={handleSave}
+                                >
+                                    Save Changes
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </DialogFooter>
             </DialogContent>
+
+            <Dialog open={confirmCancelOpen} onOpenChange={setConfirmCancelOpen}>
+                <DialogContent className="sm:max-w-md p-0">
+                    <DialogHeader className="px-6 pt-6 pb-0">
+                        <DialogTitle>Cancel Session?</DialogTitle>
+                        <p className="mt-1 text-sm text-muted">
+                            This will cancel the scheduled session. This action cannot be undone.
+                        </p>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-2 px-6 py-5">
+                        <Button variant="ghost" size="sm" onClick={() => setConfirmCancelOpen(false)}>
+                            Keep Session
+                        </Button>
+                        <Button
+                            variant="default"
+                            size="sm"
+                            loading={cancelSession.isPending}
+                            onClick={handleCancel}
+                            className="border-danger/50 text-danger hover:bg-danger/10 hover:border-danger"
+                        >
+                            Yes, Cancel
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </Dialog>
     );
 }

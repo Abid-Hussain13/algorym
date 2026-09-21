@@ -17,6 +17,7 @@ import {
     AnimatedSidebarTrigger,
 } from "@/components/motion/animated-sidebar";
 import { selectUser, selectAuthStatus } from "@/stores/auth-slice";
+import { useSessionStatusPoller } from "@/features/sessions";
 
 const navIcons: Record<string, string> = {
     grid: "M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z",
@@ -49,6 +50,7 @@ export function DashboardLayout() {
     const navigate = useNavigate();
     const user = useSelector(selectUser);
     const authStatus = useSelector(selectAuthStatus);
+    useSessionStatusPoller();
     const [sidebarOpen, setSidebarOpen] = useState(() => {
         const stored = localStorage.getItem("sidebar-open");
         return stored !== null ? stored === "true" : true;
