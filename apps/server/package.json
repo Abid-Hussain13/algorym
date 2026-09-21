@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "@algorym/shared-types": "workspace:*",
+    "@google/genai": "^2.23.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/jsonwebtoken": "^9.0.10",
     "@y/websocket-server": "^0.1.5",

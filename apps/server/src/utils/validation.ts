@@ -91,6 +91,22 @@ export const evaluatedUserSchema = z.object({
     notes: z.string().optional()
 })
 
+export const changePasswordSchema = z.object({
+    current_password: z.string().min(1, "Current password is required"),
+    new_password: z.string().min(8, "New password must be at least 8 characters"),
+});
+
+export const generateQuestionSchema = z.object({
+    title: z.string().min(1, "Title is required"),
+    languages: z.array(z.string()).min(1, "At least one language is required"),
+});
+
+export const updatePreferencesSchema = z.object({
+    theme: z.enum(["light", "dark", "system"]).optional(),
+    default_language: z.string().nullable().optional(),
+    default_duration_minutes: z.number().min(10).max(301).nullable().optional(),
+});
+
 export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type CreateQuestionInput = z.infer<typeof createQuestionSchema>;
@@ -100,17 +116,6 @@ export type RunCodeInput = z.infer<typeof runCodeSchema>;
 export type EvaluatedUserInput = z.infer<typeof evaluatedUserSchema>;
 export type getAllQuestionsQuery = z.infer<typeof getAllQuestionsSchema>;
 export type ReportsQuery = z.infer<typeof reportsQuerySchema>;
-
-export const changePasswordSchema = z.object({
-    current_password: z.string().min(1, "Current password is required"),
-    new_password: z.string().min(8, "New password must be at least 8 characters"),
-});
-
-export const updatePreferencesSchema = z.object({
-    theme: z.enum(["light", "dark", "system"]).optional(),
-    default_language: z.string().nullable().optional(),
-    default_duration_minutes: z.number().min(10).max(301).nullable().optional(),
-});
-
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
+export type GenerateQuestionInput = z.infer<typeof generateQuestionSchema>;
