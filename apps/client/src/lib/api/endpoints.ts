@@ -112,6 +112,7 @@ export const dashboardApi = {
 
 export const reportsApi = {
     get: (range: ReportsRange) => http.get<ReportsResponse>(`/api/reports?range=${range}`),
+    exportCsv: (range: ReportsRange) => http.getText(`/api/reports/export?range=${range}`),
 }
 
 export const userApi = {

@@ -136,4 +136,12 @@ export const http = {
         request<T>(path, { ...options, method: 'PUT', body: JSON.stringify(body) }),
     delete: <T>(path: string, options?: RequestInit) =>
         request<T>(path, { ...options, method: 'DELETE' }),
+    getText: async (path: string): Promise<string> => {
+        const response = await fetch(`${API_BASE}${path}`, {
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        if (!response.ok) throw new ApiError(response.status, `Request failed: ${response.status}`);
+        return response.text();
+    },
 }

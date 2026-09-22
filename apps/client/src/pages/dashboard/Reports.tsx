@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import { toast } from 'sonner'
 import type { ReportsRange } from '@algorym/shared-types'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
+import { reportsApi } from '@/lib/api/endpoints'
 import {
     useReports,
     TimeFilter,
@@ -13,7 +15,27 @@ import {
 
 export function Reports() {
     const [range, setRange] = useState<ReportsRange>('30d')
+    const [exporting, setExporting] = useState(false)
     const { data, isLoading, error, refetch } = useReports(range)
+
+    const handleExport = useCallback(async () => {
+        setExporting(true);
+        try {
+            const csv = await reportsApi.exportCsv(range);
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `reports-${range}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+            toast.success("Export downloaded");
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Failed to export");
+        } finally {
+            setExporting(false);
+        }
+    }, [range]);
 
     return (
         <div className="flex flex-col gap-6 p-6">
@@ -23,7 +45,7 @@ export function Reports() {
                 </h1>
                 <div className="flex items-center gap-3">
                     <TimeFilter value={range} onChange={setRange} />
-                    <Button variant="primary" size="sm" disabled>
+                    <Button variant="primary" size="sm" onClick={handleExport} loading={exporting}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 24 24"

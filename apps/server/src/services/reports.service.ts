@@ -96,3 +96,72 @@ export const getReports = async (userId: string, range: ReportsRange): Promise<R
         evaluationDistribution,
     };
 };
+
+function csvEscape(value: string | null | undefined): string {
+    if (!value) return "";
+    if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+        return `"${value.replace(/"/g, '""')}"`;
+    }
+    return value;
+}
+
+function formatDate(dateStr: string | null): string {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+}
+
+function formatDateTime(dateStr: string | null): string {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const h = String(d.getHours()).padStart(2, "0");
+    const min = String(d.getMinutes()).padStart(2, "0");
+    return `${y}-${m}-${day} ${h}:${min}`;
+}
+
+export const exportSessionsCsv = async (userId: string, range: ReportsRange): Promise<string> => {
+    const interval = RANGE_INTERVALS[range];
+    const startSql = `NOW() - INTERVAL '${interval}'`;
+    const endSql = `NOW()`;
+
+    const { rows } = await db.query(
+        `SELECT
+            s.role_context, s.mode, s.language, s.status,
+            s.scheduled_at, s.duration_minutes, s.started_at, s.ended_at,
+            sp.display_name AS candidate_name,
+            sp.email AS candidate_email,
+            se.rating
+        FROM sessions s
+        LEFT JOIN session_participants sp ON sp.session_id = s.id AND sp.role = 'guest'
+        LEFT JOIN session_evaluations se ON se.evaluated_participant_id = sp.id
+            AND s.id = se.session_id
+        WHERE s.created_by = $1
+          AND s.created_at >= ${startSql}
+          AND s.created_at < ${endSql}
+        ORDER BY s.created_at DESC`,
+        [userId]
+    );
+
+    const header = "Session,Mode,Language,Status,Candidate Name,Candidate Email,Rating,Scheduled At,Duration (min),Started At,Ended At";
+    const lines = rows.map((r: any) => [
+        csvEscape(r.role_context),
+        r.mode,
+        csvEscape(r.language),
+        r.status,
+        csvEscape(r.candidate_name),
+        csvEscape(r.candidate_email),
+        r.rating ?? "",
+        formatDate(r.scheduled_at),
+        r.duration_minutes ?? "",
+        formatDateTime(r.started_at),
+        formatDateTime(r.ended_at),
+    ].join(","));
+
+    return [header, ...lines].join("\n");
+};
