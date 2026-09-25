@@ -38,7 +38,7 @@ export const getAllSessions = async (req: Request, res: Response) => {
 };
 
 export const getSessionById = async (req: Request, res: Response) => {
-    const session = await service.getSessionById(req.user!.id, req.params.id as string);
+    const session = await service.getSessionDetail(req.user!.id, req.params.id as string);
 
     res.json({ success: true, data: { session }, message: "" });
 };

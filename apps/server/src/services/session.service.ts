@@ -1,5 +1,5 @@
 import db from "../db/pool.js";
-import { Pagination, Session, SessionListItem, SessionListResponse, SessionStatus } from "@algorym/shared-types";
+import { Pagination, Session, SessionDetail, SessionListItem, SessionListResponse, SessionStatus } from "@algorym/shared-types";
 import { nanoid } from "nanoid";
 import AppError from "../utils/AppError.js";
 import { CreateSessionInput, GetAllSessionsQuery } from "../utils/validation.js";
@@ -227,6 +227,28 @@ export const getSessionById = async (userId: string, sessionId: string): Promise
 
     if (!session.rows[0]) throw new AppError("Session not found", 404);
     return session.rows[0];
+}
+
+export const getSessionDetail = async (userId: string, sessionId: string): Promise<SessionDetail> => {
+    const { rows } = await db.query(
+        `SELECT s.id, s.created_by, s.question_id, s.mode, s.status, s.access_token,
+                s.role_context, s.language, s.scheduled_at, s.duration_minutes,
+                s.started_at, s.ended_at, s.expires_at, s.created_at,
+                sp.display_name AS candidate_name,
+                sp.email AS candidate_email,
+                se.rating, se.notes,
+                q.title AS question_title
+         FROM sessions s
+         LEFT JOIN session_participants sp ON sp.session_id = s.id AND sp.role = 'guest'
+         LEFT JOIN session_evaluations se ON se.session_id = s.id
+             AND se.evaluated_participant_id = sp.id
+         LEFT JOIN questions q ON q.id = s.question_id
+         WHERE s.created_by = $1 AND s.id = $2`,
+        [userId, sessionId]
+    );
+
+    if (!rows[0]) throw new AppError("Session not found", 404);
+    return rows[0] as SessionDetail;
 }
 
 export const updateSession = async (userId: string, sessionId: string, data: Partial<CreateSessionInput>): Promise<Session> => {

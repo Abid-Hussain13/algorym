@@ -50,6 +50,11 @@ export interface Session {
     rating?: string | null;
 }
 
+export interface SessionDetail extends Session {
+    notes: string | null;
+    question_title: string | null;
+}
+
 export interface SessionParticipant {
     id: string;
     session_id: string;
