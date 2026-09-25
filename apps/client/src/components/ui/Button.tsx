@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from 'react'
+import type { ButtonHTMLAttributes, Ref } from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 
@@ -35,6 +35,7 @@ export interface ButtonProps
     VariantProps<typeof buttonVariants> {
     asChild?: boolean
     loading?: boolean
+    ref?: Ref<HTMLButtonElement>
 }
 
 export function Button({
@@ -46,11 +47,13 @@ export function Button({
     type = 'button',
     disabled,
     children,
+    ref,
     ...props
 }: ButtonProps) {
     const Comp = asChild ? Slot : 'button'
     return (
         <Comp
+            ref={ref}
             type={type}
             disabled={disabled || loading}
             className={cn(buttonVariants({ variant, size, className }), loading && 'pointer-events-none')}

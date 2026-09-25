@@ -32,6 +32,7 @@ export const updateQuestionSchema = createQuestionSchema.partial();
 
 export const createSessionSchema = z.object({
     question_id: z.string().optional(),
+    question_ids: z.array(z.string()).max(50, "A session can have at most 50 questions").optional(),
     mode: z.enum(["interview", "practice"]),
     language: z.string().optional(),
     role_context: z.string().optional(),
@@ -61,7 +62,8 @@ export const getAllQuestionsSchema = z.object({
     search: z.string().optional(),
     difficulty: z.enum(["easy", "medium", "hard"]).optional(),
     sort_by: z.enum(["date_desc", "date_asc", "title_desc", "title_asc"]).default("date_desc"),
-    page: z.coerce.number().int().min(1).default(1)
+    page: z.coerce.number().int().min(1).default(1),
+    ids: z.string().max(2000).optional()
 })
 
 export const changeQuestionSchema = z.object({

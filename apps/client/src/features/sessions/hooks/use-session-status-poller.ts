@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { sessionsApi } from "@/lib/api/endpoints";
-import type { Session, SessionStatus } from "@algorym/shared-types";
+import type { SessionStatus } from "@algorym/shared-types";
 
 const STATUS_LABELS: Record<SessionStatus, string> = {
     scheduled: "Scheduled",
@@ -28,7 +28,7 @@ export function useSessionStatusPoller() {
     const detectChanges = useCallback(() => {
         const next = new Map<string, SessionStatus>();
         for (const s of sessions) {
-            next.set(s.id, s.status);
+            next.set(s.id, s.status as SessionStatus);
         }
 
         for (const [id, status] of next) {

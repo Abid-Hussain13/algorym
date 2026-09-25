@@ -17,7 +17,35 @@ export const createQuestion = async (params: CreateQuestionParams): Promise<Ques
     return result.rows[0];
 };
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const getQuestionsByIds = async (owner_id: string, idsParam: string): Promise<QuestionListResponse> => {
+    const ids = [...new Set(idsParam.split(",").map((id) => id.trim()))]
+        .filter((id) => UUID_PATTERN.test(id))
+        .slice(0, 50);
+
+    if (ids.length === 0) {
+        return { questions: [], pagination: { page: 1, limit: 0, total: 0, totalPages: 0 } };
+    }
+
+    const { rows } = await db.query<Question>(
+        `SELECT * FROM questions
+         WHERE owner_id = $1 AND id = ANY($2::uuid[])
+         ORDER BY created_at DESC`,
+        [owner_id, ids]
+    );
+
+    return {
+        questions: rows,
+        pagination: { page: 1, limit: rows.length, total: rows.length, totalPages: 1 }
+    };
+};
+
 export const getAllQuestions = async (owner_id: string, params: getAllQuestionsQuery): Promise<QuestionListResponse> => {
+    if (params.ids) {
+        return getQuestionsByIds(owner_id, params.ids);
+    }
+
     const limit = 21;
     const offset = (params.page - 1) * limit;
 

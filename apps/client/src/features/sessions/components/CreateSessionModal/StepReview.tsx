@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { cn } from "@/lib/utils/cn";
-import { DURATION_OPTIONS } from "@/features/sessions/constants";
+import { DURATION_OPTIONS, DIFFICULTY_BADGES } from "@/features/sessions/constants";
 import { AVAILABLE_LANGUAGES } from "@/features/questions/constants";
 import { formatTime12 } from "./TimePicker";
 
@@ -14,7 +14,7 @@ interface StepReviewProps {
     mode: "interview" | "practice";
     duration: number;
     roleContext: string;
-    selectedQuestion: Question | undefined;
+    selectedQuestions: Question[];
     language: string;
     scheduledDate: Date | undefined;
     scheduledTime: string;
@@ -24,7 +24,7 @@ export function StepReview({
     mode,
     duration,
     roleContext,
-    selectedQuestion,
+    selectedQuestions,
     language,
     scheduledDate,
     scheduledTime,
@@ -64,20 +64,27 @@ export function StepReview({
                         </div>
                     )}
                     <div className="flex justify-between">
-                        <span className="text-muted">Question</span>
-                        <span className="font-medium text-fg truncate ml-4 max-w-[200px]">
-                            {selectedQuestion ? selectedQuestion.title : "None"}
+                        <span className="text-muted">Questions</span>
+                        <span className="font-medium text-fg">
+                            {selectedQuestions.length > 0 ? selectedQuestions.length : "None"}
                         </span>
                     </div>
-                    {selectedQuestion && (
-                        <div className="flex justify-between">
-                            <span className="text-muted">Difficulty</span>
-                            <span className={cn("text-xs font-medium px-1.5 py-0.5 rounded", "bg-success/10 text-success")}>
-                                {selectedQuestion.difficulty}
-                            </span>
-                        </div>
+                    {selectedQuestions.length > 0 && (
+                        <ol className="flex flex-col gap-1">
+                            {selectedQuestions.map((question, index) => (
+                                <li key={question.id} className="flex items-center gap-2">
+                                    <span className="grid size-4 shrink-0 place-items-center rounded bg-surface-2 text-[10px] font-semibold text-muted">
+                                        {index + 1}
+                                    </span>
+                                    <span className="min-w-0 flex-1 truncate font-medium text-fg">{question.title}</span>
+                                    <span className={cn("shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded", DIFFICULTY_BADGES[question.difficulty])}>
+                                        {question.difficulty}
+                                    </span>
+                                </li>
+                            ))}
+                        </ol>
                     )}
-                    {selectedQuestion && language && (
+                    {selectedQuestions.length > 0 && language && (
                         <div className="flex justify-between">
                             <span className="text-muted">Language</span>
                             <span className="font-medium text-fg">

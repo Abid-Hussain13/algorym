@@ -15,6 +15,7 @@ import type {
     ReportsRange,
     ReportsResponse,
     Session,
+    SessionDetail,
     SessionEvaluation,
     SessionEvent,
     SessionListParams,
@@ -46,6 +47,7 @@ export const questionsApi = {
         if (params?.difficulty) searchParams.set('difficulty', params.difficulty)
         if (params?.sort_by) searchParams.set('sort_by', params.sort_by)
         if (params?.page) searchParams.set('page', String(params.page))
+        if (params?.ids) searchParams.set('ids', params.ids)
         const query = searchParams.toString()
         return http.get<QuestionListResponse>(`/api/question${query ? `?${query}` : ''}`)
     },
@@ -68,14 +70,14 @@ export const sessionsApi = {
         const query = searchParams.toString()
         return http.get<SessionListResponse>(`/api/session${query ? `?${query}` : ''}`)
     },
-    get: (id: string) => http.get<{ session: Session }>(`/api/session/${id}`),
+    get: (id: string) => http.get<{ session: SessionDetail }>(`/api/session/${id}`),
     create: (body: CreateSessionBody) => http.post<{ session: Session }>('/api/session', body),
     join: (token: string, body: JoinSessionBody) =>
         http.post<{ session: Session }>(`/api/session/join`, {
             ...body,
             access_token: token,
         }),
-    update: (id: string, body: Partial<Session>) =>
+    update: (id: string, body: Partial<CreateSessionBody>) =>
         http.patch<{ session: Session }>(`/api/session/${id}`, body),
     remove: (id: string) => http.delete<void>(`/api/session/${id}`),
     start: (id: string) => http.patch<{ session: Session }>(`/api/session/${id}/start`),

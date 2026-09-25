@@ -1,4 +1,4 @@
-export const LiveRoom = (props: {}) => {
+export const LiveRoom = () => {
     return (
         <div>
             live room comming soom

@@ -88,9 +88,18 @@ create table session_evaluations (
     created_at timestamptz not null default now()
 );
 
+create table session_questions (
+    session_id uuid not null references sessions(id) on delete cascade,
+    question_id uuid not null references questions(id) on delete cascade,
+    position int not null default 0,
+    primary key (session_id, question_id)
+);
+
 create index idx_questions_owner on questions(owner_id);
 create index idx_sessions_created_by on sessions(created_by);
 create index idx_participants_session on session_participants(session_id);
+create index idx_session_questions_session on session_questions(session_id);
+create index idx_session_questions_question on session_questions(question_id);
 create index idx_events_session on session_events(session_id);
 create unique index idx_evaluations_session_candidate
     on session_evaluations(session_id, evaluated_participant_id);

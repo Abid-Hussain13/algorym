@@ -213,3 +213,24 @@ INSERT INTO session_evaluations (session_id, evaluator_participant_id, evaluated
 --   September: 5 evaluations
 --   Total: 20 evaluations
 -- ============================================================
+
+-- ============================================================
+-- DEMO: COMPLETED SESSION WITH THREE QUESTIONS
+-- (exercises the session_questions many-to-many join)
+-- ============================================================
+
+INSERT INTO sessions (id, created_by, question_id, mode, status, access_token, role_context, language, duration_minutes, started_at, ended_at, created_at) VALUES
+('d1000001-0000-0000-0000-000000000099', 'c3504229-2af1-46f5-970b-5e3ccfa26260', 'c1000001-0000-0000-0000-000000000001', 'interview', 'completed', 'demo-three-questions', 'Fullstack Engineer — Panel Round', 'javascript', 90, '2026-09-21 10:00:00+05', '2026-09-21 11:35:00+05', '2026-09-20 09:00:00+05');
+
+INSERT INTO session_participants (id, session_id, user_id, email, display_name, role, consent_to_contact, consent_timestamp, joined_at) VALUES
+('e1000001-0000-0000-0000-000000000098', 'd1000001-0000-0000-0000-000000000099', 'c3504229-2af1-46f5-970b-5e3ccfa26260', 'abidhussainme1@gmail.com', 'Abid Hussain', 'host', true, '2026-09-20 09:00:00+05', '2026-09-20 09:00:00+05'),
+('e1000001-0000-0000-0000-000000000099', 'd1000001-0000-0000-0000-000000000099', 'b1000001-0000-0000-0000-000000000006', 'hassan.ali@example.com', 'Hassan Ali', 'guest', true, '2026-09-20 09:05:00+05', '2026-09-21 09:55:00+05');
+
+INSERT INTO session_questions (session_id, question_id, position) VALUES
+('d1000001-0000-0000-0000-000000000099', 'c1000001-0000-0000-0000-000000000001', 0),
+('d1000001-0000-0000-0000-000000000099', 'c1000001-0000-0000-0000-000000000002', 1),
+('d1000001-0000-0000-0000-000000000099', 'c1000001-0000-0000-0000-000000000003', 2)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO session_evaluations (session_id, evaluator_participant_id, evaluated_participant_id, rating, notes, created_at) VALUES
+('d1000001-0000-0000-0000-000000000099', 'e1000001-0000-0000-0000-000000000098', 'e1000001-0000-0000-0000-000000000099', 'strong', 'Three-question panel round. Two Sum solved optimally in O(n). Reverse Linked List handled iteratively and recursively with no bugs. LRU Cache was the differentiator — hit O(1) on get/put after one hint on the doubly-linked list. Fast with AI assistance but explains trade-offs well. Strong hire recommendation.', '2026-09-21 12:00:00+05');

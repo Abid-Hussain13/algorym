@@ -1,6 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { format } from "date-fns";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
@@ -12,11 +11,13 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
-import { sessionsApi, questionsApi } from "@/lib/api/endpoints";
+import { sessionsApi } from "@/lib/api/endpoints";
+import { useQuestions } from "@/features/questions";
 import { useUpdateSession, useCancelSession } from "@/features/sessions";
+import { useUserPreferences } from "@/features/user";
 import { DURATION_OPTIONS } from "@/features/sessions/constants";
-import { AVAILABLE_LANGUAGES, LANGUAGE_COLORS } from "@/features/questions/constants";
-import type { Session, CreateSessionBody } from "@algorym/shared-types";
+import { QuestionPicker, resolveSessionLanguage } from "@/features/sessions/components/QuestionPicker";
+import type { CreateSessionBody, Question } from "@algorym/shared-types";
 
 interface EditSessionModalProps {
     open: boolean;
@@ -31,11 +32,8 @@ export function EditSessionModal({ open, sessionId, onOpenChange }: EditSessionM
         enabled: open && !!sessionId,
     });
 
-    const { data: questionsData, isLoading: questionsLoading } = useQuery({
-        queryKey: ["questions"],
-        queryFn: () => questionsApi.list(),
-        enabled: open,
-    });
+    const { data: questionsData, isLoading: questionsLoading } = useQuestions();
+    const { data: prefs } = useUserPreferences();
 
     const updateSession = useUpdateSession();
     const cancelSession = useCancelSession();
@@ -44,7 +42,7 @@ export function EditSessionModal({ open, sessionId, onOpenChange }: EditSessionM
     const [mode, setMode] = useState<"interview" | "practice">("interview");
     const [roleContext, setRoleContext] = useState("");
     const [duration, setDuration] = useState(60);
-    const [questionId, setQuestionId] = useState<string | undefined>();
+    const [questionIds, setQuestionIds] = useState<string[]>([]);
     const [language, setLanguage] = useState<string>("");
     const [questionSearch, setQuestionSearch] = useState("");
     const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
@@ -54,27 +52,23 @@ export function EditSessionModal({ open, sessionId, onOpenChange }: EditSessionM
             setMode(session.mode);
             setRoleContext(session.role_context ?? "");
             setDuration(session.duration_minutes ?? 60);
-            setQuestionId(session.question_id ?? undefined);
+            setQuestionIds(session.questions.map((question) => question.id));
             setLanguage(session.language ?? "");
+            setQuestionSearch("");
         }
     }, [session, open]);
 
     const questions = questionsData?.questions ?? [];
 
-    const filteredQuestions = useMemo(() => {
-        if (!questionSearch.trim()) return questions;
-        const q = questionSearch.toLowerCase();
-        return questions.filter(
-            (item) =>
-                item.title.toLowerCase().includes(q) ||
-                item.description.toLowerCase().includes(q) ||
-                item.languages.some((l) => l.toLowerCase().includes(q))
-        );
-    }, [questions, questionSearch]);
-
-    const selectedQuestion = useMemo(
-        () => questions.find((q) => q.id === questionId),
-        [questions, questionId]
+    const handleSelectionChange = useCallback(
+        (ids: string[]) => {
+            setQuestionIds(ids);
+            const picked = ids
+                .map((id) => questions.find((question) => question.id === id))
+                .filter((question): question is Question => !!question);
+            setLanguage((current) => resolveSessionLanguage(picked, current, prefs?.default_language ?? undefined));
+        },
+        [questions, prefs?.default_language]
     );
 
     const handleClose = useCallback(
@@ -95,7 +89,7 @@ export function EditSessionModal({ open, sessionId, onOpenChange }: EditSessionM
             mode,
             duration_minutes: duration,
             role_context: roleContext || undefined,
-            question_id: questionId,
+            question_ids: questionIds,
             language: language || undefined,
         };
 
@@ -111,7 +105,7 @@ export function EditSessionModal({ open, sessionId, onOpenChange }: EditSessionM
                 },
             }
         );
-    }, [sessionId, mode, duration, roleContext, questionId, language, updateSession, handleClose]);
+    }, [sessionId, mode, duration, roleContext, questionIds, language, updateSession, handleClose]);
 
     const isScheduled = session?.status === "scheduled";
 
@@ -218,114 +212,20 @@ export function EditSessionModal({ open, sessionId, onOpenChange }: EditSessionM
                                 </div>
                             </div>
 
-                            {/* Question */}
+                            {/* Questions */}
                             <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-muted">Question (optional)</label>
-                                <div className="relative">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted">
-                                        <circle cx="11" cy="11" r="8" />
-                                        <path d="m21 21-4.3-4.3" />
-                                    </svg>
-                                    <input
-                                        type="text"
-                                        placeholder="Search questions..."
-                                        value={questionSearch}
-                                        onChange={(e) => setQuestionSearch(e.target.value)}
-                                        className="h-9 w-full rounded-lg border border-border bg-surface pl-9 pr-3 text-sm text-fg placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-                                    />
-                                </div>
-
-                                {/* No question option */}
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setQuestionId(undefined);
-                                        setLanguage("");
-                                    }}
-                                    className={cn(
-                                        "flex items-center gap-3 rounded-lg border px-3 py-2 text-left transition-all text-sm w-full",
-                                        !questionId
-                                            ? "border-accent bg-accent-soft ring-1 ring-accent"
-                                            : "border-border hover:border-border-strong"
-                                    )}
-                                >
-                                    <div className="size-3 rounded-full border-2 border-border-strong" />
-                                    <div>
-                                        <p className="font-medium text-fg">No question</p>
-                                        <p className="text-xs text-muted">Remove question from session</p>
-                                    </div>
-                                </button>
-
-                                {questionsLoading ? (
-                                    <div className="flex items-center justify-center py-6">
-                                        <Spinner size="md" />
-                                    </div>
-                                ) : filteredQuestions.length === 0 ? (
-                                    <div className="py-6 text-center text-xs text-muted">
-                                        {questionSearch ? "No questions match your search" : "No questions available"}
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col gap-1.5 max-h-[160px] overflow-y-auto pr-1">
-                                        {filteredQuestions.map((q) => (
-                                            <button
-                                                key={q.id}
-                                                type="button"
-                                                onClick={() => {
-                                                    setQuestionId(q.id);
-                                                    setLanguage(q.languages[0] ?? "");
-                                                }}
-                                                className={cn(
-                                                    "flex items-center gap-3 rounded-lg border px-3 py-2 text-left transition-all",
-                                                    questionId === q.id
-                                                        ? "border-accent bg-accent-soft ring-1 ring-accent"
-                                                        : "border-border hover:border-border-strong"
-                                                )}
-                                            >
-                                                <div className={cn(
-                                                    "mt-0.5 size-3 shrink-0 rounded-full border-2 flex items-center justify-center",
-                                                    questionId === q.id ? "border-accent" : "border-border-strong"
-                                                )}>
-                                                    {questionId === q.id && <div className="size-1.5 rounded-full bg-accent" />}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium text-fg truncate">{q.title}</p>
-                                                    <div className="mt-0.5 flex flex-wrap gap-1">
-                                                        {q.languages.map((l) => (
-                                                            <span key={l} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-surface-2 text-muted">{l}</span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {/* Language picker */}
-                                {selectedQuestion && selectedQuestion.languages.length > 0 && (
-                                    <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3">
-                                        <p className="text-xs font-medium text-muted">Select language</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {selectedQuestion.languages.map((lang) => {
-                                                const langInfo = AVAILABLE_LANGUAGES.find((l) => l.value === lang);
-                                                return (
-                                                    <button
-                                                        key={lang}
-                                                        type="button"
-                                                        onClick={() => setLanguage(lang)}
-                                                        className={cn(
-                                                            "inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium transition-all border",
-                                                            language === lang
-                                                                ? `${LANGUAGE_COLORS[lang]} border-current ring-1 ring-current`
-                                                                : "border-border bg-surface text-muted hover:border-border-strong"
-                                                        )}
-                                                    >
-                                                        {langInfo?.label ?? lang}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
+                                <label className="text-xs font-medium text-muted">Questions (optional)</label>
+                                <QuestionPicker
+                                    questions={questions}
+                                    selectedIds={questionIds}
+                                    onSelectionChange={handleSelectionChange}
+                                    search={questionSearch}
+                                    onSearchChange={setQuestionSearch}
+                                    selectedLanguage={language}
+                                    onLanguageSelect={setLanguage}
+                                    isLoading={questionsLoading}
+                                    listMaxHeight="max-h-[160px]"
+                                />
                             </div>
                         </>
                     )}

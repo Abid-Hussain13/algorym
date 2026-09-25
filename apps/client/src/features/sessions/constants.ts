@@ -68,3 +68,8 @@ export const MODE_BADGES: Record<string, string> = {
     interview: "bg-accent-soft text-accent-text",
     practice: "bg-info/10 text-info",
 };
+
+export const MODE_LABELS: Record<string, string> = {
+    interview: "Interview",
+    practice: "Practice",
+};

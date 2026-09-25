@@ -21,10 +21,11 @@ export function useUpdateSession() {
     return useMutation({
         mutationFn: ({ id, body }: { id: string; body: Partial<CreateSessionBody> }) =>
             sessionsApi.update(id, body),
-        onSuccess: () => {
+        onSuccess: (_data, { id }) => {
             queryClient.invalidateQueries({ queryKey: ['sessions'] })
             queryClient.invalidateQueries({ queryKey: ['dashboard'] })
             queryClient.invalidateQueries({ queryKey: ['scheduledSession'] })
+            queryClient.invalidateQueries({ queryKey: ['session', id] })
         },
     })
 }

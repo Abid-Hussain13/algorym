@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "@/components/ui/Spinner";
 import { STATUS_BADGES, STATUS_LABELS, RATING_BADGES, RATING_LABELS, MODE_BADGES } from "../constants";
-import type { Session } from "@algorym/shared-types";
+import type { SessionListItem } from "@algorym/shared-types";
 
 interface SessionListMobileCardsProps {
-    sessions: Session[];
+    sessions: SessionListItem[];
     onEdit: (id: string) => void;
     onDelete: (id: string) => void;
     isDeleting: boolean;

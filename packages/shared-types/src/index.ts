@@ -50,9 +50,15 @@ export interface Session {
     rating?: string | null;
 }
 
+export interface SessionQuestionRef {
+    id: string;
+    title: string;
+    position: number;
+}
+
 export interface SessionDetail extends Session {
     notes: string | null;
-    question_title: string | null;
+    questions: SessionQuestionRef[];
 }
 
 export interface SessionParticipant {
@@ -136,6 +142,7 @@ export interface QuestionListParams {
     difficulty?: string;
     sort_by?: string;
     page?: number;
+    ids?: string;
 }
 
 export interface QuestionListResponse {
@@ -147,6 +154,7 @@ export interface CreateSessionBody {
     mode: SessionMode;
     duration_minutes?: number;
     question_id?: string;
+    question_ids?: string[];
     language?: string;
     role_context?: string;
     scheduled_at?: string;
@@ -174,7 +182,7 @@ export interface SessionListItem {
     created_at: string;
     candidate_name: string | null;
     candidate_email: string | null;
-    languages: string[] | null;
+    language: string | null;
     rating: string | null;
 }
 

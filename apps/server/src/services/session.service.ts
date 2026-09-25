@@ -16,7 +16,9 @@ interface GetAllSessionsResult {
 
 
 export const createSession = async (userId: string, data: CreateSessionInput): Promise<Session> => {
-    const { question_id, mode, role_context, scheduled_at, duration_minutes, language } = data;
+    const { mode, role_context, scheduled_at, duration_minutes, language } = data;
+    const questionIds = resolveQuestionIds(data, []);
+    const question_id = questionIds[0] ?? null;
     const access_token = nanoid(12);
 
     let startTime: Date;
@@ -73,6 +75,8 @@ export const createSession = async (userId: string, data: CreateSessionInput): P
         const queryString2 = `Insert into session_participants(session_id, user_id, role, email, display_name)
                               Values($1, $2, 'host', $3, $4)`;
         await db.query(queryString2, [session.id, userId, user?.email ?? null, user?.name ?? null]);
+
+        await syncSessionQuestions(session.id, questionIds);
 
         await db.query("COMMIT");
         return session;
@@ -237,12 +241,18 @@ export const getSessionDetail = async (userId: string, sessionId: string): Promi
                 sp.display_name AS candidate_name,
                 sp.email AS candidate_email,
                 se.rating, se.notes,
-                q.title AS question_title
+                COALESCE((
+                    SELECT json_agg(json_build_object(
+                               'id', q.id, 'title', q.title, 'position', sq.position
+                           ) ORDER BY sq.position, q.title)
+                    FROM session_questions sq
+                    JOIN questions q ON q.id = sq.question_id
+                    WHERE sq.session_id = s.id
+                ), '[]'::json) AS questions
          FROM sessions s
          LEFT JOIN session_participants sp ON sp.session_id = s.id AND sp.role = 'guest'
          LEFT JOIN session_evaluations se ON se.session_id = s.id
              AND se.evaluated_participant_id = sp.id
-         LEFT JOIN questions q ON q.id = s.question_id
          WHERE s.created_by = $1 AND s.id = $2`,
         [userId, sessionId]
     );
@@ -250,6 +260,44 @@ export const getSessionDetail = async (userId: string, sessionId: string): Promi
     if (!rows[0]) throw new AppError("Session not found", 404);
     return rows[0] as SessionDetail;
 }
+
+const resolveQuestionIds = (data: Partial<CreateSessionInput>, fallback: string[]): string[] => {
+    if (data.question_ids !== undefined) {
+        return [...new Set(data.question_ids)].slice(0, 50);
+    }
+    if (data.question_id !== undefined) {
+        return data.question_id ? [data.question_id] : [];
+    }
+    return fallback;
+};
+
+const getSessionQuestionIds = async (sessionId: string): Promise<string[]> => {
+    const { rows } = await db.query<{ question_id: string }>(
+        `SELECT question_id FROM session_questions
+         WHERE session_id = $1
+         ORDER BY position ASC, question_id ASC`,
+        [sessionId]
+    );
+    return rows.map((row) => row.question_id);
+};
+
+const syncSessionQuestions = async (sessionId: string, questionIds: string[]): Promise<void> => {
+    await db.query("DELETE FROM session_questions WHERE session_id = $1", [sessionId]);
+    if (questionIds.length === 0) return;
+
+    const values: (string | number)[] = [];
+    const tuples = questionIds.map((questionId, index) => {
+        values.push(sessionId, questionId, index);
+        return `($${index * 3 + 1}, $${index * 3 + 2}, $${index * 3 + 3})`;
+    });
+
+    await db.query(
+        `INSERT INTO session_questions (session_id, question_id, position)
+         VALUES ${tuples.join(", ")}
+         ON CONFLICT DO NOTHING`,
+        values
+    );
+};
 
 export const updateSession = async (userId: string, sessionId: string, data: Partial<CreateSessionInput>): Promise<Session> => {
     const existing = await db.query(
@@ -262,8 +310,14 @@ export const updateSession = async (userId: string, sessionId: string, data: Par
     if (session.status !== "scheduled") {
         throw new AppError("Can only update sessions that are scheduled", 400);
     }
+
+    const questionsTouched = data.question_ids !== undefined || data.question_id !== undefined;
+    const questionIds = questionsTouched
+        ? resolveQuestionIds(data, [])
+        : await getSessionQuestionIds(sessionId);
+    const questionId = questionIds[0] ?? null;
+
     const mode = data.mode ?? session.mode;
-    const questionId = data.question_id ?? session.question_id;
     const language = data.language ?? session.language;
     const roleContext = data.role_context ?? session.role_context;
     const scheduledAt = data.scheduled_at ?? session.scheduled_at;
@@ -288,6 +342,10 @@ export const updateSession = async (userId: string, sessionId: string, data: Par
             userId,
         ]
     );
+
+    if (questionsTouched) {
+        await syncSessionQuestions(sessionId, questionIds);
+    }
 
     return rows[0];
 }
@@ -434,10 +492,15 @@ export const changeQuestion = async (userId: string, sessionId: string, question
     if (!session) throw new AppError("Session not found", 404);
     if (session.status !== "live") throw new AppError("Can only change question in a live session", 400);
 
+    const currentIds = await getSessionQuestionIds(sessionId);
+    const questionIds = [questionId, ...currentIds.filter((id) => id !== questionId)];
+
     const { rows } = await db.query(
         `UPDATE sessions SET question_id = $1, language = $2 WHERE id = $3 AND created_by = $4 RETURNING *`,
         [questionId, language, sessionId, userId]
     );
+
+    await syncSessionQuestions(sessionId, questionIds);
 
     return rows[0];
 };

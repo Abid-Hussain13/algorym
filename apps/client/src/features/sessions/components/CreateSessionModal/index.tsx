@@ -14,14 +14,15 @@ import {
 import { useQuestions } from "@/features/questions";
 import { useCreateSession, useScheduleOverlap, useAutoSwitchTime, computeScheduledISO } from "@/features/sessions";
 import { useUserPreferences } from "@/features/user";
-import type { CreateSessionBody } from "@algorym/shared-types";
+import { resolveSessionLanguage } from "@/features/sessions/components/QuestionPicker";
+import type { CreateSessionBody, Question } from "@algorym/shared-types";
 import { StepMode } from "./StepMode";
 import { StepQuestion } from "./StepQuestion";
 import { StepDurationSchedule } from "./StepDurationSchedule";
 import { StepReview } from "./StepReview";
 import { StepSuccess } from "./StepSuccess";
 
-const STEP_TITLES = ["Session Mode", "Choose Question", "Duration & Schedule", "Review & Create"];
+const STEP_TITLES = ["Session Mode", "Choose Questions", "Duration & Schedule", "Review & Create"];
 
 interface CreateSessionModalProps {
     open: boolean;
@@ -31,7 +32,7 @@ interface CreateSessionModalProps {
 export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalProps) {
     const [step, setStep] = useState(0);
     const [mode, setMode] = useState<"interview" | "practice">("interview");
-    const [questionId, setQuestionId] = useState<string | undefined>();
+    const [questionIds, setQuestionIds] = useState<string[]>([]);
     const [language, setLanguage] = useState<string>("");
     const [duration, setDuration] = useState(60);
     const [scheduledDate, setScheduledDate] = useState<Date | undefined>();
@@ -55,20 +56,23 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
 
     const questions = questionsData?.questions ?? [];
 
-    const filteredQuestions = useMemo(() => {
-        if (!questionSearch.trim()) return questions;
-        const q = questionSearch.toLowerCase();
-        return questions.filter(
-            (item) =>
-                item.title.toLowerCase().includes(q) ||
-                item.description.toLowerCase().includes(q) ||
-                item.languages.some((l) => l.toLowerCase().includes(q))
-        );
-    }, [questions, questionSearch]);
+    const selectedQuestions = useMemo(
+        () =>
+            questionIds
+                .map((id) => questions.find((question) => question.id === id))
+                .filter((question): question is Question => !!question),
+        [questionIds, questions]
+    );
 
-    const selectedQuestion = useMemo(
-        () => questions.find((q) => q.id === questionId),
-        [questions, questionId]
+    const handleSelectionChange = useCallback(
+        (ids: string[]) => {
+            setQuestionIds(ids);
+            const picked = ids
+                .map((id) => questions.find((question) => question.id === id))
+                .filter((question): question is Question => !!question);
+            setLanguage((current) => resolveSessionLanguage(picked, current, prefs?.default_language ?? undefined));
+        },
+        [questions, prefs?.default_language]
     );
 
     const isToday = scheduledDate && format(scheduledDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
@@ -78,7 +82,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
     const reset = useCallback(() => {
         setStep(0);
         setMode("interview");
-        setQuestionId(undefined);
+        setQuestionIds([]);
         setLanguage("");
         setDuration(60);
         setScheduledDate(undefined);
@@ -104,7 +108,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
         const body: CreateSessionBody = {
             mode,
             duration_minutes: duration,
-            question_id: questionId,
+            question_ids: questionIds,
             language: language || undefined,
             role_context: roleContext || undefined,
             scheduled_at: scheduledISO,
@@ -121,7 +125,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
                 handleClose(false);
             },
         });
-    }, [mode, duration, questionId, language, roleContext, scheduledISO, scheduledDate, scheduledTime, createSession, reset, handleClose, isTimeSlotBlocked]);
+    }, [mode, duration, questionIds, language, roleContext, scheduledISO, scheduledDate, scheduledTime, createSession, reset, handleClose, isTimeSlotBlocked]);
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
@@ -143,7 +147,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
                     <DialogTitle className="text-base">{STEP_TITLES[step]}</DialogTitle>
                     <DialogDescription className="text-xs">
                         {step === 0 && "Select the type of session you want to create."}
-                        {step === 1 && "Optionally assign a coding question to the session."}
+                        {step === 1 && "Pick one or more questions for this session, in the order you want them."}
                         {step === 2 && "Set session duration and optionally schedule it for later."}
                         {step === 3 && "Review your session details before creating."}
                     </DialogDescription>
@@ -158,28 +162,10 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
                     {step === 1 && (
                         <StepQuestion
                             questions={questions}
-                            filteredQuestions={filteredQuestions}
-                            questionSearch={questionSearch}
+                            search={questionSearch}
                             onSearchChange={setQuestionSearch}
-                            questionId={questionId}
-                            onQuestionSelect={(id) => {
-                                setQuestionId(id);
-                                if (id) {
-                                    const q = questions.find((q) => q.id === id);
-                                    if (q && q.languages.length > 0) {
-                                        const preferred = prefs?.default_language;
-                                        setLanguage(
-                                            preferred && q.languages.includes(preferred)
-                                                ? preferred
-                                                : q.languages[0]
-                                        );
-                                    } else {
-                                        setLanguage("");
-                                    }
-                                } else {
-                                    setLanguage("");
-                                }
-                            }}
+                            selectedIds={questionIds}
+                            onSelectionChange={handleSelectionChange}
                             selectedLanguage={language}
                             onLanguageSelect={setLanguage}
                             isLoading={questionsLoading}
@@ -207,7 +193,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
                             mode={mode}
                             duration={duration}
                             roleContext={roleContext}
-                            selectedQuestion={selectedQuestion}
+                            selectedQuestions={selectedQuestions}
                             language={language}
                             scheduledDate={scheduledDate}
                             scheduledTime={scheduledTime}
