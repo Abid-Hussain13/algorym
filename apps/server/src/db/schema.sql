@@ -6,17 +6,16 @@ create type session_status as enum ('scheduled', 'live', 'completed', 'cancelled
 create type event_type as enum ('code_snapshot', 'run_result', 'question_change', 'session_started', 'session_completed', 'session_cancelled');
 create type evaluation_rating as enum ('weak', 'average', 'strong');
 create type participant_role as enum ('host', 'guest');
+create type token_type as enum ('email_verification', 'password_reset');
 
 create table users (
     id uuid primary key default gen_random_uuid(),
     name text not null,
     email text not null unique,
     password_hash text not null,
-    email_verified boolean not null default false,
-    created_at timestamptz not null default now()
+    created_at timestamptz not null default now(),
+    email_verified boolean not null default false
 );
-
-create type token_type as enum ('email_verification', 'password_reset');
 
 create table tokens (
     id uuid primary key default gen_random_uuid(),
@@ -26,9 +25,6 @@ create table tokens (
     expires_at timestamptz not null,
     created_at timestamptz not null default now()
 );
-
-create index idx_tokens_user on tokens(user_id);
-create index idx_tokens_token on tokens(token);
 
 create table questions (
     id uuid primary key default gen_random_uuid(),
@@ -49,13 +45,13 @@ create table sessions (
     status session_status not null default 'scheduled',
     access_token text not null unique,
     role_context text,
-    language text,
     scheduled_at timestamptz,
     duration_minutes integer,
     started_at timestamptz,
-    ended_at timestamptz,
     expires_at timestamptz,
-    created_at timestamptz not null default now()
+    created_at timestamptz not null default now(),
+    ended_at timestamptz,
+    language text
 );
 
 create table session_participants (
@@ -70,7 +66,8 @@ create table session_participants (
     joined_at timestamptz not null default now()
 );
 
-create table session_events ( id uuid primary key default gen_random_uuid(),
+create table session_events (
+    id uuid primary key default gen_random_uuid(),
     session_id uuid not null references sessions(id) on delete cascade,
     actor_participant_id uuid references session_participants(id) on delete set null,
     event_type event_type not null,
@@ -95,15 +92,6 @@ create table session_questions (
     primary key (session_id, question_id)
 );
 
-create index idx_questions_owner on questions(owner_id);
-create index idx_sessions_created_by on sessions(created_by);
-create index idx_participants_session on session_participants(session_id);
-create index idx_session_questions_session on session_questions(session_id);
-create index idx_session_questions_question on session_questions(question_id);
-create index idx_events_session on session_events(session_id);
-create unique index idx_evaluations_session_candidate
-    on session_evaluations(session_id, evaluated_participant_id);
-
 create table user_preferences (
     user_id uuid primary key references users(id) on delete cascade,
     theme text not null default 'system',
@@ -112,3 +100,14 @@ create table user_preferences (
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now()
 );
+
+create index idx_tokens_user on tokens(user_id);
+create index idx_tokens_token on tokens(token);
+create index idx_questions_owner on questions(owner_id);
+create index idx_sessions_created_by on sessions(created_by);
+create index idx_participants_session on session_participants(session_id);
+create index idx_session_questions_session on session_questions(session_id);
+create index idx_session_questions_question on session_questions(question_id);
+create index idx_events_session on session_events(session_id);
+create unique index idx_evaluations_session_candidate
+    on session_evaluations(session_id, evaluated_participant_id);

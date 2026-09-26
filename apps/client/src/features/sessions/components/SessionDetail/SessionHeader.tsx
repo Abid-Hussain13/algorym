@@ -15,7 +15,7 @@ export function SessionHeader({ session }: SessionHeaderProps) {
         <div className="flex flex-col gap-4">
             <button
                 type="button"
-                onClick={() => navigate("/app/sessions")}
+                onClick={() => navigate(-1)}
                 className="group inline-flex w-fit items-center gap-1.5 font-body text-sm text-muted transition-colors hover:text-fg"
             >
                 <svg

@@ -150,3 +150,33 @@ Adding more questions **during a live session** is not built yet. `changeQuestio
 (`PATCH /api/session/:id/question`) already preserves the rest of the list and promotes
 the requested question to `position 0` (it is the "current" one), which is the primitive
 that flow will need.
+
+# Database Schema — Single Source of Truth
+
+## Decision: `src/db/schema.sql` is canonical; migrations are historical
+
+`schema.sql` was drifting behind the migrations (`002_starter_code_jsonb`,
+`003_session_questions`). It is now the authoritative definition of the database.
+
+- **`schema.sql`** — canonical. A fresh database built from it must be structurally
+  identical to production: same tables, columns **in the same order**, types,
+  nullability, defaults, constraints, indexes and enums.
+- **`src/db/migrations/*.sql`** — historical increments, only for databases created
+  before a change. They are never the source of truth and must not diverge.
+
+### Verification (run after every schema change)
+```bash
+createdb check && psql -d check -v ON_ERROR_STOP=1 -f apps/server/src/db/schema.sql
+pg_dump --schema-only --no-owner --no-privileges <db>   # diff the two dumps
+```
+A random pg_dump `\restrict`/`\unrestrict` token is the only expected difference.
+
+### Why column *order* is kept in lockstep
+Ordinal position drifted on `sessions` (`language`, `ended_at` appended by
+`ALTER TABLE`) and `users` (`email_verified`). `schema.sql` now matches the live
+order rather than an idealised one, so a regenerated dump is byte-identical and
+`INSERT … VALUES` without a column list behaves the same everywhere.
+
+### Structure
+`schema.sql` is ordered: extension → enum types → tables → indexes, with no
+interleaving, so missing objects are easy to spot in review.

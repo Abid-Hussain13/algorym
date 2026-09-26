@@ -74,7 +74,7 @@ export function NotesCard({ session, className }: NotesCardProps) {
                             onChange={(e) => setDraft(e.target.value)}
                             rows={10}
                             autoFocus
-                            placeholder="Write your observations about this candidate — strengths, weaknesses, hiring recommendation…"
+                            placeholder="Write your observations about this candidate strengths, weaknesses, hiring recommendation…"
                             className="min-h-[200px] w-full flex-1 resize-y rounded-lg border border-border bg-surface px-3.5 py-3 font-body text-sm leading-relaxed text-fg placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                         />
                         <div className="flex items-center justify-end gap-2">
