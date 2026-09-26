@@ -1,5 +1,6 @@
 import { dashboardStatsType, SessionStatus } from "@algorym/shared-types";
 import db from "../db/pool.js";
+import { LAST_MONTH_END, LAST_MONTH_START, THIS_MONTH_END, THIS_MONTH_START } from "../utils/period.js";
 
 
 export interface recentSessionType {
@@ -54,8 +55,8 @@ const getMonthRatings = async (userId: string): Promise<monthRatingType[]> => {
          WHERE s.created_by = $1
            AND sp.role = 'guest'
            AND ev.rating IS NOT NULL
-           AND s.created_at >= date_trunc('month', CURRENT_DATE)
-           AND s.created_at < date_trunc('month', CURRENT_DATE) + interval '1 month'
+           AND s.created_at >= ${THIS_MONTH_START}
+           AND s.created_at < ${THIS_MONTH_END}
          GROUP BY ev.rating`,
         [userId]
     );
@@ -63,15 +64,16 @@ const getMonthRatings = async (userId: string): Promise<monthRatingType[]> => {
 };
 
 export const getDashboardStats = async (userId: string): Promise<dashboardStatsType> => {
-    const thisMonthStart = `date_trunc('month', CURRENT_DATE)`;
-    const thisMonthEnd = `date_trunc('month', CURRENT_DATE) + interval '1 month'`;
-    const lastMonthStart = `date_trunc('month', CURRENT_DATE - interval '1 month')`;
+    const thisMonthStart = THIS_MONTH_START;
+    const thisMonthEnd = THIS_MONTH_END;
+    const lastMonthStart = LAST_MONTH_START;
+    const lastMonthEnd = LAST_MONTH_END;
 
     const [thisMonth, lastMonth, avgDurationThisMonth, avgDurationLastMonth, thisMonthCompletedSessions, recentSessions, monthRating] = await Promise.all([
         getSessionsInRange(userId, thisMonthStart, thisMonthEnd),
-        getSessionsInRange(userId, lastMonthStart, thisMonthStart),
+        getSessionsInRange(userId, lastMonthStart, lastMonthEnd),
         getDurationInRange(userId, thisMonthStart, thisMonthEnd),
-        getDurationInRange(userId, lastMonthStart, thisMonthStart),
+        getDurationInRange(userId, lastMonthStart, lastMonthEnd),
         getCompletedSessionsInRange(userId, thisMonthStart, thisMonthEnd),
         getRecentSessions(userId),
         getMonthRatings(userId)

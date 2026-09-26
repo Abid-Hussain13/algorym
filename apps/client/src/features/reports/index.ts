@@ -1,4 +1,5 @@
 export { useReports } from './hooks/use-reports'
+export { RANGE_OPTIONS } from './constants'
 export { TimeFilter } from './components/TimeFilter'
 export { ReportStatCards } from './components/ReportStatCards'
 export { SessionsOverTime } from './components/SessionsOverTime'

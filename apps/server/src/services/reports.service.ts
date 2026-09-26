@@ -1,12 +1,7 @@
 import { ReportsRange, ReportsResponse, EvaluationRating, EvaluationDistributionItem, LanguageDistributionItem, SessionsOverTimePoint } from "@algorym/shared-types";
 import db from "../db/pool.js";
 import { getCompletedSessionsInRange, getDurationInRange, getSessionsInRange } from "./dashboard.service.js";
-
-const RANGE_INTERVALS: Record<ReportsRange, string> = {
-    "7d": "7 days",
-    "30d": "30 days",
-    "90d": "90 days",
-};
+import { getPeriod } from "../utils/period.js";
 
 const getLanguageDistribution = async (userId: string, startSql: string, endSql: string): Promise<LanguageDistributionItem[]> => {
     const queryString = `
@@ -46,10 +41,8 @@ const getEvaluationDistribution = async (userId: string, startSql: string, endSq
     return rows;
 };
 
-const getSessionsOverTime = async (userId: string, startSql: string, endSql: string, range: ReportsRange): Promise<SessionsOverTimePoint[]> => {
-    const dateExpr = range === "90d"
-        ? `DATE_TRUNC('week', created_at)::date`
-        : `DATE(created_at)`;
+const getSessionsOverTime = async (userId: string, startSql: string, endSql: string, bucketSql: string): Promise<SessionsOverTimePoint[]> => {
+    const dateExpr = bucketSql;
 
     const queryString = `
         SELECT 
@@ -67,9 +60,7 @@ const getSessionsOverTime = async (userId: string, startSql: string, endSql: str
 };
 
 export const getReports = async (userId: string, range: ReportsRange): Promise<ReportsResponse> => {
-    const interval = RANGE_INTERVALS[range];
-    const startSql = `NOW() - INTERVAL '${interval}'`;
-    const endSql = `NOW()`;
+    const { startSql, endSql, bucketSql } = getPeriod(range);
 
     const [totalSessions, avgDurationMinutes, completedSessions, languageDistribution, evaluationDistribution, sessionsOverTime] =
         await Promise.all([
@@ -78,7 +69,7 @@ export const getReports = async (userId: string, range: ReportsRange): Promise<R
             getCompletedSessionsInRange(userId, startSql, endSql),
             getLanguageDistribution(userId, startSql, endSql),
             getEvaluationDistribution(userId, startSql, endSql),
-            getSessionsOverTime(userId, startSql, endSql, range),
+            getSessionsOverTime(userId, startSql, endSql, bucketSql),
         ]);
 
     const completionRate = totalSessions > 0
@@ -126,9 +117,7 @@ function formatDateTime(dateStr: string | null): string {
 }
 
 export const exportSessionsCsv = async (userId: string, range: ReportsRange): Promise<string> => {
-    const interval = RANGE_INTERVALS[range];
-    const startSql = `NOW() - INTERVAL '${interval}'`;
-    const endSql = `NOW()`;
+    const { startSql, endSql } = getPeriod(range);
 
     const { rows } = await db.query(
         `SELECT

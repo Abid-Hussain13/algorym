@@ -1,9 +1,13 @@
-import type { HTMLAttributes } from "react";
+import type { HTMLAttributes, Ref } from "react";
 import { cn } from "@/lib/utils/cn";
 
-export function Card({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
+    ref?: Ref<HTMLDivElement>;
+}
+
+export function Card({ className, children, ref, ...props }: CardProps) {
     return (
-        <div className={cn("rounded-xl border border-border bg-surface-2 shadow-sm", className)} {...props}>
+        <div ref={ref} className={cn("rounded-xl border border-border bg-surface-2 shadow-sm", className)} {...props}>
             {children}
         </div>
     );

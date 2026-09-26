@@ -1,11 +1,6 @@
 import type { ReportsRange } from '@algorym/shared-types'
 import { cn } from '@/lib/utils/cn'
-
-const RANGES: Array<{ value: ReportsRange; label: string }> = [
-    { value: '7d', label: '7d' },
-    { value: '30d', label: '30d' },
-    { value: '90d', label: '90d' },
-]
+import { RANGE_OPTIONS } from '../constants'
 
 interface TimeFilterProps {
     value: ReportsRange
@@ -14,8 +9,8 @@ interface TimeFilterProps {
 
 export function TimeFilter({ value, onChange }: TimeFilterProps) {
     return (
-        <div className="flex items-center rounded-sm border border-border bg-surface p-0.5">
-            {RANGES.map((r) => (
+        <div className="flex flex-wrap items-center gap-0.5 rounded-sm border border-border bg-surface p-0.5">
+            {RANGE_OPTIONS.map((r) => (
                 <button
                     key={r.value}
                     onClick={() => onChange(r.value)}

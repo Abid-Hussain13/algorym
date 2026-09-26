@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 import type { SessionDetail } from "@algorym/shared-types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { RATING_BADGES, RATING_LABELS, STATUS_BADGES, STATUS_LABELS } from "../../constants";
@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils/cn";
 interface SessionInfoCardProps {
     session: SessionDetail;
     className?: string;
+    ref?: Ref<HTMLDivElement>;
 }
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
@@ -23,11 +24,11 @@ function Placeholder({ children }: { children: ReactNode }) {
     return <span className="text-muted">{children}</span>;
 }
 
-export function SessionInfoCard({ session, className }: SessionInfoCardProps) {
+export function SessionInfoCard({ session, className, ref }: SessionInfoCardProps) {
     const actualDuration = formatRelativeDuration(session.started_at, session.ended_at);
 
     return (
-        <Card className={cn("flex h-full flex-col", className)}>
+        <Card ref={ref} className={cn("flex flex-col", className)}>
             <CardHeader>
                 <CardTitle>Session Details</CardTitle>
             </CardHeader>

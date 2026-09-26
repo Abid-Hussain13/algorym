@@ -180,3 +180,58 @@ order rather than an idealised one, so a regenerated dump is byte-identical and
 ### Structure
 `schema.sql` is ordered: extension → enum types → tables → indexes, with no
 interleaving, so missing objects are easy to spot in review.
+
+# Reporting Periods — One Shared Definition
+
+## Problem
+The dashboard and Reports measured "now" two different ways, and the dashboard's
+month-over-month delta was mathematically wrong.
+
+- Dashboard used a **calendar month** window and compared it against **all of last month**.
+- Reports used **rolling** 7/30/90-day windows.
+
+On the 1st of a month `thisMonth` held hours of data while `lastMonth` held a full 31
+days, so `sessionTrend` and `durationTrend` swung to a large negative number and then
+climbed back all month. The windowing was defensible; the comparison was not.
+
+## Decision 1 — Day-of-month alignment for the dashboard delta
+
+The comparison window is now the **same number of elapsed days** as the current period:
+
+```sql
+-- current:  Sep 1 00:00 .. end of month
+-- baseline: Aug 1 00:00 .. Aug 1 + (NOW() - Sep 1 00:00)
+date_trunc('month', CURRENT_DATE - interval '1 month')
+  + (NOW() - date_trunc('month', CURRENT_DATE))
+```
+
+Verified: on Sep 26 the baseline is Aug 1–26 (8 sessions), not Aug 1–31 (9 sessions),
+against Sep 1–26 (20 sessions). The delta is now honest on every day of the month and
+is ~0 by definition on the 1st, instead of a false collapse.
+
+## Decision 2 — One `Period` definition on the server
+
+`src/utils/period.ts` is the only place that turns a range into SQL. Every range-based
+query — dashboard and Reports, JSON and CSV alike — goes through `getPeriod()`, so the
+two features cannot drift apart again.
+
+## Decision 3 — Reports gained calendar ranges
+
+`ReportsRange` is now `'7d' | '30d' | '90d' | 'month' | 'year'`, and the filter shows
+**7d / 30d / 90d / This month / This year**.
+
+This exists so the two pages are reconcilable: without it a user sees Reports say 12 and
+the dashboard say 3 and has no way to tell which is right.
+
+### Bucketing
+| range    | bucket                |
+|----------|-----------------------|
+| 7d       | day                   |
+| 30d      | day                   |
+| 90d      | week                  |
+| month    | day                   |
+| year     | month                 |
+
+Rolling and calendar windows are deliberately **not** unified: a dashboard wants
+"current period vs prior period", Reports wants "pick a range and export it". Same
+vocabulary, different jobs.

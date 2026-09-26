@@ -11,8 +11,8 @@ function formatDate(dateStr: string, range: ReportsRange): string {
     if (range === '7d') {
         return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
     }
-    if (range === '30d') {
-        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    if (range === 'year') {
+        return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
     }
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }

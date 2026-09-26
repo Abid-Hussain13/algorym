@@ -9,9 +9,10 @@ import { cn } from "@/lib/utils/cn";
 interface NotesCardProps {
     session: SessionDetail;
     className?: string;
+    height?: number;
 }
 
-export function NotesCard({ session, className }: NotesCardProps) {
+export function NotesCard({ session, className, height }: NotesCardProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [draft, setDraft] = useState(session.notes ?? "");
     const saveNotes = useSaveNotes(session.id);
@@ -42,8 +43,11 @@ export function NotesCard({ session, className }: NotesCardProps) {
     };
 
     return (
-        <Card className={cn("flex h-full flex-col", className)}>
-            <CardHeader>
+        <Card
+            className={cn("flex flex-col overflow-hidden", className)}
+            style={height ? { height } : undefined}
+        >
+            <CardHeader className="shrink-0">
                 <CardTitle>Notes</CardTitle>
                 {canEdit && !isEditing ? (
                     <Button variant="ghost" size="sm" onClick={handleEdit}>
@@ -66,18 +70,18 @@ export function NotesCard({ session, className }: NotesCardProps) {
                 ) : null}
             </CardHeader>
 
-            <CardContent className="flex flex-1 flex-col">
+            <CardContent className="flex min-h-0 flex-1 flex-col">
                 {isEditing ? (
-                    <div className="flex flex-1 flex-col gap-3">
+                    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
                         <textarea
                             value={draft}
                             onChange={(e) => setDraft(e.target.value)}
                             rows={10}
                             autoFocus
                             placeholder="Write your observations about this candidate strengths, weaknesses, hiring recommendation…"
-                            className="min-h-[200px] w-full flex-1 resize-y rounded-lg border border-border bg-surface px-3.5 py-3 font-body text-sm leading-relaxed text-fg placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
+                            className="min-h-[160px] w-full flex-1 resize-y rounded-lg border border-border bg-surface px-3.5 py-3 font-body text-sm leading-relaxed text-fg placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25"
                         />
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex shrink-0 items-center justify-end gap-2">
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -97,7 +101,12 @@ export function NotesCard({ session, className }: NotesCardProps) {
                         </div>
                     </div>
                 ) : notes ? (
-                    <div className="flex flex-1 flex-col">
+                    <div
+                        className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1"
+                        tabIndex={0}
+                        role="region"
+                        aria-label="Session notes"
+                    >
                         <p className="whitespace-pre-wrap break-words font-body text-sm leading-relaxed text-fg">
                             {notes}
                         </p>

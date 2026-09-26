@@ -83,7 +83,7 @@ export const runCodeSchema = z.object({
 
 
 export const reportsQuerySchema = z.object({
-    range: z.enum(["7d", "30d", "90d"]).default("30d"),
+    range: z.enum(["7d", "30d", "90d", "month", "year"]).default("30d"),
 });
 
 export const evaluatedUserSchema = z.object({

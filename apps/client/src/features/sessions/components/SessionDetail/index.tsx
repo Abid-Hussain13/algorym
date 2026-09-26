@@ -1,4 +1,6 @@
 import { ApiError } from "@/lib/api/client";
+import { useElementHeight } from "@/lib/hooks/use-element-height";
+import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import { useSessionDetail } from "../../hooks/use-session-detail";
 import { SessionHeader } from "./SessionHeader";
 import { SessionInfoCard } from "./SessionInfoCard";
@@ -13,6 +15,8 @@ interface SessionDetailProps {
 
 export function SessionDetail({ sessionId }: SessionDetailProps) {
     const { data, isLoading, error, refetch } = useSessionDetail(sessionId);
+    const { ref: infoCardRef, height: infoCardHeight } = useElementHeight<HTMLDivElement>();
+    const isTwoColumn = useMediaQuery("(min-width: 1024px)");
 
     if (!sessionId) {
         return <SessionDetailError error={new ApiError(404, "Session not found")} />;
@@ -33,9 +37,17 @@ export function SessionDetail({ sessionId }: SessionDetailProps) {
                 <SessionHeader session={session} />
             </div>
 
-            <div className="grid gap-5 lg:grid-cols-2">
-                <SessionInfoCard session={session} className="animate-rise [animation-delay:80ms]" />
-                <NotesCard session={session} className="animate-rise [animation-delay:140ms]" />
+            <div className="grid items-start gap-5 lg:grid-cols-2">
+                <SessionInfoCard
+                    ref={infoCardRef}
+                    session={session}
+                    className="animate-rise [animation-delay:80ms]"
+                />
+                <NotesCard
+                    session={session}
+                    className="animate-rise [animation-delay:140ms]"
+                    height={isTwoColumn ? infoCardHeight || undefined : undefined}
+                />
             </div>
 
             <ReplayPlaceholder className="animate-rise [animation-delay:200ms]" />

@@ -248,7 +248,7 @@ export type WsMessage =
     | { type: 'leave'; payload: Record<string, never> };
 
 
-export type ReportsRange = '7d' | '30d' | '90d';
+export type ReportsRange = '7d' | '30d' | '90d' | 'month' | 'year';
 
 export interface ReportsStats {
     totalSessions: number;
