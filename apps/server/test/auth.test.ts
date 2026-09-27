@@ -19,9 +19,9 @@ describe("POST /api/auth/signup", () => {
         expect(res.status).toBe(200);
         expect(res.body.statusCode).toBe(201);
         expect(res.body.success).toBe(true);
-        expect(res.body.user).toMatchObject({ name: validUser.name, email: validUser.email });
-        expect(res.body.user).toHaveProperty("id");
-        expect(res.body.user.password_hash).toBeUndefined();
+        expect(res.body.data).toMatchObject({ name: validUser.name, email: validUser.email });
+        expect(res.body.data).toHaveProperty("id");
+        expect(res.body.data.password_hash).toBeUndefined();
     });
 
     it("sets httpOnly auth cookies (accessToken + refreshToken)", async () => {
@@ -105,7 +105,7 @@ describe("POST /api/auth/login", () => {
 
         expect(res.status).toBe(200);
         expect(res.body.success).toBe(true);
-        expect(res.body.user.email).toBe(validUser.email);
+        expect(res.body.data.email).toBe(validUser.email);
 
         const cookies = (res.headers["set-cookie"] ?? []) as unknown as string[];
         expect(cookies.find((c) => c.startsWith("accessToken="))).toBeDefined();
@@ -148,8 +148,8 @@ describe("GET /api/auth/me", () => {
         const res = await agent.get("/api/auth/me");
         expect(res.status).toBe(200);
         expect(res.body.success).toBe(true);
-        expect(res.body.user.email).toBe(validUser.email);
-        expect(res.body.user).toHaveProperty("id");
+        expect(res.body.data.email).toBe(validUser.email);
+        expect(res.body.data).toHaveProperty("id");
     });
 
     it("returns 401 without token", async () => {

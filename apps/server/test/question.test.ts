@@ -20,14 +20,14 @@ describe("Question", () => {
             });
 
             expect(res.status).toBe(201);
-            expect(res.body.question).toMatchObject({
+            expect(res.body.data.question).toMatchObject({
                 title: "Two Sum",
                 description: "Find the indices",
                 languages: ["python"],
                 difficulty: "easy",
             });
-            expect(res.body.question).toHaveProperty("id");
-            expect(res.body.question.owner_id).toBeDefined();
+            expect(res.body.data.question).toHaveProperty("id");
+            expect(res.body.data.question.owner_id).toBeDefined();
         });
 
         it("rejects missing title with 400", async () => {
@@ -68,11 +68,11 @@ describe("Question", () => {
 
             const res = await agent.get("/api/question");
             expect(res.status).toBe(200);
-            expect(res.body.count).toBe(2);
-            expect(res.body.questions.map((q: any) => q.id)).toContain(q1.id);
-            expect(res.body.questions.map((q: any) => q.id)).toContain(q2.id);
+            expect(res.body.data.pagination.total).toBe(2);
+            expect(res.body.data.questions.map((q: any) => q.id)).toContain(q1.id);
+            expect(res.body.data.questions.map((q: any) => q.id)).toContain(q2.id);
             // newest first
-            expect(res.body.questions[0].id).toBe(q2.id);
+            expect(res.body.data.questions[0].id).toBe(q2.id);
         });
 
         it("does not leak other users' questions", async () => {
@@ -82,8 +82,8 @@ describe("Question", () => {
 
             const res = await agent.get("/api/question");
             expect(res.status).toBe(200);
-            expect(res.body.questions).toHaveLength(1);
-            expect(res.body.questions[0].title).toBe("Mine");
+            expect(res.body.data.questions).toHaveLength(1);
+            expect(res.body.data.questions[0].title).toBe("Mine");
         });
     });
 
@@ -92,7 +92,7 @@ describe("Question", () => {
             const q = await createQuestion(agent);
             const res = await agent.get(`/api/question/${q.id}`);
             expect(res.status).toBe(200);
-            expect(res.body.question.id).toBe(q.id);
+            expect(res.body.data.question.id).toBe(q.id);
         });
 
         it("returns 404 for a valid but nonexistent id", async () => {
@@ -124,7 +124,7 @@ describe("Question", () => {
             });
 
             expect(res.status).toBe(200);
-            expect(res.body.question).toMatchObject({ title: "Renamed", difficulty: "hard", languages: ["cpp"] });
+            expect(res.body.data.question).toMatchObject({ title: "Renamed", difficulty: "hard", languages: ["cpp"] });
         });
 
         it("returns 404 for another owner's question", async () => {

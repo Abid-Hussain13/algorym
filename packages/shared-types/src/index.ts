@@ -239,7 +239,7 @@ export interface CollaboratorPresence {
 
 export type WsMessage =
     | { type: 'code_snapshot'; payload: CodeSnapshotPayload }
-    | { type: 'run_result'; payload: RunResultPayload }
+    | { type: 'run_result'; payload: RunResultPayload; actorParticipantId: string }
     | { type: 'question_change'; payload: QuestionChangePayload }
     | { type: 'session_started'; payload: SessionStatePayload }
     | { type: 'session_completed'; payload: SessionStatePayload }

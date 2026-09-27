@@ -19,11 +19,11 @@ describe("Session", () => {
         it("creates a live session", async () => {
             const res = await agent.post("/api/session").send({ mode: "practice" });
             expect(res.status).toBe(201);
-            expect(res.body.session.status).toBe("live");
-            expect(res.body.session.mode).toBe("practice");
-            expect(res.body.session.access_token).toBeTruthy();
-            expect(res.body.session.started_at).toBeTruthy();
-            expect(res.body.session.duration_minutes).toBeNull();
+            expect(res.body.data.session.status).toBe("live");
+            expect(res.body.data.session.mode).toBe("practice");
+            expect(res.body.data.session.access_token).toBeTruthy();
+            expect(res.body.data.session.started_at).toBeTruthy();
+            expect(res.body.data.session.duration_minutes).toBeNull();
         });
 
         it("creates a scheduled session with duration", async () => {
@@ -33,10 +33,10 @@ describe("Session", () => {
                 duration_minutes: 45,
             });
             expect(res.status).toBe(201);
-            expect(res.body.session.status).toBe("scheduled");
-            expect(res.body.session.duration_minutes).toBe(45);
-            expect(res.body.session.scheduled_at).toBe("2026-09-01T10:00:00.000Z");
-            expect(res.body.session.expires_at).toBeTruthy();
+            expect(res.body.data.session.status).toBe("scheduled");
+            expect(res.body.data.session.duration_minutes).toBe(45);
+            expect(res.body.data.session.scheduled_at).toBe("2026-09-01T10:00:00.000Z");
+            expect(res.body.data.session.expires_at).toBeTruthy();
         });
 
         it("registers the host as a participant with display name", async () => {
@@ -70,11 +70,11 @@ describe("Session", () => {
 
             const res = await agent.get("/api/session");
             expect(res.status).toBe(200);
-            const ids = res.body.sessions.map((s: any) => s.id);
+            const ids = res.body.data.sessions.map((s: any) => s.id);
             expect(ids).toContain(s1.id);
             expect(ids).toContain(s2.id);
-            expect(res.body.pagination.total).toBe(2);
-            expect(res.body.sessions[0].evaluated).toBe(false);
+            expect(res.body.data.pagination.total).toBe(2);
+            expect(res.body.data.sessions[0].rating).toBeNull();
         });
 
         it("does not leak other users' sessions", async () => {
@@ -83,7 +83,7 @@ describe("Session", () => {
             await createSession(other.agent, { mode: "practice" });
 
             const res = await agent.get("/api/session");
-            expect(res.body.pagination.total).toBe(1);
+            expect(res.body.data.pagination.total).toBe(1);
         });
 
         it("filters by status", async () => {
@@ -93,7 +93,7 @@ describe("Session", () => {
 
             const res = await agent.get("/api/session?status=live");
             expect(res.status).toBe(200);
-            expect(res.body.sessions.every((s: any) => s.status === "live")).toBe(true);
+            expect(res.body.data.sessions.every((s: any) => s.status === "live")).toBe(true);
         });
     });
 
@@ -102,7 +102,7 @@ describe("Session", () => {
             const s = await liveSession();
             const res = await agent.get(`/api/session/${s.id}`);
             expect(res.status).toBe(200);
-            expect(res.body.session.id).toBe(s.id);
+            expect(res.body.data.session.id).toBe(s.id);
         });
 
         it("returns 404 for another user's session", async () => {
@@ -127,7 +127,7 @@ describe("Session", () => {
             });
             const res = await agent.patch(`/api/session/${s.id}`).send({ duration_minutes: 60 });
             expect(res.status).toBe(200);
-            expect(res.body.session.duration_minutes).toBe(60);
+            expect(res.body.data.session.duration_minutes).toBe(60);
         });
 
         it("cannot update a live session", async () => {
@@ -146,8 +146,8 @@ describe("Session", () => {
             });
             const started = await agent.patch(`/api/session/${s.id}/start`);
             expect(started.status).toBe(200);
-            expect(started.body.session.status).toBe("live");
-            expect(started.body.session.started_at).toBeTruthy();
+            expect(started.body.data.session.status).toBe("live");
+            expect(started.body.data.session.started_at).toBeTruthy();
 
             // live session cannot be started again
             const again = await agent.patch(`/api/session/${s.id}/start`);
@@ -162,7 +162,7 @@ describe("Session", () => {
             const s2 = await liveSession();
             const done = await agent.patch(`/api/session/${s2.id}/complete`);
             expect(done.status).toBe(200);
-            expect(done.body.session.status).toBe("completed");
+            expect(done.body.data.session.status).toBe("completed");
         });
 
         it("cancel: only scheduled sessions can be cancelled", async () => {
@@ -172,7 +172,7 @@ describe("Session", () => {
             const s2 = await createSession(agent, { scheduled_at: "2026-09-01T10:00:00.000Z" });
             const cancelled = await agent.patch(`/api/session/${s2.id}/cancel`);
             expect(cancelled.status).toBe(200);
-            expect(cancelled.body.session.status).toBe("cancelled");
+            expect(cancelled.body.data.session.status).toBe("cancelled");
         });
     });
 
@@ -187,9 +187,9 @@ describe("Session", () => {
             });
 
             expect(res.status).toBe(200);
-            expect(res.body.session.id).toBe(s.id);
-            expect(res.body.participant.role).toBe("guest");
-            expect(res.body.participant.display_name).toBe("Candidate");
+            expect(res.body.data.session.id).toBe(s.id);
+            expect(res.body.data.participant.role).toBe("guest");
+            expect(res.body.data.participant.display_name).toBe("Candidate");
 
             const { rows } = await db.query(
                 "SELECT count(*) FROM session_participants WHERE session_id = $1",
@@ -235,9 +235,9 @@ describe("Session", () => {
             const q = await createQuestion(agent);
             const s = await liveSession();
 
-            const res = await agent.patch(`/api/session/${s.id}/question`).send({ question_id: q.id });
+            const res = await agent.patch(`/api/session/${s.id}/question`).send({ question_id: q.id, language: "python" });
             expect(res.status).toBe(200);
-            expect(res.body.session.question_id).toBe(q.id);
+            expect(res.body.data.session.question_id).toBe(q.id);
 
             const { rows } = await db.query(
                 `SELECT payload FROM session_events WHERE session_id = $1 AND event_type = 'question_change'`,
@@ -250,7 +250,7 @@ describe("Session", () => {
         it("cannot change question on a non-live session", async () => {
             const q = await createQuestion(agent);
             const s = await createSession(agent, { scheduled_at: "2026-09-01T10:00:00.000Z" });
-            const res = await agent.patch(`/api/session/${s.id}/question`).send({ question_id: q.id });
+            const res = await agent.patch(`/api/session/${s.id}/question`).send({ question_id: q.id, language: "python" });
             expect(res.status).toBe(400);
             expect(res.body.message).toBe("Can only change question in a live session");
         });

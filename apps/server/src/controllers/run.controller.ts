@@ -35,7 +35,11 @@ export const runCode = async (req: Request, res: Response) => {
 
     await logSessionEvent(sessionId, participantId, "run_result", { ...result, stdin, code });
 
-    const runResultMessage: WsMessage = { type: "run_result", payload: result };
+    const runResultMessage: WsMessage = {
+        type: "run_result",
+        payload: result,
+        actorParticipantId: participantId,
+    };
     broadcast(sessionId, runResultMessage);
 
     res.json({ success: true, data: { result }, message: "Code executed" });

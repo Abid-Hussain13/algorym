@@ -83,8 +83,8 @@ export const sessionsApi = {
     start: (id: string) => http.patch<{ session: Session }>(`/api/session/${id}/start`),
     complete: (id: string) => http.patch<{ session: Session }>(`/api/session/${id}/complete`),
     cancel: (id: string) => http.patch<{ session: Session }>(`/api/session/${id}/cancel`),
-    changeQuestion: (id: string, questionId: string) =>
-        http.patch<{ session: Session }>(`/api/session/${id}/question`, { question_id: questionId }),
+    changeQuestion: (id: string, questionId: string, language: string) =>
+        http.patch<{ session: Session }>(`/api/session/${id}/question`, { question_id: questionId, language }),
     saveNotes: (id: string, notes: string) =>
         http.patch<{ evaluation: SessionEvaluation }>(`/api/session/${id}/notes`, { notes }),
     evaluation: (id: string) =>

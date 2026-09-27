@@ -33,7 +33,7 @@ describe("Session replay events (GET /api/session/:id/events)", () => {
         expect(res.status).toBe(200);
         expect(res.body.success).toBe(true);
 
-        const events = res.body.sessionEvents;
+        const events = res.body.data.sessionEvents;
         expect(events).toHaveLength(2);
         expect(events[0].event_type).toBe("session_started");
         expect(events[1].event_type).toBe("code_snapshot");
@@ -50,10 +50,10 @@ describe("Session replay events (GET /api/session/:id/events)", () => {
     it("returns question_change payload with question details", async () => {
         const q = await createQuestion(agent);
         const session = await createSession(agent, { mode: "practice" });
-        await agent.patch(`/api/session/${session.id}/question`).send({ question_id: q.id });
+        await agent.patch(`/api/session/${session.id}/question`).send({ question_id: q.id, language: "python" });
 
         const res = await agent.get(`/api/session/${session.id}/events`);
-        const qc = res.body.sessionEvents.find((e: any) => e.event_type === "question_change");
+        const qc = res.body.data.sessionEvents.find((e: any) => e.event_type === "question_change");
         expect(qc).toBeDefined();
         expect(qc.payload.title).toBe("Two Sum");
         expect(qc.payload.question_id).toBe(q.id);
@@ -69,7 +69,7 @@ describe("Session replay events (GET /api/session/:id/events)", () => {
         });
 
         const res = await agent.get(`/api/session/${session.id}/events`);
-        const rr = res.body.sessionEvents.find((e: any) => e.event_type === "run_result");
+        const rr = res.body.data.sessionEvents.find((e: any) => e.event_type === "run_result");
         expect(rr.payload).toMatchObject({ status: "accepted", stdout: "5", stdin: "input here", code: "print(5)" });
     });
 
@@ -78,7 +78,7 @@ describe("Session replay events (GET /api/session/:id/events)", () => {
         await agent.patch(`/api/session/${session.id}/complete`);
 
         const res = await agent.get(`/api/session/${session.id}/events`);
-        const types = res.body.sessionEvents.map((e: any) => e.event_type);
+        const types = res.body.data.sessionEvents.map((e: any) => e.event_type);
         expect(types).toContain("session_completed");
     });
 
@@ -86,7 +86,7 @@ describe("Session replay events (GET /api/session/:id/events)", () => {
         const session = await createSession(agent, { mode: "practice" });
         const res = await agent.get(`/api/session/${session.id}/events`);
         expect(res.status).toBe(200);
-        expect(res.body.sessionEvents).toEqual([]);
+        expect(res.body.data.sessionEvents).toEqual([]);
     });
 
     it("blocks non-owners with 404", async () => {

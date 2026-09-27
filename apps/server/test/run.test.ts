@@ -29,7 +29,7 @@ const joinGuest = async (sessionId: string) => {
         display_name: "Candidate",
         consent_to_contact: true,
     });
-    return res.body.participant as { id: string };
+    return res.body.data.participant as { id: string };
 };
 
 describe("POST /api/run", () => {
@@ -48,8 +48,8 @@ describe("POST /api/run", () => {
 
         expect(res.status).toBe(200);
         expect(res.body.success).toBe(true);
-        expect(res.body.result.status).toBe("accepted");
-        expect(res.body.result.stdout).toBe("5\n");
+        expect(res.body.data.result.status).toBe("accepted");
+        expect(res.body.data.result.stdout).toBe("5\n");
 
         // event persisted with stdin + code for the replay
         const { rows } = await db.query(

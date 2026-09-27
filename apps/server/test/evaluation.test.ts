@@ -24,7 +24,7 @@ describe("Session evaluation", () => {
             consent_to_contact: true,
         });
         if (res.status !== 200) throw new Error(`join failed ${res.status}`);
-        return res.body.participant as { id: string };
+        return res.body.data.participant as { id: string };
     };
 
     const setupCompletedInterview = async () => {
@@ -43,9 +43,9 @@ describe("Session evaluation", () => {
                 notes: "Struggled with edge cases, good approach.",
             });
             expect(res.status).toBe(200);
-            expect(res.body.evaluation.notes).toBe("Struggled with edge cases, good approach.");
-            expect(res.body.evaluation.rating).toBeNull();
-            expect(res.body.evaluation.evaluated_participant_id).toBe(guest.id);
+            expect(res.body.data.evaluation.notes).toBe("Struggled with edge cases, good approach.");
+            expect(res.body.data.evaluation.rating).toBeNull();
+            expect(res.body.data.evaluation.evaluated_participant_id).toBe(guest.id);
         });
 
         it("upserts into the same row when notes are updated", async () => {
@@ -55,7 +55,7 @@ describe("Session evaluation", () => {
             await agent.patch(`/api/session/${session.id}/notes`).send({ notes: "first draft" });
             const res = await agent.patch(`/api/session/${session.id}/notes`).send({ notes: "second draft" });
             expect(res.status).toBe(200);
-            expect(res.body.evaluation.notes).toBe("second draft");
+            expect(res.body.data.evaluation.notes).toBe("second draft");
 
             const { rows } = await db.query("SELECT count(*) FROM session_evaluations WHERE session_id = $1", [
                 session.id,
@@ -85,7 +85,7 @@ describe("Session evaluation", () => {
             const session = await createSession(agent, { mode: "interview" });
             const res = await agent.get(`/api/session/${session.id}/evaluation`);
             expect(res.status).toBe(200);
-            expect(res.body.evaluation).toBeNull();
+            expect(res.body.data.evaluation).toBeNull();
         });
 
         it("returns saved notes as a draft (pre-fill)", async () => {
@@ -95,8 +95,8 @@ describe("Session evaluation", () => {
 
             const res = await agent.get(`/api/session/${session.id}/evaluation`);
             expect(res.status).toBe(200);
-            expect(res.body.evaluation.notes).toBe("draft note");
-            expect(res.body.evaluation.rating).toBeNull();
+            expect(res.body.data.evaluation.notes).toBe("draft note");
+            expect(res.body.data.evaluation.rating).toBeNull();
         });
 
         it("blocks non-owners", async () => {
@@ -120,8 +120,8 @@ describe("Session evaluation", () => {
 
             expect(res.status).toBe(200);
             expect(res.body.success).toBe(true);
-            expect(res.body.result.rating).toBe("strong");
-            expect(res.body.result.notes).toBe("Excellent work");
+            expect(res.body.data.result.rating).toBe("strong");
+            expect(res.body.data.result.notes).toBe("Excellent work");
         });
 
         it("submits evaluation without rating or notes (both optional)", async () => {
@@ -133,7 +133,7 @@ describe("Session evaluation", () => {
             });
 
             expect(res.status).toBe(200);
-            expect(res.body.result.rating).toBeNull();
+            expect(res.body.data.result.rating).toBeNull();
         });
 
         it("persists a single evaluation row after drafts (final submit overwrites notes when omitted)", async () => {
