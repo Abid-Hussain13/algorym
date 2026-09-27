@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import type { WsMessage } from "@algorym/shared-types";
 import * as runService from "../services/code-run.service.js";
 import { getSessionStatus } from "../services/session.service.js";
 import { logSessionEvent } from "../services/session-events.service.js";
+import { broadcast } from "../ws/connectionManager.js";
 import { verifyParticipant } from "../utils/verifyParticipant.js";
 import AppError from "../utils/AppError.js";
 import type { AuthPayload } from "../types/index.js";
@@ -32,6 +34,9 @@ export const runCode = async (req: Request, res: Response) => {
     const result = await runService.runCode({ code, language, stdin });
 
     await logSessionEvent(sessionId, participantId, "run_result", { ...result, stdin, code });
+
+    const runResultMessage: WsMessage = { type: "run_result", payload: result };
+    broadcast(sessionId, runResultMessage);
 
     res.json({ success: true, data: { result }, message: "Code executed" });
 };
