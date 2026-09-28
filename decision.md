@@ -235,3 +235,45 @@ the dashboard say 3 and has no way to tell which is right.
 Rolling and calendar windows are deliberately **not** unified: a dashboard wants
 "current period vs prior period", Reports wants "pick a range and export it". Same
 vocabulary, different jobs.
+
+# Realtime — Two Channels, One WebSocket Server
+
+## Problem
+The server had **two** `WebSocketServer` instances, each registering its own `upgrade`
+listener on the same `http.Server` — one in `src/ws/index.ts` (`/ws`, JSON events), one in
+`src/collab/index.ts` (`/collaboration`, Yjs binary). Working, but ~90 lines of duplicated
+auth boilerplate and two socket registries. It also read as "two WebSocket servers", which
+was genuinely confusing when navigating the codebase.
+
+## Decision
+**One `WebSocketServer`, one `upgrade` listener, dispatch by pathname.** `src/ws/index.ts`
+now owns both; `src/collab/index.ts` is deleted and only `src/collab/auth.ts` survives (its
+parser reads `sessionId` from the path segment, so it is not the same as the events parser).
+
+```
+server.on("upgrade")
+  ├─ /ws                    → extractConnectionInfo     → verifyParticipant → joinRoom + handleMessage
+  └─ /collaboration/<id>    → parseCollabConnectionInfo → verifyParticipant → setupWSConnection
+```
+
+## Why the channels stay separate
+Two *routes* are non-negotiable — the wire protocols differ (JSON text frames vs binary Yjs
+CRDT updates). The Yjs channel needs a state-vector handshake, awareness broadcasts and
+incremental binary diffs; merging them onto one socket would mean reimplementing the Yjs
+sync protocol by hand. Two routes, one server, one process.
+
+## Collab sockets are deliberately kept out of the events room
+`connectionManager.rooms` drives `broadcast()`, which sends **JSON** `WsMessage` frames.
+A `/collaboration` socket is a `y-websocket` provider speaking a **binary** protocol.
+Registering it in that room would inject JSON text frames into the CRDT stream and corrupt
+it. So collab sockets get `setupWSConnection` and nothing else.
+
+Consequence: `getRoomSize(sessionId)` counts **events-channel** members only. That is the
+correct meaning — it answers "how many people are watching the event channel", not
+"how many sockets exist".
+
+## Relay version pin
+`@y/websocket-server` is held at **0.1.1** (pinned, no caret). `0.1.5` hard-depends on
+`yjs ^14.0.0-7`; `0.1.1` takes `yjs ^13.5.6` as a *peer*, so it uses the app's own Yjs.
+Mixing majors means incompatible CRDT wire formats and silent sync failure. The v13 line
+stops at `0.1.1` — do not let a range float onto `0.1.5`.

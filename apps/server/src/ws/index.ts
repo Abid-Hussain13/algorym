@@ -1,37 +1,49 @@
 import { Server as HttpServer, IncomingMessage } from "http";
 import { WebSocketServer, WebSocket } from "ws";
+import { setupWSConnection } from "@y/websocket-server/utils";
+import { Duplex } from "stream";
 import { extractConnectionInfo } from "./auth.js";
+import { COLLAB_PATH_PREFIX, parseCollabConnectionInfo } from "../collab/auth.js";
 import { joinRoom, leaveRoom, broadcast } from "./connectionManager.js";
 import { handleMessage } from "./handlers.js";
 import { verifyParticipant } from "../utils/verifyParticipant.js";
-import { Duplex } from "stream";
+
+const EVENTS_PATH = "/ws";
 
 interface WsConnection extends WebSocket {
     sessionId?: string;
     participantId?: string;
 }
 
+const isCollabPath = (pathname: string): boolean => pathname.startsWith(COLLAB_PATH_PREFIX);
+
+const rejectUpgrade = (socket: Duplex, status: number, reason: string): void => {
+    socket.write(`HTTP/1.1 ${status} ${reason}\r\n\r\n`);
+    socket.destroy();
+};
+
 export const initializeWebSocketServer = (server: HttpServer): WebSocketServer => {
     const wss = new WebSocketServer({ noServer: true });
 
     server.on("upgrade", (request: IncomingMessage, socket: Duplex, head: Buffer) => {
         const { pathname } = new URL(request.url ?? "/", "http://localhost");
+        const collab = isCollabPath(pathname);
 
-        if (pathname !== "/ws") return;
+        if (!collab && pathname !== EVENTS_PATH) return;
 
-        const info = extractConnectionInfo(request.url);
+        const info = collab
+            ? parseCollabConnectionInfo(request.url)
+            : extractConnectionInfo(request.url);
 
         if (!info) {
-            socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
-            socket.destroy();
+            rejectUpgrade(socket, 401, "Unauthorized");
             return;
         }
 
         verifyParticipant(info)
             .then((isVerified) => {
                 if (!isVerified) {
-                    socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
-                    socket.destroy();
+                    rejectUpgrade(socket, 401, "Unauthorized");
                     return;
                 }
 
@@ -40,12 +52,31 @@ export const initializeWebSocketServer = (server: HttpServer): WebSocketServer =
                 });
             })
             .catch(() => {
-                socket.write("HTTP/1.1 500 Internal Server Error\r\n\r\n");
-                socket.destroy();
+                rejectUpgrade(socket, 500, "Internal Server Error");
             });
     });
 
     wss.on("connection", (ws: WsConnection, req) => {
+        const { pathname } = new URL(req.url ?? "/", "http://localhost");
+
+        // Collaboration sockets speak the binary Yjs sync protocol. They are
+        // deliberately NOT added to the events room: that room broadcasts JSON
+        // WsMessage frames, which would corrupt the CRDT stream.
+        if (isCollabPath(pathname)) {
+            const collabInfo = parseCollabConnectionInfo(req.url);
+
+            if (!collabInfo) {
+                ws.close(4001, "Invalid connection parameters");
+                return;
+            }
+
+            ws.sessionId = collabInfo.sessionId;
+            ws.participantId = collabInfo.participantId;
+
+            setupWSConnection(ws, req, { docName: collabInfo.sessionId });
+            return;
+        }
+
         const info = extractConnectionInfo(req.url);
 
         if (!info) {
