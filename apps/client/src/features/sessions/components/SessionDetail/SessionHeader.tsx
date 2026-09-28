@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import type { SessionDetail } from "@algorym/shared-types";
+import { Button } from "@/components/ui/Button";
 import { MODE_BADGES, MODE_LABELS, STATUS_BADGES, STATUS_LABELS } from "../../constants";
 import { formatDate, formatDuration } from "@/lib/utils/date";
 
@@ -45,6 +46,29 @@ export function SessionHeader({ session }: SessionHeaderProps) {
                     >
                         {MODE_LABELS[session.mode] || session.mode}
                     </span>
+                    {session.status === "live" && (
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => navigate(`/live/${session.id}`)}
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={1.7}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="size-3.5"
+                                aria-hidden="true"
+                            >
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                            Enter live session
+                        </Button>
+                    )}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5 text-sm text-muted">

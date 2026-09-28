@@ -339,9 +339,44 @@ Anonymous guests have no identity, so the duplicate-join guard cannot apply to t
 person may join the same session repeatedly. A rate limit or per-session cap is a
 follow-up.
 
-## Known mismatch
-`cancelSession` only accepts `scheduled` sessions, so a **live** session cannot be
-cancelled — only completed. The status-flow diagram in `decision.md` and
-`frontend-decisions.md` shows `live → cancelled`, which the code does not implement. The
-live room is designed to expose both Cancel and Complete to the host, so this needs a
-decision before that UI ships.
+## Resolved: `live → cancelled` is now allowed
+`cancelSession` previously accepted only `scheduled`, so a running session could only be
+**completed** — yet the status-flow diagrams in `decision.md` and `frontend-decisions.md`
+both showed `live → cancelled`, and the live-room design exposes **both** Cancel and
+Complete to the host. The code now matches the documented flow:
+
+- `scheduled → cancelled` — `ended_at` stays `NULL` (it never ran)
+- `live → cancelled` — `ended_at` is stamped, so the timeline records when the session was
+  really abandoned rather than pretending it never started
+- anything already closed (`completed` / `cancelled` / `expired`) is still rejected
+
+`completeSession` is unchanged: `live → completed` only.
+
+
+# Getting into a Live Session
+
+## Decision: the invite is a full URL, never a bare token
+The create-session success step used to show only `access_token` and label it *"Share this
+link with participants"* — a host could not actually paste anything useful, because the
+raw token is not a URL. It now shows the complete link:
+
+```
+<origin>/live/<sessionId>?token=<accessToken>
+```
+
+Built in `lib/session-urls.ts` from `window.location.origin`, so the same code is correct
+on localhost, a preview deploy and production with **no environment variable** and no
+second source of truth for the host name. One copy button copies the whole URL.
+
+## Decision: the host enters a live session from the sessions list
+`JoinGate` can identify the host (owner-scoped `GET /api/session/:id` returns 200), but
+that only helps once the host is already on `/live/:id` — there was no way *in*.
+
+An "enter live session" control appears **only while `status === "live'`**, in three
+places: the sessions table row, the mobile session card, and the session detail header
+(there as a filled primary button, since that is the page a host naturally lands on). It
+is deliberately absent for scheduled/completed/cancelled/expired sessions, because joining
+is rejected for those anyway.
+
+Note this is a **navigation** link for the host only — it carries no `?token=`, since the
+host is authenticated and resolved by the cookie-backed probe.

@@ -165,14 +165,27 @@ describe("Session", () => {
             expect(done.body.data.session.status).toBe("completed");
         });
 
-        it("cancel: only scheduled sessions can be cancelled", async () => {
-            const s = await liveSession();
-            expect((await agent.patch(`/api/session/${s.id}/cancel`)).status).toBe(400);
+        it("cancel: scheduled and live sessions can be cancelled, closed ones cannot", async () => {
+            // live → cancelled is allowed, and stamps ended_at because it ran
+            const live = await liveSession();
+            const cancelledLive = await agent.patch(`/api/session/${live.id}/cancel`);
+            expect(cancelledLive.status).toBe(200);
+            expect(cancelledLive.body.data.session.status).toBe("cancelled");
+            expect(cancelledLive.body.data.session.ended_at).toBeTruthy();
 
-            const s2 = await createSession(agent, { scheduled_at: "2026-09-01T10:00:00.000Z" });
-            const cancelled = await agent.patch(`/api/session/${s2.id}/cancel`);
+            // scheduled → cancelled, and started_at is null so ended_at stays null
+            const scheduled = await createSession(agent, { scheduled_at: "2026-09-01T10:00:00.000Z" });
+            const cancelled = await agent.patch(`/api/session/${scheduled.id}/cancel`);
             expect(cancelled.status).toBe(200);
             expect(cancelled.body.data.session.status).toBe("cancelled");
+            expect(cancelled.body.data.session.ended_at).toBeNull();
+
+            // already closed → rejected
+            expect((await agent.patch(`/api/session/${cancelled.body.data.session.id}/cancel`)).status).toBe(400);
+
+            const completed = await liveSession();
+            await agent.patch(`/api/session/${completed.id}/complete`);
+            expect((await agent.patch(`/api/session/${completed.id}/cancel`)).status).toBe(400);
         });
     });
 

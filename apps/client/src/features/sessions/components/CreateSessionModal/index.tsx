@@ -203,6 +203,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
                     {step === 4 && (
                         <StepSuccess
                             mode={mode}
+                            sessionId={createSession.data?.session?.id}
                             accessToken={createSession.data?.session?.access_token}
                         />
                     )}

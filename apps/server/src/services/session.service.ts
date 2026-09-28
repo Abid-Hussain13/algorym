@@ -406,10 +406,18 @@ export const cancelSession = async (userId: string, sessionId: string): Promise<
 
     const session = existing.rows[0];
     if (!session) throw new AppError("Session not found", 404);
-    if (session.status !== "scheduled") throw new AppError("Only scheduled sessions can be cancelled", 400);
+    if (session.status !== "scheduled" && session.status !== "live") {
+        throw new AppError("Only scheduled or live sessions can be cancelled", 400);
+    }
 
+    // A session that actually started needs ended_at stamped, so the timeline
+    // reflects when it was really abandoned rather than never running.
     const { rows } = await db.query(
-        `UPDATE sessions SET status = 'cancelled' WHERE id = $1 AND created_by = $2 RETURNING *`,
+        `UPDATE sessions
+         SET status = 'cancelled',
+             ended_at = CASE WHEN started_at IS NOT NULL THEN now() ELSE ended_at END
+         WHERE id = $1 AND created_by = $2
+         RETURNING *`,
         [sessionId, userId]
     );
 

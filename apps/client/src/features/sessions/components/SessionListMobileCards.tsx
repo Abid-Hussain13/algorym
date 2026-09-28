@@ -39,6 +39,20 @@ export function SessionListMobileCards({ sessions, onEdit, onDelete, isDeleting 
                             </p>
                         </div>
                         <div className="flex items-center gap-0.5">
+                            {session.status === "live" && (
+                                <button
+                                    type="button"
+                                    onClick={() => navigate(`/live/${session.id}`)}
+                                    className="grid size-6 place-items-center rounded text-accent transition-colors hover:bg-accent-soft"
+                                    aria-label="Enter live session"
+                                    title="Enter live session"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-3.5">
+                                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                </button>
+                            )}
                             <button
                                 type="button"
                                 onClick={() => navigate(`/app/sessions/${session.id}`)}
