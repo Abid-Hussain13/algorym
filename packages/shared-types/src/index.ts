@@ -59,6 +59,8 @@ export interface SessionQuestionRef {
 export interface SessionDetail extends Session {
     notes: string | null;
     questions: SessionQuestionRef[];
+    /** Owner-scoped endpoint, so only the host ever receives this. */
+    host_participant_id: string | null;
 }
 
 export interface SessionParticipant {

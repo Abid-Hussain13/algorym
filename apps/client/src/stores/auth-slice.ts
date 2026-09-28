@@ -8,7 +8,7 @@ import { authApi, ApiError } from '@/lib/api'
 
 import type { User } from '@algorym/shared-types'
 
-type UserSafe = Omit<User, 'password_hash'>
+export type UserSafe = Omit<User, 'password_hash'>
 
 interface AuthState {
     user: UserSafe | null

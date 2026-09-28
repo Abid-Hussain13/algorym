@@ -14,6 +14,7 @@ import type {
     QuestionListResponse,
     ReportsRange,
     ReportsResponse,
+    SessionParticipant,
     Session,
     SessionDetail,
     SessionEvaluation,
@@ -73,7 +74,7 @@ export const sessionsApi = {
     get: (id: string) => http.get<{ session: SessionDetail }>(`/api/session/${id}`),
     create: (body: CreateSessionBody) => http.post<{ session: Session }>('/api/session', body),
     join: (token: string, body: JoinSessionBody) =>
-        http.post<{ session: Session }>(`/api/session/join`, {
+        http.post<{ session: Session; participant: SessionParticipant }>(`/api/session/join`, {
             ...body,
             access_token: token,
         }),

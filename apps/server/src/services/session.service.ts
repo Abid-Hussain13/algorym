@@ -248,7 +248,10 @@ export const getSessionDetail = async (userId: string, sessionId: string): Promi
                     FROM session_questions sq
                     JOIN questions q ON q.id = sq.question_id
                     WHERE sq.session_id = s.id
-                ), '[]'::json) AS questions
+                ), '[]'::json) AS questions,
+                (SELECT hp.id FROM session_participants hp
+                 WHERE hp.session_id = s.id AND hp.role = 'host'
+                 ORDER BY hp.joined_at ASC LIMIT 1) AS host_participant_id
          FROM sessions s
          LEFT JOIN session_participants sp ON sp.session_id = s.id AND sp.role = 'guest'
          LEFT JOIN session_evaluations se ON se.session_id = s.id
@@ -455,6 +458,17 @@ export const joinSession = async (data: JoinSessionData, userId?: string): Promi
         // Host: pull info from users table, consent is implicit
         role = "host";
         consent = true;
+
+        const user = await db.query("SELECT name, email FROM users WHERE id = $1", [userId]);
+        if (!user.rows[0]) throw new AppError("User not found", 404);
+
+        email = user.rows[0].email;
+        displayName = user.rows[0].name;
+    } else if (userId) {
+        // Authenticated guest: identity comes from the account, so only
+        // consent is asked for — never re-prompted for name or email.
+        role = "guest";
+        consent = data.consent_to_contact;
 
         const user = await db.query("SELECT name, email FROM users WHERE id = $1", [userId]);
         if (!user.rows[0]) throw new AppError("User not found", 404);

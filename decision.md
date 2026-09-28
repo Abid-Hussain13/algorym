@@ -277,3 +277,71 @@ correct meaning — it answers "how many people are watching the event channel",
 `yjs ^14.0.0-7`; `0.1.1` takes `yjs ^13.5.6` as a *peer*, so it uses the app's own Yjs.
 Mixing majors means incompatible CRDT wire formats and silent sync failure. The v13 line
 stops at `0.1.1` — do not let a range float onto `0.1.5`.
+
+# Joining a Session
+
+## Decision: identity source follows authentication, not the form
+`POST /api/session/join` now has three identity paths:
+
+| Visitor | Name / email | Consent |
+|---|---|---|
+| **Host** (owner) | from `users` | implicit `true` |
+| **Authenticated guest** | from `users` — **never re-asked** | asked |
+| **Anonymous guest** | asked in the form | asked |
+
+Previously every non-host fell through one branch, so a signed-in candidate was made to
+retype a name and email the system already held. Any `display_name` / `email` sent by an
+authenticated guest is **ignored** — the account is authoritative (covered by a test).
+`joinSessionSchema` needed no change: both fields were already optional, and the
+"required" rule only ever existed in the service.
+
+**Consent is asked on every session and never carried over.** A new `session_participant`
+row is created per session, and a given session may have a different host, so inheriting
+consent across sessions would be the riskier behaviour. It is stored exactly as given —
+`consent_to_contact: false` is never defaulted to `true`.
+
+## Decision: WebSocket auth reads the cookie
+The access token is httpOnly, so browser JS cannot read it to place in a query string, and
+no endpoint returns a token to JS. A same-origin `ws://` upgrade **does** carry the
+`Cookie` header, so both WS parsers resolve:
+
+```
+token = ?token=…  ??  cookie.accessToken
+```
+
+An explicit `?token=` still wins, which keeps scripted clients and tests working and makes
+a bad query token fail closed rather than silently falling back to the cookie. Side
+benefit: no JWT in URLs, so it stops leaking into browser history, server logs and
+`Referer`.
+
+`cookie-parser` is **not** usable here — its default export is the Express middleware and
+it exports no `parse`, and the `upgrade` event never runs Express middleware. Hence
+`src/utils/parse-cookie.ts`, a ~20-line reader for a `Cookie` header.
+
+## Decision: the live room is gated, host detection by probe
+`/live/:sessionId` renders `JoinGate`, which resolves in this order:
+
+1. `authStatus` still `idle` → wait (prevents a form flash for signed-in users)
+2. `participantId` in `sessionStorage` → straight to the room
+3. `GET /api/session/:id` → 200 means **host**, so skip the form entirely
+4. otherwise → `JoinSessionForm`
+
+The host still needs a `participantId` for the WebSocket URLs, so `SessionDetail` gained
+`host_participant_id`, read from a sub-select. That endpoint is owner-scoped
+(`WHERE s.created_by = $1`), so only the host can ever see it — no new endpoint, no leak.
+
+`participantId` lives in `sessionStorage` keyed by session id, so a refresh or accidental
+tab close mid-interview does not strand a guest outside the room. The invite token is
+stripped from the URL with `history.replaceState` after a successful join.
+
+## Known gap (not fixed here)
+Anonymous guests have no identity, so the duplicate-join guard cannot apply to them — one
+person may join the same session repeatedly. A rate limit or per-session cap is a
+follow-up.
+
+## Known mismatch
+`cancelSession` only accepts `scheduled` sessions, so a **live** session cannot be
+cancelled — only completed. The status-flow diagram in `decision.md` and
+`frontend-decisions.md` shows `live → cancelled`, which the code does not implement. The
+live room is designed to expose both Cancel and Complete to the host, so this needs a
+decision before that UI ships.

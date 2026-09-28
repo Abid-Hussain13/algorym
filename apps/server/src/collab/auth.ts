@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
+import type { IncomingMessage } from "http";
 import type { AuthPayload } from "../types/index.js";
+import { readWsToken } from "../ws/auth.js";
 
 export interface CollabConnectionInfo {
     sessionId: string;
@@ -9,26 +11,27 @@ export interface CollabConnectionInfo {
 
 export const COLLAB_PATH_PREFIX = "/collaboration";
 
-export const parseCollabConnectionInfo = (url: string | undefined): CollabConnectionInfo | null => {
+export const parseCollabConnectionInfo = (request: IncomingMessage): CollabConnectionInfo | null => {
+    const url = request.url;
     if (!url) return null;
 
     const parsed = new URL(url, "http://localhost");
     const match = COLLAB_PATH_PREFIX.length > 0 ? parsed.pathname.match(new RegExp(`^${COLLAB_PATH_PREFIX}/([^/]+)`)) : null;
     const sessionId = match?.[1];
     const participantId = parsed.searchParams.get("participantId");
-    const token = parsed.searchParams.get("token");
 
     if (!sessionId || !participantId) return null;
 
-    let userId: string | undefined;
+    const token = readWsToken(request);
+
     if (token) {
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET!) as AuthPayload;
-            userId = decoded.id;
+            return { sessionId, participantId, userId: decoded.id };
         } catch {
             return null;
         }
     }
 
-    return { sessionId, participantId, userId };
+    return { sessionId, participantId };
 };

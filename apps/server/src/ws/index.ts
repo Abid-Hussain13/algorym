@@ -32,8 +32,8 @@ export const initializeWebSocketServer = (server: HttpServer): WebSocketServer =
         if (!collab && pathname !== EVENTS_PATH) return;
 
         const info = collab
-            ? parseCollabConnectionInfo(request.url)
-            : extractConnectionInfo(request.url);
+            ? parseCollabConnectionInfo(request)
+            : extractConnectionInfo(request);
 
         if (!info) {
             rejectUpgrade(socket, 401, "Unauthorized");
@@ -59,11 +59,8 @@ export const initializeWebSocketServer = (server: HttpServer): WebSocketServer =
     wss.on("connection", (ws: WsConnection, req) => {
         const { pathname } = new URL(req.url ?? "/", "http://localhost");
 
-        // Collaboration sockets speak the binary Yjs sync protocol. They are
-        // deliberately NOT added to the events room: that room broadcasts JSON
-        // WsMessage frames, which would corrupt the CRDT stream.
         if (isCollabPath(pathname)) {
-            const collabInfo = parseCollabConnectionInfo(req.url);
+            const collabInfo = parseCollabConnectionInfo(req);
 
             if (!collabInfo) {
                 ws.close(4001, "Invalid connection parameters");
@@ -77,7 +74,7 @@ export const initializeWebSocketServer = (server: HttpServer): WebSocketServer =
             return;
         }
 
-        const info = extractConnectionInfo(req.url);
+        const info = extractConnectionInfo(req);
 
         if (!info) {
             ws.close(4001, "Invalid connection parameters");
