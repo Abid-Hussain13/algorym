@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { userApi } from '@/lib/api/endpoints'
+import { userApi } from '@/lib/api'
 import type { UpdatePreferencesBody, ChangePasswordBody } from '@algorym/shared-types'
 
 export function useUserPreferences() {

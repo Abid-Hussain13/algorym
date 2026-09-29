@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { sessionsApi } from "@/lib/api/endpoints";
+import { sessionsApi } from '@/lib/api';
 import { selectAuthStatus, selectUser } from "@/stores/auth-slice";
 import { useAppSelector } from "@/stores/hooks";
 import { Spinner } from "@/components/ui/Spinner";
@@ -21,7 +21,8 @@ export function JoinGate({ sessionId, children }: JoinGateProps) {
     const status = useAppSelector(selectAuthStatus);
     const user = useAppSelector(selectUser);
 
-    const [participant, setParticipant] = useState<LocalParticipant | null>(() => readParticipant(sessionId));
+    /** Set only by the join form or by a previous visit (sessionStorage). */
+    const [joined, setJoined] = useState<LocalParticipant | null>(() => readParticipant(sessionId));
 
     const isAuthResolved = status === "authenticated" || status === "unauthenticated";
 
@@ -30,7 +31,7 @@ export function JoinGate({ sessionId, children }: JoinGateProps) {
     const { data: hostProbe, isLoading: probing } = useQuery({
         queryKey: ["session", sessionId],
         queryFn: () => sessionsApi.get(sessionId),
-        enabled: isAuthResolved && !participant,
+        enabled: isAuthResolved && !joined,
         retry: false,
     });
 
@@ -38,24 +39,28 @@ export function JoinGate({ sessionId, children }: JoinGateProps) {
 
     // The host is never sent through the join form, but still needs a
     // participantId for the WebSocket URLs — recover theirs from the detail
-    // response (which is owner-scoped, so only they can read it).
-    useEffect(() => {
+    // response (which is owner-scoped, so only they can read it). Derived during
+    // render rather than pushed into state from an effect.
+    const hostParticipant = useMemo<LocalParticipant | null>(() => {
         const hostId = hostProbe?.session?.host_participant_id;
-        if (!isHost || participant || !hostId) return;
+        if (!isHost || !hostId) return null;
 
-        const record: LocalParticipant = {
-            id: hostId,
-            displayName: user?.name || "Host",
-            role: "host",
-        };
-        writeParticipant(sessionId, record);
-        setParticipant(record);
-    }, [hostProbe, isHost, participant, sessionId, user?.name]);
+        return { id: hostId, displayName: user?.name || "Host", role: "host" };
+    }, [hostProbe, isHost, user?.name]);
+
+    const participant = joined ?? hostParticipant;
+
+    // The only thing that genuinely needs an effect is persisting the host's
+    // participantId so a refresh does not re-run the probe.
+    useEffect(() => {
+        if (!hostParticipant || joined) return;
+        writeParticipant(sessionId, hostParticipant);
+    }, [hostParticipant, joined, sessionId]);
 
     const handleJoined = useCallback(
         (record: LocalParticipant) => {
             writeParticipant(sessionId, record);
-            setParticipant(record);
+            setJoined(record);
 
             // Drop the invite token so it stops living in history / shared links.
             if (accessToken) {

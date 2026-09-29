@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/Button";
-import { Dropdown } from "@/components/ui/dropdown";
+import { Dropdown } from "@/components/ui/Dropdown";
 import { SORT_OPTIONS, MODE_OPTIONS } from "../constants";
 
 interface SessionsFiltersProps {

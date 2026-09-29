@@ -7,7 +7,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogDescription,
-} from "@/components/ui/dialog"
+} from "@/components/ui/Dialog"
 import { useChangePassword } from "@/features/user"
 
 interface ChangePasswordModalProps {

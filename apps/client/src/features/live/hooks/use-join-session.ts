@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { sessionsApi } from "@/lib/api/endpoints";
+import { sessionsApi } from '@/lib/api';
 import type { JoinSessionBody } from "@algorym/shared-types";
 import { writeParticipant } from "../lib/participant-store";
 

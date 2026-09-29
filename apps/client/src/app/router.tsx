@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, Navigate } from 'react-router-dom'
 
 import { DashboardLayout } from '@/app/layouts/DashboardLayout'
 import { MarketingLayout } from '@/app/layouts/MarketingLayout'
@@ -21,7 +21,6 @@ import { Settings } from '@/pages/dashboard/Settings'
 import { Reports } from '@/pages/dashboard/Reports'
 import { Questions } from '@/pages/dashboard/Questions'
 import { Sessions } from '@/pages/dashboard/Sessions'
-import { LiveRoom } from '@/pages/live/LiveRoom'
 
 export function AppRouter() {
     return (
@@ -50,7 +49,8 @@ export function AppRouter() {
                 <Route path="app/sessions/:sessionId" element={<SessionDetailPage />} />
             </Route>
             <Route path="live" element={<LiveLayout />}>
-                <Route index element={<LiveRoom />} />
+                {/* A room always needs a session id; bare /live is a dead end. */}
+                <Route index element={<Navigate to="/app/sessions" replace />} />
                 <Route path=":sessionId" element={<LiveRoomPage />} />
             </Route>
 

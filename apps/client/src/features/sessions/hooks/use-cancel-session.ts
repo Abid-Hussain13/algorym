@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { sessionsApi } from "@/lib/api/endpoints";
+import { sessionsApi } from '@/lib/api';
 
 export function useCancelSession() {
     const queryClient = useQueryClient();

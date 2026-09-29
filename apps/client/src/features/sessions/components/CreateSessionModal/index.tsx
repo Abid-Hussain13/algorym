@@ -10,7 +10,7 @@ import {
     DialogTitle,
     DialogDescription,
     DialogFooter,
-} from "@/components/ui/dialog";
+} from "@/components/ui/Dialog";
 import { useQuestions } from "@/features/questions";
 import { useCreateSession, useScheduleOverlap, useAutoSwitchTime, computeScheduledISO } from "@/features/sessions";
 import { useUserPreferences } from "@/features/user";

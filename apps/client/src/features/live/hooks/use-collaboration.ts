@@ -49,6 +49,11 @@ export function useCollaboration(sessionId: string, participant: LocalParticipan
         };
 
         provider.on("status", handleStatus);
+        // The Y.Doc and WebsocketProvider are external objects that cannot be
+        // built during render without breaking StrictMode, so they are published
+        // to React from here. This is the subscribe-to-an-external-system case,
+        // not derived state.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCollaboration({ doc, provider, files, isConnected });
 
         return () => {

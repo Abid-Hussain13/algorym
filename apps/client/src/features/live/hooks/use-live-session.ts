@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { Question, RoomSession } from "@algorym/shared-types";
-import { sessionsApi } from "@/lib/api/endpoints";
+import { sessionsApi } from '@/lib/api';
 
 export interface LiveSessionState {
     session: RoomSession | null;

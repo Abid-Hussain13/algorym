@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import type { ReportsRange } from '@algorym/shared-types'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
-import { reportsApi } from '@/lib/api/endpoints'
+import { reportsApi } from '@/lib/api'
 import {
     useReports,
     TimeFilter,

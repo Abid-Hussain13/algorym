@@ -6,7 +6,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/Dialog";
 import { useCreateQuestion, useUpdateQuestion, useGenerateQuestion } from "../../hooks/use-question-mutations";
 import { GenerateButton } from "./GenerateButton";
 import { QuestionFormFields } from "./QuestionFormFields";

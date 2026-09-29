@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { sessionsApi } from "@/lib/api/endpoints";
+import { sessionsApi } from '@/lib/api';
 import type { SessionStatus } from "@algorym/shared-types";
 
 const STATUS_LABELS: Record<SessionStatus, string> = {

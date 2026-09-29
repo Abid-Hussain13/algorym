@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard } from "@/components/ui/StatCard";
 import { Button } from "@/components/ui/Button";
 import { SessionsTable, MonthlyEvaluation, useDashboardStats } from "@/features/dashboard";
 import { Spinner } from "@/components/ui/Spinner";

@@ -527,3 +527,103 @@ are declared in `WsMessage` and are **never broadcast** — only `run_result`, `
 and `leave` are. So the room cannot currently react to the host switching question
 or completing the session. `useLiveSession` papers over this with a 30s refetch,
 which is a placeholder, not the design.
+
+# Codebase Layout — Tidying Pass
+
+Goal: a newcomer should be able to predict where a file lives. The rules below are now
+enforced by convention (there is no linter for structure).
+
+## The layout
+```
+src/
+  app/          routing + layouts only — no business logic
+  pages/        one file per route, thin; composes features/
+  features/<name>/
+      components/   presentational, feature-specific
+      hooks/        data + behaviour
+      lib/          feature-local helpers
+      index.ts      the only public surface
+  components/   cross-feature: ui/ primitives, icons/, shared/ layout-ish, marketing/, motion/
+  lib/          infrastructure: api/, ws/, utils/, query-client, session-urls
+  stores/       redux
+```
+
+**A feature is only importable through its `index.ts`.** That is what keeps `features/live`
+from becoming a dumping ground, and it is why the barrels are worth maintaining.
+
+## Decisions
+
+**`components/ui/` is now all PascalCase.** It was a mix: `Button.tsx`/`Card.tsx` (ours)
+next to `badge.tsx`/`stat-card.tsx`/`not-found-shared.tsx` (shadcn). The export symbols
+were already PascalCase — only the filenames had drifted — so this was a pure rename with
+`git mv` to preserve history. Note this deliberately diverges from shadcn's own
+convention: a future `npx shadcn add` will re-introduce lowercase files, and they should be
+re-cased to match. Export *names* must stay identical either way or imports break.
+
+**One import path per module: `@/lib/api`.** There were three ways to reach the same
+object — `@/lib/api`, `@/lib/api/endpoints`, and a `@/lib` barrel that existed only to
+re-export `@/lib/api`. The barrel was also **incomplete**: `lib/api/index.ts` exported 5 of
+the 8 API groups, so anyone trusting it would have hit a missing-export error on
+`dashboardApi`, `reportsApi` or `userApi`. Completed it and deleted `lib/index.ts`;
+the three import styles are now one.
+
+**Placeholder feature folders are kept, but stop lying.** `presence/`, `evaluation/`,
+`replay/`, `marketing/`, `editor/` and `settings/` are kept (decided), but each
+`index.ts` is now a comment saying what belongs there and — critically — **that it is a
+marker, not code**. `presence` in particular now states that presence lives in
+`features/live`, because leaving it looking like a home for presence code is exactly the
+trap that made a second, wrong module look reasonable. `editor` now says CodeMirror 6,
+not Monaco.
+
+**`use-monaco.ts` was deleted, not moved.** It was a stub for a library this project never
+adopted. Keeping it would have been the most expensive kind of placeholder — an
+almost-working module pointing at the wrong technology. `calendar.tsx` and
+`use-local-storage.ts` went with it as genuinely unreferenced.
+
+Caution for the future: `use-dashboard.ts` and `EvaluationCard.tsx` *looked* dead to a
+filename scan but are not — they export `useDashboardStats` and `MonthlyEvaluation`.
+Check the exported symbol, not the filename, before deleting a hook.
+
+**`/live` is a redirect now.** The index route rendered a stub that said "live room comming
+soom" (typo included). A room is meaningless without a session id, so `/live` now
+redirects to `/app/sessions` and the stub is gone.
+
+**Server: `collab/` moved under `ws/`.** `src/collab/auth.ts` had exactly one importer —
+`src/ws/index.ts` — and existed only to serve the collaboration socket. A top-level folder
+for a single WebSocket auth helper implied more scope than it had. It is now
+`src/ws/collab/auth.ts`.
+
+**Server: `ai.controller.ts` folded into `questions.controller.ts`.** It contained a
+single handler, `generateQuestion`, which is mounted at `POST /api/question/generate` — so
+it is a questions controller by any measure. Controllers are grouped by *resource*; the AI
+concern stays in `services/ai.service.ts`, where it belongs. Its sibling `ai.router.ts`
+was a **0-byte file**, never imported and never registered — deleted.
+
+## Fixed while in there: 4 real lint errors in live-room code
+`pnpm run lint` had **20 errors**, all pre-existing, but four were in Phase 3/4 code and
+were not going to be left behind:
+
+- `use-fullscreen` — took a `target` ref parameter that **nobody passed**, and reading
+  `target.current` inside a `useCallback` made React Compiler bail out
+  ("could not preserve existing manual memoization"). Dropped the parameter; fullscreen
+  always targets `document.documentElement`.
+- `use-collaborators` — was calling `setCollaborators([])` in an effect to handle "no
+  provider yet". That is a derivable case, so it is now `awareness ? roster : []`.
+- `JoinGate` — was syncing the host's participantId from a query result into `useState`
+  inside an effect, a classic cascading-render antipattern. The host record is now
+  **derived during render** with `useMemo`; the effect only persists to sessionStorage,
+  which is a genuine external side effect.
+- `use-collaboration` — keeps its `setState`-in-effect, because a `Y.Doc` and
+  `WebsocketProvider` cannot be constructed during render (that is exactly what broke
+  under StrictMode). It now carries a one-line comment saying why.
+
+Down to **16 errors, 7 warnings** — all in `features/sessions`, `features/questions` and
+`components/ui`, all pre-existing. Left alone deliberately: they are `set-state-in-effect`
+and `exhaustive-deps` findings in the create/edit session modals, which are behavioural
+refactors with real regression risk, and they are unrelated to the live room.
+
+## Not done, on purpose
+**Quote style is still mixed** (single vs double) across the client. No prettier config and
+eslint does not enforce it, so normalising it would have produced a large diff touching
+almost every file for zero behaviour change. Worth a `prettier` config when there is time,
+not worth a risky sweep now.

@@ -8,7 +8,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogDescription,
-} from "@/components/ui/dialog"
+} from "@/components/ui/Dialog"
 import { useDeleteAccount } from "@/features/user"
 
 const CONFIRM_TEXT = "DELETE"

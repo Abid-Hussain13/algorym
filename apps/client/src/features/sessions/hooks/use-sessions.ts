@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { sessionsApi } from '@/lib/api/endpoints'
+import { sessionsApi } from '@/lib/api'
 import type { SessionListParams } from '@algorym/shared-types'
 
 export function useSessions(params: SessionListParams) {

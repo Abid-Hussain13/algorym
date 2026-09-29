@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import type { IncomingMessage } from "http";
-import type { AuthPayload } from "../types/index.js";
-import { readWsToken } from "../ws/auth.js";
+import type { AuthPayload } from "../../types/index.js";
+import { readWsToken } from "../auth.js";
 
 export interface CollabConnectionInfo {
     sessionId: string;

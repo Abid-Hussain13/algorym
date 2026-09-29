@@ -1,4 +1,4 @@
-import { sessionsApi } from "@/lib"
+import { sessionsApi } from '@/lib/api'
 import { useQuery } from "@tanstack/react-query"
 
 export function useScheduledSession() {

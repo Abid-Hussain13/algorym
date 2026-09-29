@@ -8,8 +8,8 @@ import {
     getQuestion,
     updateQuestion,
     deleteQuestion,
+    generateQuestion,
 } from "../controllers/questions.controller.js";
-import { generateQuestion } from "../controllers/ai.controller.js";
 
 const questionRoute = express.Router();
 

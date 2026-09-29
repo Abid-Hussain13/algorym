@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
-import { Dropdown } from "@/components/ui/dropdown";
+import { Dropdown } from "@/components/ui/Dropdown";
 import { Spinner } from "@/components/ui/Spinner";
 import {
     useQuestions,

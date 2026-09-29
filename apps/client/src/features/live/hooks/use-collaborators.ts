@@ -36,13 +36,10 @@ export function useCollaborators(
     selfParticipantId: string | undefined,
     isConnected: boolean,
 ): { collaborators: Collaborator[]; connected: boolean } {
-    const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+    const [roster, setRoster] = useState<Collaborator[]>([]);
 
     useEffect(() => {
-        if (!awareness) {
-            setCollaborators([]);
-            return;
-        }
+        if (!awareness) return;
 
         const read = () => {
             const next: Collaborator[] = [];
@@ -66,9 +63,12 @@ export function useCollaborators(
                 return a.displayName.localeCompare(b.displayName);
             });
 
-            setCollaborators(next);
+            setRoster(next);
         };
 
+        // Awareness is an external system, not derived React state: the roster
+        // cannot be computed during render, only read from the provider and
+        // pushed into state. The first read seeds it, the listeners keep it live.
         read();
 
         awareness.on("change", read);
@@ -81,6 +81,9 @@ export function useCollaborators(
             awareness.off("remove", read);
         };
     }, [awareness, selfParticipantId]);
+
+    // Before the provider exists there is nobody to show.
+    const collaborators = awareness ? roster : [];
 
     return { collaborators, connected: isConnected };
 }

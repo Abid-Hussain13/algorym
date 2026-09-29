@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import type { RunResultPayload } from "@algorym/shared-types";
-import { runApi } from "@/lib/api/endpoints";
+import { runApi } from '@/lib/api';
 
 interface RunVariables {
     code: string;

@@ -1,8 +1,12 @@
 export { ApiError, http } from './client'
+
 export {
-  authApi,
-  evaluationApi,
-  questionsApi,
-  runApi,
-  sessionsApi,
+    authApi,
+    dashboardApi,
+    evaluationApi,
+    questionsApi,
+    reportsApi,
+    runApi,
+    sessionsApi,
+    userApi,
 } from './endpoints'

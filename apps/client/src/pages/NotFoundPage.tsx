@@ -1,4 +1,4 @@
-import { NotFoundGlitch } from '@/components/ui/not-found-glitch'
+import { NotFoundGlitch } from '@/components/ui/NotFoundGlitch'
 
 export function NotFoundPage() {
   return (

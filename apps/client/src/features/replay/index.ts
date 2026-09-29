@@ -1,1 +1,5 @@
-export const replayFeature = 'video-style replay built from trimmed session_events, never device-gated'
+/**
+ * Video-style replay rebuilt from trimmed `session_events` (code snapshots +
+ * run results), never device-gated. Deliberately built AFTER the live room.
+ */
+export {};

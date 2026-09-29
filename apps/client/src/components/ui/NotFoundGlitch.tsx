@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useReducedMotion } from 'motion/react'
 
-import { NotFoundActions, NotFoundStage, type NotFoundProps } from './not-found-shared'
+import { NotFoundActions, NotFoundStage, type NotFoundProps } from './NotFoundShared'
 
 const GLYPHS = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789#%&@$?/\\"'
 const SCRAMBLE_MS = 700

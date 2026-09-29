@@ -9,9 +9,9 @@ import {
     DialogHeader,
     DialogTitle,
     DialogFooter,
-} from "@/components/ui/dialog";
+} from "@/components/ui/Dialog";
 import { useQuery } from "@tanstack/react-query";
-import { sessionsApi } from "@/lib/api/endpoints";
+import { sessionsApi } from '@/lib/api';
 import { useQuestions } from "@/features/questions";
 import { useUpdateSession, useCancelSession } from "@/features/sessions";
 import { useUserPreferences } from "@/features/user";

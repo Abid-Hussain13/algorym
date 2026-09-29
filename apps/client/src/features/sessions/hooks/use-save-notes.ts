@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { sessionsApi } from "@/lib/api/endpoints";
+import { sessionsApi } from '@/lib/api';
 
 export function useSaveNotes(sessionId: string | undefined) {
     const queryClient = useQueryClient();

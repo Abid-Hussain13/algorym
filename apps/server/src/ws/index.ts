@@ -3,7 +3,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { setupWSConnection } from "@y/websocket-server/utils";
 import { Duplex } from "stream";
 import { extractConnectionInfo } from "./auth.js";
-import { COLLAB_PATH_PREFIX, parseCollabConnectionInfo } from "../collab/auth.js";
+import { COLLAB_PATH_PREFIX, parseCollabConnectionInfo } from "./collab/auth.js";
 import { joinRoom, leaveRoom, broadcast } from "./connectionManager.js";
 import { handleMessage } from "./handlers.js";
 import { verifyParticipant } from "../utils/verifyParticipant.js";

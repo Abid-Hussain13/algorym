@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { questionsApi } from '@/lib/api/endpoints'
+import { questionsApi } from '@/lib/api'
 import type { CreateQuestionBody, GenerateQuestionBody } from '@algorym/shared-types'
 
 export function useCreateQuestion() {

@@ -5,7 +5,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogDescription,
-} from "@/components/ui/dialog";
+} from "@/components/ui/Dialog";
 
 interface ConfirmReplaceDialogProps {
     open: boolean;
