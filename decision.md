@@ -380,3 +380,77 @@ is rejected for those anyway.
 
 Note this is a **navigation** link for the host only — it carries no `?token=`, since the
 host is authenticated and resolved by the cookie-backed probe.
+
+# Presence — Who Is In The Room
+
+## Decision: Yjs awareness, not `join`/`leave` events
+The room shows who else is connected using **Yjs awareness**, which rides on the existing
+`/collaboration` socket. The `/ws` channel already broadcasts `join` / `leave`, but that was
+not used for presence:
+
+- awareness is keyed **per client connection**, so a tab killed without a clean close
+  simply expires from the roster instead of leaving a permanent ghost
+- it needs no extra server code, and in Phase 5 it also carries **remote cursors** for free
+- it survives reconnects with backoff, which `join`/`leave` does not
+
+Every client publishes `awareness.setLocalStateField("participant", …)` with its
+`participantId`, `displayName` and `role`; `useCollaborators` reads `getStates()` and
+re-renders on `change` / `add` / `remove`.
+
+`CollaboratorPresence` in `shared-types` (previously unused) is what the roster renders.
+
+## Two bugs this exposed
+
+**1. There was no dev proxy, so the WS URL was wrong.** `useCollaboration` originally built
+`ws://<window.location.host>/collaboration` — which in development is the **Vite port
+(5173)**, not the API port (3000), so the socket never opened and presence silently stayed
+empty. `lib/session-urls.ts` now resolves the origin from `VITE_API_URL`, falling back to
+`window.location.origin` for same-origin production. This is also why the pre-existing
+`lib/ws/socket.ts` `buildWsUrl` must use the same helper.
+
+**2. Creating the provider during render breaks under StrictMode.** The first version built
+the `WebsocketProvider` in a `useMemo` guarded by a ref and destroyed it in the effect
+cleanup. React's StrictMode mounts → unmounts → remounts in development, so the cleanup
+destroyed the provider while the memo never re-ran, and the second mount reused a **dead
+socket**. Creation now happens *inside* the effect, so setup and teardown are symmetric.
+
+Both were invisible to unit tests and to `tsc` — only driving two real browsers caught them.
+
+## Known behaviour: a hard tab close takes ~30s to clear
+If a participant closes the tab or loses connectivity abruptly, the awareness removal message
+never reaches the server, so the ghost stays until Yjs's awareness timeout (~30s). A clean
+in-app exit clears immediately. A faster path is to send a `leave` event on `beforeunload` in
+Phase 6, which will shorten but not eliminate the window.
+
+# Live Room — Staying In The Room
+
+## Decision: two layers, honest about what each can do
+The room has **zero app chrome** (the `/live/*` route sits outside `DashboardLayout`, and
+`LiveLayout` is `h-svh overflow-hidden`), so there is nothing to click out to. That was
+already true from the route design in `frontend-decisions.md` §6.
+
+On top of that, `FullscreenGuard` adds a thin warning strip with a **Go full screen**
+button, which also hides the browser's own address bar and tabs.
+
+**A browser cannot stop a candidate leaving.** Fullscreen exits on ESC, a new tab always
+works, and JS can be disabled. So this is deterrence plus evidence — the host's recording
+shows the gap — not lock-down. The docs already called these "security walls"; the word
+"walls" is doing real work there.
+
+## Simplicity choices
+- **A strip, not a modal.** It never blocks the room, so a candidate on a browser that
+  refuses fullscreen is not trapped behind an overlay.
+- **Dismissable, and it returns.** Dismissing hides it for the session; leaving fullscreen
+  brings it back, because that is exactly the moment the warning matters.
+- **`requestFullscreen` is only ever called from the click handler.** Browsers reject it
+  without a user gesture, so auto-triggering would be a silent no-op *and* hostile UX —
+  `frontend-decisions.md` §6 rule 4 says never auto-trigger, and that still holds.
+- **No new dependency.** `useFullscreen` is ~40 lines wrapping the platform API and
+  listening to `fullscreenchange`.
+
+## Verified with a real trusted click
+`Runtime.evaluate` cannot enter fullscreen (it is not a user gesture), so the check was done
+with `Input.dispatchMouseEvent` — a real mouse event:
+
+- `document.fullscreenElement` becomes `HTML` after clicking **Go full screen**
+- the strip hides on entering, returns on exiting

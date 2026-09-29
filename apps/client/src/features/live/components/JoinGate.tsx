@@ -6,12 +6,13 @@ import { selectAuthStatus, selectUser } from "@/stores/auth-slice";
 import { useAppSelector } from "@/stores/hooks";
 import { Spinner } from "@/components/ui/Spinner";
 import { JoinSessionForm } from "./JoinSessionForm";
-import { readParticipantId, writeParticipantId } from "../lib/participant-store";
+import { readParticipant, writeParticipant } from "../lib/participant-store";
+import type { LocalParticipant } from "../lib/participant-store";
 
 interface JoinGateProps {
     sessionId: string;
     /** Rendered once the visitor is a confirmed participant. */
-    children: (participantId: string) => React.ReactNode;
+    children: (participant: LocalParticipant) => React.ReactNode;
 }
 
 export function JoinGate({ sessionId, children }: JoinGateProps) {
@@ -20,7 +21,7 @@ export function JoinGate({ sessionId, children }: JoinGateProps) {
     const status = useAppSelector(selectAuthStatus);
     const user = useAppSelector(selectUser);
 
-    const [participantId, setParticipantId] = useState<string | null>(() => readParticipantId(sessionId));
+    const [participant, setParticipant] = useState<LocalParticipant | null>(() => readParticipant(sessionId));
 
     const isAuthResolved = status === "authenticated" || status === "unauthenticated";
 
@@ -29,7 +30,7 @@ export function JoinGate({ sessionId, children }: JoinGateProps) {
     const { data: hostProbe, isLoading: probing } = useQuery({
         queryKey: ["session", sessionId],
         queryFn: () => sessionsApi.get(sessionId),
-        enabled: isAuthResolved && !participantId,
+        enabled: isAuthResolved && !participant,
         retry: false,
     });
 
@@ -40,16 +41,21 @@ export function JoinGate({ sessionId, children }: JoinGateProps) {
     // response (which is owner-scoped, so only they can read it).
     useEffect(() => {
         const hostId = hostProbe?.session?.host_participant_id;
-        if (!isHost || participantId || !hostId) return;
+        if (!isHost || participant || !hostId) return;
 
-        writeParticipantId(sessionId, hostId);
-        setParticipantId(hostId);
-    }, [hostProbe, isHost, participantId, sessionId]);
+        const record: LocalParticipant = {
+            id: hostId,
+            displayName: user?.name || "Host",
+            role: "host",
+        };
+        writeParticipant(sessionId, record);
+        setParticipant(record);
+    }, [hostProbe, isHost, participant, sessionId, user?.name]);
 
     const handleJoined = useCallback(
-        (id: string) => {
-            writeParticipantId(sessionId, id);
-            setParticipantId(id);
+        (record: LocalParticipant) => {
+            writeParticipant(sessionId, record);
+            setParticipant(record);
 
             // Drop the invite token so it stops living in history / shared links.
             if (accessToken) {
@@ -61,7 +67,7 @@ export function JoinGate({ sessionId, children }: JoinGateProps) {
         [accessToken, sessionId]
     );
 
-    if (participantId) return <>{children(participantId)}</>;
+    if (participant) return <>{children(participant)}</>;
 
     if (!isAuthResolved) {
         return (

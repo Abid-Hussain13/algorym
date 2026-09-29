@@ -8,12 +8,13 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { Card, CardContent } from "@/components/ui/Card";
 import { useJoinSession } from "../hooks/use-join-session";
 import type { UserSafe } from "@/stores/auth-slice";
+import type { LocalParticipant } from "../lib/participant-store";
 
 interface JoinSessionFormProps {
     sessionId: string;
     accessToken: string;
     user: UserSafe | null;
-    onJoined: (participantId: string) => void;
+    onJoined: (participant: LocalParticipant) => void;
 }
 
 export function JoinSessionForm({ sessionId, accessToken, user, onJoined }: JoinSessionFormProps) {
@@ -71,7 +72,12 @@ export function JoinSessionForm({ sessionId, accessToken, user, onJoined }: Join
         joinSession.mutate(
             { accessToken, body },
             {
-                onSuccess: (data) => onJoined(data.participant.id),
+                onSuccess: (data) =>
+                    onJoined({
+                        id: data.participant.id,
+                        displayName: data.participant.display_name || "Guest",
+                        role: data.participant.role,
+                    }),
                 onError: (err) => {
                     toast.error(err instanceof Error ? err.message : "Could not join this session");
                 },
