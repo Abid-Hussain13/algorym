@@ -14,6 +14,7 @@ import type {
     QuestionListResponse,
     ReportsRange,
     ReportsResponse,
+    RunResultPayload,
     SessionParticipant,
     Session,
     SessionDetail,
@@ -21,6 +22,7 @@ import type {
     SessionEvent,
     SessionListParams,
     SessionListResponse,
+    SessionRoom,
     SignupBody,
     UpdatePreferencesBody,
     User,
@@ -72,6 +74,9 @@ export const sessionsApi = {
         return http.get<SessionListResponse>(`/api/session${query ? `?${query}` : ''}`)
     },
     get: (id: string) => http.get<{ session: SessionDetail }>(`/api/session/${id}`),
+    /** Participant-scoped live-room payload; works for anonymous guests too. */
+    room: (id: string, participantId: string) =>
+        http.get<SessionRoom>(`/api/session/${id}/room?participantId=${encodeURIComponent(participantId)}`),
     create: (body: CreateSessionBody) => http.post<{ session: Session }>('/api/session', body),
     join: (token: string, body: JoinSessionBody) =>
         http.post<{ session: Session; participant: SessionParticipant }>(`/api/session/join`, {
@@ -96,8 +101,18 @@ export const sessionsApi = {
 }
 
 export const runApi = {
-    execute: (body: { session_id: string; language: string; code: string }) =>
-        http.post<{ result: unknown }>('/api/run', body),
+    /**
+     * `POST /api/run`. Body must match `runCodeSchema` on the server, which is
+     * camelCase — an earlier revision sent `session_id` and was silently 400ing.
+     * The response envelope unwraps to `{ result }`.
+     */
+    execute: (body: {
+        sessionId: string
+        participantId: string
+        language: string
+        code: string
+        stdin?: string
+    }) => http.post<{ result: RunResultPayload }>('/api/run', body),
 }
 
 export const evaluationApi = {

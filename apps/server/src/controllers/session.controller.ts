@@ -6,6 +6,7 @@ import { getHostParticipant, getCandidateParticipant } from "../services/partici
 import { saveSessionNotes, getSessionEvaluation } from "../services/evaluation.service.js";
 import * as sessionEventService from "../services/session-events.service.js";
 import AppError from "../utils/AppError.js";
+import { verifyParticipant } from "../utils/verifyParticipant.js";
 import type { AuthPayload } from "../types/index.js";
 
 export const createSession = async (req: Request, res: Response) => {
@@ -41,6 +42,35 @@ export const getSessionById = async (req: Request, res: Response) => {
     const session = await service.getSessionDetail(req.user!.id, req.params.id as string);
 
     res.json({ success: true, data: { session }, message: "" });
+};
+
+/**
+ * `GET /api/session/:id/room?participantId=…`
+ *
+ * The live room's data source. Deliberately NOT behind `protect`: a candidate can
+ * be an anonymous guest with no account, so their proof of membership is the
+ * participantId issued at join time — the same check `/api/run` uses.
+ */
+export const getSessionRoom = async (req: Request, res: Response) => {
+    const sessionId = req.params.id as string;
+    const participantId = typeof req.query.participantId === "string" ? req.query.participantId : "";
+
+    if (!participantId) throw new AppError("participantId is required", 400);
+
+    let userId: string | undefined;
+    try {
+        const token = req.cookies?.accessToken;
+        if (token) userId = (jwt.verify(token, process.env.JWT_SECRET!) as AuthPayload).id;
+    } catch {
+        // no/expired cookie — treated as an anonymous guest below
+    }
+
+    const isVerified = await verifyParticipant({ sessionId, participantId, userId });
+    if (!isVerified) throw new AppError("You are not a participant of this session", 403);
+
+    const room = await service.getSessionRoom(sessionId);
+
+    res.json({ success: true, data: room, message: "" });
 };
 
 export const updateSession = async (req: Request, res: Response) => {

@@ -454,3 +454,76 @@ with `Input.dispatchMouseEvent` — a real mouse event:
 
 - `document.fullscreenElement` becomes `HTML` after clicking **Go full screen**
 - the strip hides on entering, returns on exiting
+
+# Phase 4 — The Data Layer (three hooks, one new endpoint)
+
+## The gap this phase had to close
+`GET /api/session/:id` is owner-scoped **and** behind `protect`. An anonymous
+candidate has no account and no owner rights, so the room had *no* way to load the
+session or the question. The `join` response returns only the raw `sessions` row
+(`question_id`, `language`, `status`) — never the question's text or starter code.
+
+So the data layer had no data source. One endpoint was added rather than
+complicating the client.
+
+## `GET /api/session/:id/room?participantId=…`
+Returns `{ session, question }` and is gated by `verifyParticipant` — the *same*
+check `/api/run` already uses — instead of `protect`. That is what lets a logged-out
+candidate read the room: their proof of membership is the participantId issued at
+join, not a session cookie.
+
+Three deliberate choices:
+- **It 403s, never 404s, for an unknown session.** The participant check runs first
+  and fails, so the response does not reveal whether a session id exists. Matches how
+  `/api/run` already behaves.
+- **`access_token` is deliberately excluded** (`RoomSession` is its own narrower
+  type, not `Session`). The invite secret is not something to hand a candidate back.
+- **Same endpoint for host and guest.** The host has a richer owner-scoped payload
+  (`["session", id]` — notes, question list) which the dashboard already uses, so
+  there is no need for a host-only branch here.
+
+## `runApi.execute` was wrong and silently so
+It sent `{ session_id, language, code }`. The server validates `runCodeSchema`,
+which wants `sessionId`, `participantId`, `code`, `language` — so every call would
+have been a **400**. It was never caught because the function is currently
+referenced only by a re-export; the first real caller in Phase 5 would have hit it.
+Fixed, and the return type is now `RunResultPayload` instead of `unknown`.
+
+## `useSessionSocket` — subscribing, not "last message"
+It deliberately does **not** expose `lastMessage`. Two identical `run_result`s in a
+row would collapse into one `useState` update and be dropped, and every consumer
+would be forced to filter messages it does not care about. Instead:
+
+```ts
+socket.subscribe(msg => { if (msg.type === 'run_result') setResult(msg.payload) })
+```
+
+Each part of the room takes only what it needs. As with `useCollaboration`, the
+`WsClient` is constructed *inside* the effect — creating it during render strands a
+dead socket under StrictMode's mount/unmount/remount.
+
+## Heartbeat: why the client needs one
+A browser cannot send protocol-level WebSocket pings, and a half-open connection can
+sit there for minutes while the UI confidently reports "connected". So the client
+asks in-band every 60s and treats 120s of total silence as death, then reconnects.
+This is a **client-side liveness check only** — the server's own zombie-socket
+cleanup (protocol ping / terminate) is a separate concern and is *not* implemented
+yet; it is a known follow-up, not an oversight.
+
+`ping`/`pong` are new `WsMessage` / `WsClientMessage` variants, and the client and
+server directions are now **separate types** so browser code cannot accidentally
+construct a broadcast.
+
+## Also fixed: the duplicated, wrong `buildWsUrl`
+`lib/ws/socket.ts` exported its own `buildWsUrl(path, token)` built from
+`window.location.host` — the same port bug that silently broke presence, still
+sitting in the file waiting to be used. It was unreachable dead code. Deleted; the
+socket now uses `lib/session-urls.ts`, and the `token` parameter is gone because the
+cookie authenticates the upgrade automatically.
+
+## Noted for Phase 7 (not done here)
+`question_change`, `session_started`, `session_completed` and `session_cancelled`
+are declared in `WsMessage` and are **never broadcast** — only `run_result`, `join`
+and `leave` are. So the room cannot currently react to the host switching question
+or completing the session. `useLiveSession` papers over this with a 30s refetch,
+which is a placeholder, not the design.

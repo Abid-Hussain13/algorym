@@ -63,6 +63,32 @@ export interface SessionDetail extends Session {
     host_participant_id: string | null;
 }
 
+/**
+ * What a participant needs to render the live room. Deliberately does NOT
+ * include `access_token` — the invite secret is not something a candidate
+ * should be handed back.
+ */
+export interface RoomSession {
+    id: string;
+    question_id: string | null;
+    mode: SessionMode;
+    status: SessionStatus;
+    role_context: string | null;
+    language: string | null;
+    scheduled_at: string | null;
+    duration_minutes: number | null;
+    started_at: string | null;
+    ended_at: string | null;
+    expires_at: string | null;
+    created_at: string;
+}
+
+/** Response of `GET /api/session/:id/room`. */
+export interface SessionRoom {
+    session: RoomSession;
+    question: Question | null;
+}
+
 export interface SessionParticipant {
     id: string;
     session_id: string;
@@ -247,7 +273,14 @@ export type WsMessage =
     | { type: 'session_completed'; payload: SessionStatePayload }
     | { type: 'session_cancelled'; payload: SessionStatePayload }
     | { type: 'join'; payload: Record<string, never> }
-    | { type: 'leave'; payload: Record<string, never> };
+    | { type: 'leave'; payload: Record<string, never> }
+    | { type: 'pong'; payload: Record<string, never> };
+
+/** Events the browser sends to `/ws`. Kept separate so client code cannot
+ *  accidentally construct a broadcast message. */
+export type WsClientMessage =
+    | { type: 'code_snapshot'; payload: CodeSnapshotPayload }
+    | { type: 'ping' };
 
 
 export type ReportsRange = '7d' | '30d' | '90d' | 'month' | 'year';

@@ -1,5 +1,5 @@
 import db from "../db/pool.js";
-import { Pagination, Session, SessionDetail, SessionListItem, SessionListResponse, SessionStatus } from "@algorym/shared-types";
+import { Pagination, Question, RoomSession, Session, SessionDetail, SessionListItem, SessionListResponse, SessionRoom, SessionStatus } from "@algorym/shared-types";
 import { nanoid } from "nanoid";
 import AppError from "../utils/AppError.js";
 import { CreateSessionInput, GetAllSessionsQuery } from "../utils/validation.js";
@@ -263,6 +263,38 @@ export const getSessionDetail = async (userId: string, sessionId: string): Promi
     if (!rows[0]) throw new AppError("Session not found", 404);
     return rows[0] as SessionDetail;
 }
+
+/**
+ * Everything a participant needs to render the live room.
+ *
+ * Separate from `getSessionDetail` because that one is owner-scoped (and gated
+ * behind `protect`), while guests may be completely anonymous — they have no
+ * account to authenticate against, only a participantId they were given at join.
+ */
+export const getSessionRoom = async (sessionId: string): Promise<SessionRoom> => {
+    const { rows } = await db.query(
+        `SELECT id, question_id, mode, status, role_context, language, scheduled_at,
+                duration_minutes, started_at, ended_at, expires_at, created_at
+         FROM sessions WHERE id = $1`,
+        [sessionId]
+    );
+
+    if (!rows[0]) throw new AppError("Session not found", 404);
+
+    const session = rows[0] as RoomSession;
+
+    let question: Question | null = null;
+    if (session.question_id) {
+        const result = await db.query(
+            `SELECT id, title, description, languages, difficulty, starter_code
+             FROM questions WHERE id = $1`,
+            [session.question_id]
+        );
+        question = (result.rows[0] as Question) ?? null;
+    }
+
+    return { session, question };
+};
 
 const resolveQuestionIds = (data: Partial<CreateSessionInput>, fallback: string[]): string[] => {
     if (data.question_ids !== undefined) {

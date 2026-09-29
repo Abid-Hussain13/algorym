@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {
-    createSession, getAllSessions, getSessionById,
+    createSession, getAllSessions, getSessionById, getSessionRoom,
     updateSession, deleteSession, startSession,
     completeSession, cancelSession, joinSession, changeQuestion,
     saveNotes, getEvaluation,
@@ -24,6 +24,8 @@ sessionRoute.post("/", protect, validate(createSessionSchema), createSession);
 sessionRoute.get("/", protect, validateQuery(getAllSessionsSchema), getAllSessions);
 sessionRoute.get("/scheduled", protect, scheduledSessions);
 sessionRoute.get("/:id", protect, getSessionById);
+// Live room data — participant-verified, so no `protect` (guests may be anonymous).
+sessionRoute.get("/:id/room", getSessionRoom);
 sessionRoute.patch("/:id", protect, validate(updateSessionSchema), updateSession);
 sessionRoute.delete("/:id", protect, deleteSession);
 

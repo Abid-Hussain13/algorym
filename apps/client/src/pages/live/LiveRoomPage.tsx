@@ -3,6 +3,8 @@ import {
     JoinGate,
     useCollaboration,
     useCollaborators,
+    useLiveSession,
+    useSessionSocket,
     CollaboratorsBar,
     FullscreenGuard,
 } from "@/features/live";
@@ -36,6 +38,10 @@ function LiveRoomShell({
         collaboration?.isConnected ?? false
     );
 
+    // Phase 4 data layer: session state + question, and the /ws event channel.
+    const { session, question, isLoading } = useLiveSession(sessionId, participant.id);
+    const socket = useSessionSocket(sessionId, participant.id);
+
     return (
         <div className="flex h-svh flex-col overflow-hidden bg-bg text-fg">
             <FullscreenGuard isHost={participant.role === "host"} />
@@ -53,9 +59,35 @@ function LiveRoomShell({
                 <CollaboratorsBar collaborators={collaborators} connected={connected} />
             </header>
 
-            <main className="flex min-h-0 flex-1 items-center justify-center p-6">
-                <p className="text-sm text-muted">
-                    Editor, output and question panels land in Phase 5. Presence and full screen are live.
+            <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 p-6">
+                {isLoading && (
+                    <p className="text-sm text-muted">Loading session…</p>
+                )}
+
+                {session && (
+                    <p className="text-sm text-muted">
+                        status <span className="font-medium text-fg">{session.status}</span>
+                        {session.language && (
+                            <>
+                                {" "}· language{" "}
+                                <span className="font-medium text-fg">{session.language}</span>
+                            </>
+                        )}
+                        {" "}· events{" "}
+                        <span
+                            className={`font-medium ${
+                                socket.isConnected ? "text-success" : "text-warning"
+                            }`}
+                        >
+                            {socket.isConnected ? "connected" : "reconnecting"}
+                        </span>
+                    </p>
+                )}
+
+                <p className="text-center text-sm text-muted">
+                    {question
+                        ? `Question: ${question.title}`
+                        : "Editor, output and question panels land in Phase 5."}
                 </p>
             </main>
         </div>
