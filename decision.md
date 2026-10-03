@@ -627,3 +627,213 @@ refactors with real regression risk, and they are unrelated to the live room.
 eslint does not enforce it, so normalising it would have produced a large diff touching
 almost every file for zero behaviour change. Worth a `prettier` config when there is time,
 not worth a risky sweep now.
+
+# Phase 5 — The Room UI
+
+## Layout
+```
+question panel (left, always visible — both sides must read the problem)
+│
+├── EditorTabs        ── over the shared files Y.Map
+├── CodeEditor        ── CodeMirror 6, lazily loaded
+├── RunToolbar        ── language (host-only) + stdin + Run
+├── BottomTabs        ── Output (everyone) │ Notes (HOST ONLY)
+└── RightRail         ── assigned questions │ all questions │ settings (host-only for the first two)
+```
+
+## Decisions
+
+**The question sits in a permanent left column, not a tab.** Both the interviewer and the
+candidate need to read the problem continuously. Burying it behind a toggle means one of them
+loses their place.
+
+**Notes is the only host-only tab — and it is not rendered at all for a candidate.** Not
+disabled: *absent*. Even a greyed-out "Notes" tells a candidate they are being assessed, which
+is exactly the thing interviewers do not want revealed mid-session. The verdict block lives in
+the rail for the same reason, and the rail's two question buttons are omitted entirely rather
+than shown disabled.
+
+**Verdict offers three ratings, not ✓/✕.** The schema is `weak | average | strong`
+(`evaluationApi` already declared it). A pass/fail pair would silently discard "average", which
+is the most common honest answer. The buttons are disabled with the reason shown, because the
+server enforces two rules the UI cannot fake: the session must be **completed** and the mode
+must be **interview**. Showing an enabled button that 409s would be worse than showing why.
+
+**Closing a tab deletes the buffer for the whole room.** Tabs are keys in a shared CRDT map, not
+local UI. This is stated in the tooltip rather than confirmed with a dialog, because the host and
+candidate share the files equally.
+
+**Starter code seeds only when the map is empty, and only once the question has loaded.**
+`useEditorFiles` takes an explicit `isReady` flag. Without it there is a race: the room mounts,
+the question is still in flight over HTTP, the map is empty, so an *empty* buffer gets created —
+and then it will never be filled, because the map is no longer empty. This was a real bug caught
+by driving two browsers; `tsc`, the build and all 101 tests were green while it was broken.
+
+Switching question deliberately does **not** re-seed: wiping a candidate's in-progress solution
+because the interviewer advanced would be far worse than carrying an old file forward. `closeFile`
+is the explicit way to start fresh.
+
+**`minimalSetup`, not `basicSetup`.** `basicSetup` bundles CodeMirror's own `history()`, which
+records *remote* edits as if the local user typed them — undo would then walk other people's
+changes and fight the Yjs `UndoManager`. `minimalSetup` omits it and `yUndoManagerKeymap` supplies
+undo that only touches your own edits. Using `basicSetup` here would have been a genuinely
+confusing bug: undo appearing to delete a colleague's code.
+
+## Per-person colours (fixes the hardcoded `#f4702c`)
+`lib/participant-colors.ts` derives a stable colour from the participantId by hashing, so every
+client independently agrees on a person's colour and it survives reconnect and refresh.
+
+The colour is published on awareness as a **`user`** field — `{ name, color }` — which is what
+`y-codemirror.next` reads. That is the entire integration: **remote cursors and selections now
+render in each peer's own colour for free**, and `CollaboratorsBar` tints avatars from the same
+value. One source of truth, two consumers, zero extra wiring.
+
+## Bundle: the editor is code-split, and the first attempt failed
+CodeMirror plus five language modes is the heaviest dependency in the app and is only needed
+inside `/live/:sessionId`. `CodeEditor` is exported from the feature barrel as a `lazy()` wrapper,
+so the marketing pages, login and dashboard never download it.
+
+**The first attempt did nothing** — the main chunk stayed at 2,553 kB. Two causes, both worth
+recording because they are invisible in the source:
+
+1. `RunToolbar` and `AllQuestionsPicker` both needed `isSupportedLanguage`, which lived in the
+   same module as the five `import { python } from "@codemirror/lang-python"` calls. So two eager
+   components dragged the whole editor in. Fixed by splitting the pure language data
+   (`editor-languages.ts`) from the CodeMirror extensions (`editor-language-extensions.ts`).
+2. The barrel exported `useCodeEditor`, which imports CodeMirror — and the barrel is eagerly
+   imported by the page. An internal implementation detail leaked the heavy chunk back in.
+
+Only after both was the split real:
+
+| | before | after |
+|---|---|---|
+| main chunk | 2,553 kB (708 kB gz) | **1,884 kB (478 kB gz)** |
+| editor chunk | — | 630 kB (222 kB gz), room only |
+
+**Two dependencies were also missing.** `@codemirror/language` and `@lezer/highlight` were only
+transitive, and pnpm's `node_modules` is strict, so importing them undeclared would have failed
+at build time on a fresh clone. They are now explicit. Same trap avoided for `y-protocols`: rather
+than add it, the `Awareness` type is derived from `y-websocket` — the pattern `use-collaborators`
+already used.
+
+## Editor theme: no JavaScript state at all
+`lib/editor-theme.ts` references the app's existing `--color-syn-*`, `--font-mono`, `--color-bg`
+and `--color-border` custom properties. Because the app toggles `data-theme="dark"` on `:root`,
+the editor follows light/dark automatically — no theme subscription in React, and no re-mounting
+the editor (which would drop the cursor and the CRDT binding). The `--color-syn-*` tokens already
+existed in both themes and had never been used; this is what they were for.
+
+## A second latent API bug, same family as `runApi`
+`evaluationApi.evaluate` sent `{ session_id, evaluated_participant_id }` while
+`evaluatedUserSchema` validates camelCase — so it would have **400'd on every call**. Like the
+`runApi` one in Phase 4, it was referenced only by a re-export, so nothing caught it. Fixed
+before wiring the verdict UI.
+
+**Worth a standing rule: any endpoint the room consumes gets its payload shape checked against
+the zod schema before it is wired up.** Two out of two endpoints this project had never been
+called by real code were both wrong.
+
+## Known limitations, stated plainly
+- **Question changes are not broadcast.** The host sees a switch immediately (the mutation
+  invalidates `["session-room"]`); the candidate picks it up on their next 30s poll. Fixing this
+  properly is Phase 7's `question_change` broadcast, not more polling.
+- **Changing language does not re-seed the buffer**, for the same non-destructive reason as
+  switching question. A fresh buffer needs `closeFile`.
+- **Yjs documents are in-memory on the server.** Rooms survive client reconnects but not a server
+  restart, and nothing is persisted (replay rebuilds from `session_events` instead). This was the
+  Phase 0 decision; it is worth remembering that "the code is gone if the server restarts".
+- **Elapsed time ticks only every 30s** and starts from `started_at`, not from when the room
+  opened.
+
+# Room Layout Revision
+
+Six layout/behaviour corrections from using the room for real.
+
+## 1. The "candidate sees different colours" report — not a bug
+Investigated with two browser profiles carrying different saved themes:
+
+| saved | `data-theme` | `--color-bg` |
+|---|---|---|
+| `light` | `light` | `oklch(0.985 0.004 90)` |
+| `dark` | `dark` | `oklch(0.185 0.004 80)` |
+
+Each profile keeps its own `algorym-theme` in `localStorage`, so host and candidate render
+in whatever theme each browser prefers. `App.tsx` already calls `useTheme()` at the root, so
+every route honours it — including the editor, which reads the same `--color-*` tokens. Working
+as intended.
+
+**But a real flaw surfaced next to it:** `index.html` hardcoded `data-theme="light"`, and
+`useTheme()` only corrects it in an effect *after* React mounts. So anyone whose saved theme is
+dark got a visible **flash of the light theme** on every page load — almost certainly what was
+actually noticed. An inline script in `<head>` now sets the attribute before first paint.
+
+Not changed: the room still respects the viewer's own preference. Forcing one theme on
+candidates would be a product decision, not a bug fix — and would override an explicit choice
+somebody made on purpose.
+
+## 2. New file appeared on the LEFT of the current tab
+`useEditorFiles` sorted the file list alphabetically:
+
+```ts
+const names = Array.from(files.keys()).sort();   // removed
+```
+
+`'solution-2.js' < 'solution.js'` because `'-'` (0x2D) sorts before `'.'` (0x2E) — so every new
+file jumped to the far left. A `Y.Map` already preserves insertion order, which is exactly what a
+tab strip wants. Sorting removed; new tabs now land to the right.
+
+Worth remembering: **alphabetical sorting is wrong for anything ordered.** It is only correct
+for a picker list where alphabetical is the intent.
+
+## 3. Rail moved to the extreme left — and renamed
+`RightRail` → `SideRail`, docked to the left edge, before the question panel. Renamed rather
+than kept as `RightRail`, because leaving the name would be a lie that misleads the next reader.
+
+## 4. Panels are layout columns, not overlays
+`SlideInPanel` (fixed-position overlay with a dimming backdrop) is replaced by `PanelColumn`, a
+real flex child. Opening the question list no longer dims or covers the editor.
+
+This was a genuine usability point, not only a preference: the host switches question while the
+candidate is reading the code. An overlay would hide the code at the exact moment the candidate
+needs to see it, and reflowing the layout would move the editor under their cursor.
+
+Both the panel and the drawer use `useResizablePane` — Pointer Events **with pointer capture**,
+so the drag keeps working once the cursor leaves the 2px handle. A plain `mousemove` bound to the
+handle stalls as soon as you move off it, which is the usual failure of hand-rolled resizers.
+Sizes persist in `localStorage`. Escape closes the panel; keyboard resizing is deliberately not
+implemented, since the collapse toggle and rail buttons already provide the non-drag path.
+
+## 5. stdin became a tab; the Run toolbar row is gone
+The bottom drawer is now **Output | Input | Notes** and `RunToolbar` is deleted. Its two
+remaining controls moved into the tab strip as `EditorControls`, with the language picker last
+at the extreme right:
+
+```
+[ solution.js ][ solution-2.js ][ + ]        [ Run ][ JavaScript ▾ ]
+```
+
+That removes a whole 40px row from a full-screen room. Measured: the select's top (124px) sits
+within 1px of the tab row's top (123px), and its right edge (1592px) is 8px from the row's right
+edge (1600px) — i.e. right-aligned to the `pr-2` padding, with Run immediately to its left.
+
+## 6. Bottom drawer expands upward
+Drag the top edge up to grow it (240px default, 120–640px clamp), or collapse to just the tab
+strip (37px) with the chevron. `aria-orientation` and `role="separator"` are set on both handles.
+
+## Removed
+`RightRail.tsx`, `SlideInPanel.tsx`, `RunToolbar.tsx` — all three superseded. Nothing else
+imported them.
+
+## A testing trap worth recording
+Three separate "failures" in the two-browser pass were **my probe's fault, not the app's**:
+1. `sel.closest('div[role=tablist]')` returned `null` because the controls are a *sibling* of the
+   tablist, not descendants — the probe threw and reported "missing".
+2. Clicking an already-active rail button toggles the panel **closed**. That is the intended
+   toggle behaviour; the test asserted the panel stayed open.
+3. `document.querySelectorAll('section').pop()` was selecting **Sonner's toast container**, not
+   the drawer — a second, empty `<section>` is appended after it. The drawer was correctly
+   `height: 240px` the whole time.
+
+Lesson applied generally: assert against a **stable identifying hook** (`aria-label`,
+`role`, a known class), never document order or a bare tag name. Two of these looked like real
+product bugs and would have sent me editing working code.

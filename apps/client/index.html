@@ -2,6 +2,18 @@
 <html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Apply the saved theme BEFORE first paint. Without this the hardcoded
+      // data-theme="light" below is used until React mounts and useTheme() runs,
+      // which shows a visible flash of the light theme to anyone whose saved
+      // preference is dark.
+      try {
+        var saved = localStorage.getItem('algorym-theme')
+        if (saved === 'light' || saved === 'dark') {
+          document.documentElement.setAttribute('data-theme', saved)
+        }
+      } catch (e) {}
+    </script>
     <link rel="icon" type="image/svg+xml" href="/logo4tab.svg?v=2" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

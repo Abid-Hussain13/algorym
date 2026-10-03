@@ -116,9 +116,15 @@ export const runApi = {
 }
 
 export const evaluationApi = {
+    /**
+     * `POST /api/evaluation`. Body must match `evaluatedUserSchema`, which is
+     * camelCase — this previously sent `session_id` / `evaluated_participant_id`
+     * and would have 400'd on every call, the same mistake `runApi.execute` had.
+     * Only valid once the session is completed, and only for interview mode.
+     */
     evaluate: (body: {
-        session_id: string
-        evaluated_participant_id: string
+        sessionId: string
+        participantId: string
         rating: 'weak' | 'average' | 'strong'
         notes?: string
     }) => http.post<{ result: unknown }>('/api/evaluation', body),

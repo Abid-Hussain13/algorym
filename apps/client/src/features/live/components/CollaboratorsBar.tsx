@@ -46,8 +46,18 @@ export function CollaboratorsBar({ collaborators, connected, className }: Collab
                                 "grid size-7 place-items-center rounded-full border text-[11px] font-semibold",
                                 collaborator.isSelf
                                     ? "border-accent bg-accent-soft text-accent-text"
-                                    : "border-border bg-surface-2 text-muted"
+                                    : "border-border"
                             )}
+                            // Runtime-derived colour, so it cannot be a Tailwind class.
+                            style={
+                                collaborator.isSelf
+                                    ? undefined
+                                    : {
+                                          borderColor: `${collaborator.color}59`,
+                                          backgroundColor: `${collaborator.color}1f`,
+                                          color: collaborator.color,
+                                      }
+                            }
                             title={
                                 collaborator.isSelf
                                     ? `${collaborator.displayName} (you)`

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { WebsocketProvider } from "y-websocket";
 import type { CollaboratorPresence } from "@algorym/shared-types";
+import { colorForParticipant } from "../lib/participant-colors";
 
 /** Derived from the provider so we depend on no extra package. */
 type Awareness = WebsocketProvider["awareness"];
@@ -48,11 +49,17 @@ export function useCollaborators(
                 const participant = state?.participant;
                 if (!isParticipant(participant)) return;
 
+                // `state.user` is only present on clients that published the
+                // y-codemirror awareness field, so narrow before reading it.
+                const userColor = (state?.user as { color?: unknown } | undefined)?.color;
+
                 next.push({
                     participantId: participant.participantId,
                     displayName: participant.displayName,
                     role: participant.role,
-                    color: "#f4702c",
+                    // Falls back to the derived colour so a client that joined
+                    // before `user` existed still gets the right avatar tint.
+                    color: typeof userColor === "string" ? userColor : colorForParticipant(participant.participantId),
                     isSelf: participant.participantId === selfParticipantId,
                     clientId,
                 });

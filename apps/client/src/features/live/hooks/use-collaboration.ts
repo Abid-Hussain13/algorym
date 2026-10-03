@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { buildWsUrl } from "@/lib/session-urls";
+import { colorForParticipant } from "../lib/participant-colors";
 import type { LocalParticipant } from "../lib/participant-store";
 
 export const FILES_MAP_KEY = "files";
@@ -39,7 +40,15 @@ export function useCollaboration(sessionId: string, participant: LocalParticipan
         });
         const files = doc.getMap<Y.Text>(FILES_MAP_KEY);
 
+        // Two awareness fields, read by two different consumers:
+        //   `participant` — our own roster (see useCollaborators)
+        //   `user`        — what y-codemirror.next expects, and it paints the
+        //                   remote cursor and selection in this colour
         provider.awareness.setLocalStateField("participant", { participantId, displayName, role });
+        provider.awareness.setLocalStateField("user", {
+            name: displayName,
+            color: colorForParticipant(participantId),
+        });
 
         let isConnected = provider.wsconnected;
 
