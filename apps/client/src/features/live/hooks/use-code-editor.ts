@@ -6,6 +6,7 @@ import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
 import type { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 import { editorTheme } from "../lib/editor-theme";
+import { editorCompletions, completionKeymaps } from "../lib/editor-completions";
 import { languageExtension } from "../lib/editor-language-extensions";
 
 /** Derived from the provider so we depend on no extra package. */
@@ -52,9 +53,10 @@ export function useCodeEditor({ yText, awareness, language }: UseCodeEditorOptio
                 doc: yText.toString(),
                 extensions: [
                     minimalSetup,
-                    keymap.of([...yUndoManagerKeymap]),
+                    keymap.of([...yUndoManagerKeymap, ...completionKeymaps]),
                     yCollab(yText, awareness, { undoManager }),
                     languageExtension(language),
+                    editorCompletions(language),
                     EditorView.lineWrapping,
                     editorTheme,
                 ],

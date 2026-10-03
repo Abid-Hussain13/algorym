@@ -7,6 +7,7 @@ import { saveSessionNotes, getSessionEvaluation } from "../services/evaluation.s
 import * as sessionEventService from "../services/session-events.service.js";
 import AppError from "../utils/AppError.js";
 import { verifyParticipant } from "../utils/verifyParticipant.js";
+import { broadcast } from "../ws/connectionManager.js";
 import type { AuthPayload } from "../types/index.js";
 
 export const createSession = async (req: Request, res: Response) => {
@@ -100,6 +101,10 @@ export const completeSession = async (req: Request, res: Response) => {
     const host = await getHostParticipant(session.id, req.user!.id);
     await sessionEventService.logSessionEvent(session.id, host.id, "session_completed", { session });
 
+    // Tell the room. Without this the candidate sits in a finished session with
+    // no idea, because nothing else they can observe changes.
+    broadcast(session.id, { type: "session_completed", payload: { session } });
+
     res.json({ success: true, data: { session }, message: "Session completed" });
 };
 
@@ -108,6 +113,8 @@ export const cancelSession = async (req: Request, res: Response) => {
 
     const host = await getHostParticipant(session.id, req.user!.id);
     await sessionEventService.logSessionEvent(session.id, host.id, "session_cancelled", { session });
+
+    broadcast(session.id, { type: "session_cancelled", payload: { session } });
 
     res.json({ success: true, data: { session }, message: "Session cancelled" });
 };

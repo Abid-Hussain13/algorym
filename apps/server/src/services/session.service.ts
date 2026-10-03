@@ -251,7 +251,10 @@ export const getSessionDetail = async (userId: string, sessionId: string): Promi
                 ), '[]'::json) AS questions,
                 (SELECT hp.id FROM session_participants hp
                  WHERE hp.session_id = s.id AND hp.role = 'host'
-                 ORDER BY hp.joined_at ASC LIMIT 1) AS host_participant_id
+                 ORDER BY hp.joined_at ASC LIMIT 1) AS host_participant_id,
+                (SELECT cp.id FROM session_participants cp
+                 WHERE cp.session_id = s.id AND cp.role = 'guest'
+                 ORDER BY cp.joined_at ASC LIMIT 1) AS candidate_participant_id
          FROM sessions s
          LEFT JOIN session_participants sp ON sp.session_id = s.id AND sp.role = 'guest'
          LEFT JOIN session_evaluations se ON se.session_id = s.id

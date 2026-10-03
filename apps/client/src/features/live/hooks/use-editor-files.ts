@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import * as Y from "yjs";
-import { filenameForLanguage } from "../lib/editor-languages";
+import {
+    LEGACY_FILENAME,
+    filenameForLanguage,
+    isSupportedLanguage,
+} from "../lib/editor-languages";
 
 interface EditorFilesState {
     /** Every filename in the shared map, alphabetically. */
@@ -63,23 +67,46 @@ export function useEditorFiles(
         return () => files.unobserve(sync);
     }, [files]);
 
-    // Both clients may race here; that is safe because Yjs resolves the
-    // duplicate `set` to one value, and both write the same starter code anyway.
+    // Seed the first buffer, and heal a legacy one.
+    //
+    // Seeding is gated on a *known* language, not just a settled query. An older
+    // revision seeded as soon as the map was empty, which for a session with no
+    // language produced a `solution.txt` tab — and because the map was then
+    // non-empty it could never be corrected. `LEGACY_FILENAME` renames that tab
+    // so rooms created before this fix recover without being recreated.
+    //
+    // Both clients may race here; that is safe because Yjs resolves the duplicate
+    // `set` to one value and both write the same starter code anyway.
     useEffect(() => {
-        if (!files || !isReady || files.size > 0) return;
+        if (!files || !isReady || !isSupportedLanguage(language)) return;
 
-        const name = filenameForLanguage(language);
-        const text = new Y.Text();
-        if (starterCode) text.insert(0, starterCode);
-        files.set(name, text);
+        const expected = filenameForLanguage(language);
+        if (!expected) return;
+
+        const names = Array.from(files.keys());
+
+        if (names.length === 0) {
+            const text = new Y.Text();
+            if (starterCode) text.insert(0, starterCode);
+            files.set(expected, text);
+            return;
+        }
+
+        if (names.length === 1 && names[0] === LEGACY_FILENAME) {
+            const existing = files.get(LEGACY_FILENAME);
+            if (existing) {
+                files.delete(LEGACY_FILENAME);
+                files.set(expected, existing);
+            }
+        }
     }, [files, isReady, language, starterCode]);
 
     const setActiveName = useCallback((name: string) => setActiveNameState(name), []);
 
     const addFile = useCallback(() => {
-        if (!files) return;
-
         const base = filenameForLanguage(language);
+        if (!files || !base) return;
+
         let name = base;
         let counter = 2;
         while (files.has(name)) {

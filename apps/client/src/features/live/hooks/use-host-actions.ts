@@ -41,5 +41,14 @@ export function useHostActions(sessionId: string) {
         onError: (error) => toast.error(error.message || "Couldn't complete the session"),
     });
 
-    return { changeQuestion, completeSession };
+    const cancelSession = useMutation({
+        mutationFn: () => sessionsApi.cancel(sessionId),
+        onSuccess: async () => {
+            await invalidate();
+            toast.success("Session cancelled");
+        },
+        onError: (error) => toast.error(error.message || "Couldn't cancel the session"),
+    });
+
+    return { changeQuestion, completeSession, cancelSession };
 }

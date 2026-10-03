@@ -61,6 +61,11 @@ export interface SessionDetail extends Session {
     questions: SessionQuestionRef[];
     /** Owner-scoped endpoint, so only the host ever receives this. */
     host_participant_id: string | null;
+    /**
+     * First guest who joined. Lets the host rate a candidate who has already left
+     * the room — the awareness roster only knows about people still connected.
+     */
+    candidate_participant_id: string | null;
 }
 
 /**

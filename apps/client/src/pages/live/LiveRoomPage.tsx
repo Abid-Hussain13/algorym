@@ -24,11 +24,12 @@ import {
     AssignedQuestions,
     AllQuestionsPicker,
     SessionSettingsPanel,
-    HostVerdict,
+    SessionActionsPanel,
 } from "@/features/live";
 import type { LocalParticipant, RailPanel } from "@/features/live";
 import { useSessionDetail } from "@/features/sessions";
 import { buildInviteUrl } from "@/lib/session-urls";
+import { isSupportedLanguage } from "@/features/live";
 import type { EvaluationRating } from "@algorym/shared-types";
 
 export function LiveRoomPage() {
@@ -46,8 +47,10 @@ export function LiveRoomPage() {
 }
 
 const PANEL_TITLES: Record<Exclude<RailPanel, null>, string> = {
+    question: "Question",
     questions: "Assigned questions",
     browse: "All questions",
+    actions: "Session actions",
     settings: "Session",
 };
 
@@ -80,7 +83,9 @@ function LiveRoomShell({
 
     // ── The shared files, keyed inside the CRDT ────────────────────────────
     const language = session?.language ?? null;
-    const starterCode = language ? question?.starter_code?.[language] ?? null : null;
+    const starterCode = isSupportedLanguage(language)
+        ? question?.starter_code?.[language] ?? null
+        : null;
 
     const { fileNames, activeName, activeText, setActiveName, addFile, closeFile } = useEditorFiles(
         collaboration?.files ?? null,
@@ -112,7 +117,13 @@ function LiveRoomShell({
         storageKey: "algorym:room:panel-width",
     });
 
-    const candidateId = collaborators.find((c) => c.role === "guest")?.participantId ?? null;
+    // Prefer whoever is in the room right now, but fall back to the first guest
+    // who ever joined — otherwise a candidate who closed their tab before the
+    // host completed the session could not be rated at all.
+    const candidateId =
+        collaborators.find((c) => c.role === "guest")?.participantId ??
+        hostDetail?.session.candidate_participant_id ??
+        null;
 
     const nameFor = useCallback(
         (participantId: string) =>
@@ -120,19 +131,28 @@ function LiveRoomShell({
         [collaborators]
     );
 
+    const hasLanguage = isSupportedLanguage(language);
+
     const handleRun = useCallback(() => {
+        // Both guards must say something. An earlier revision returned silently
+        // when the language was missing, so the room just sat there with no
+        // output and no error — indistinguishable from a broken executor.
+        if (!hasLanguage) {
+            toast.error("This session has no language set — the host needs to assign a question first");
+            return;
+        }
+
         const code = activeText?.toString() ?? "";
         if (!code.trim()) {
             toast.error("Nothing to run — the active file is empty");
             return;
         }
-        if (!language) return;
 
         runCode.mutate(
-            { code, language, stdin: stdin || undefined },
+            { code, language: language!, stdin: stdin || undefined },
             { onError: (error) => toast.error(error.message || "Run failed") }
         );
-    }, [activeText, language, stdin, runCode]);
+    }, [activeText, hasLanguage, language, stdin, runCode]);
 
     const handleSelectQuestion = useCallback(
         (questionId: string, nextLanguage?: string) => {
@@ -179,7 +199,12 @@ function LiveRoomShell({
             </header>
 
             <div className="flex min-h-0 flex-1">
-                <SideRail isHost={isHost} active={rail} onSelect={setRail} />
+                <SideRail
+                    isHost={isHost}
+                    active={rail}
+                    onSelect={setRail}
+                    canEndSession={session?.status === "live" || session?.status === "scheduled"}
+                />
 
                 {rail && (
                     <PanelColumn
@@ -187,20 +212,11 @@ function LiveRoomShell({
                         onClose={() => setRail(null)}
                         width={panel.size}
                         handleProps={panel.handleProps}
-                        footer={
-                            isHost ? (
-                                <HostVerdict
-                                    sessionId={sessionId}
-                                    candidateId={candidateId}
-                                    mode={session?.mode ?? "interview"}
-                                    status={session?.status ?? "scheduled"}
-                                    existingRating={(hostDetail?.session.rating as EvaluationRating) ?? null}
-                                    onCompleteSession={() => hostActions.completeSession.mutate()}
-                                    isCompleting={hostActions.completeSession.isPending}
-                                />
-                            ) : undefined
-                        }
                     >
+                        {rail === "question" && (
+                            <QuestionPanel question={question} language={language} isLoading={isLoading} />
+                        )}
+
                         {rail === "questions" && (
                             <AssignedQuestions
                                 questions={hostDetail?.session.questions ?? []}
@@ -219,6 +235,21 @@ function LiveRoomShell({
                             />
                         )}
 
+                        {rail === "actions" && (
+                            <SessionActionsPanel
+                                sessionId={sessionId}
+                                candidateId={candidateId}
+                                mode={session?.mode ?? "interview"}
+                                status={session?.status ?? "scheduled"}
+                                existingRating={(hostDetail?.session.rating as EvaluationRating) ?? null}
+                                existingNotes={hostDetail?.session.notes ?? null}
+                                onComplete={() => hostActions.completeSession.mutate()}
+                                onCancel={() => hostActions.cancelSession.mutate()}
+                                isCompleting={hostActions.completeSession.isPending}
+                                isCancelling={hostActions.cancelSession.isPending}
+                            />
+                        )}
+
                         {rail === "settings" && (
                             <SessionSettingsPanel
                                 session={session}
@@ -230,12 +261,27 @@ function LiveRoomShell({
                     </PanelColumn>
                 )}
 
-                {/* Both sides need to read the problem, so it is always visible. */}
-                <aside className="w-72 shrink-0 overflow-y-auto border-r border-border">
-                    <QuestionPanel question={question} language={language} isLoading={isLoading} />
-                </aside>
-
                 <main className="flex min-w-0 flex-1 flex-col">
+                    {!hasLanguage && (
+                        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-warning/30 bg-warning/10 px-4 py-2">
+                            <p className="text-xs text-fg">
+                                <span className="font-semibold">No language on this session.</span>{" "}
+                                {isHost
+                                    ? "Pick a question to set one — code cannot be run until then."
+                                    : "The interviewer has not set a language yet."}
+                            </p>
+                            {isHost && (
+                                <button
+                                    type="button"
+                                    onClick={() => setRail("browse")}
+                                    className="shrink-0 rounded border border-warning/40 px-2 py-1 text-xs font-medium text-warning transition-colors hover:bg-warning/15"
+                                >
+                                    Assign a question
+                                </button>
+                            )}
+                        </div>
+                    )}
+
                     <div className="flex min-h-0 flex-1 flex-col">
                         <EditorTabs
                             fileNames={fileNames}
@@ -257,8 +303,13 @@ function LiveRoomShell({
                                     }}
                                     onRun={handleRun}
                                     isRunning={runCode.isPending}
-                                    canRun={Boolean(activeText) && Boolean(language)}
+                                    canRun={Boolean(activeText) && hasLanguage}
                                     canChangeLanguage={isHost}
+                                    blockedReason={
+                                        !hasLanguage
+                                            ? "This session has no language set"
+                                            : "Waiting for the shared editor…"
+                                    }
                                 />
                             }
                         />

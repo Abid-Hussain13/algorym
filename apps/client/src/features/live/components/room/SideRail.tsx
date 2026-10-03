@@ -1,12 +1,14 @@
 import { cn } from "@/lib/utils/cn";
 
-export type RailPanel = "questions" | "browse" | "settings" | null;
+export type RailPanel = "question" | "questions" | "browse" | "actions" | "settings" | null;
 
 interface SideRailProps {
     /** Host-only panels; hidden entirely for a candidate. */
     isHost: boolean;
     active: RailPanel;
     onSelect: (panel: RailPanel) => void;
+    /** True when the session can still be ended, so the actions icon is shown. */
+    canEndSession: boolean;
 }
 
 interface RailButtonProps {
@@ -52,23 +54,52 @@ const GearIcon = () => (
     </svg>
 );
 
+const QuestionIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" className="size-4" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M9.2 9a2.8 2.8 0 0 1 5.5.8c0 1.9-2.7 2.2-2.7 3.9" />
+        <path d="M12 17h.01" />
+    </svg>
+);
+
+const StopIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" className="size-4" aria-hidden="true">
+        <rect x="6" y="6" width="12" height="12" rx="2" />
+    </svg>
+);
+
 /**
  * The vertical icon column on the **left** edge of the room.
  *
- * Order is deliberate and matches the agreed layout: **assigned questions → all
- * questions → settings**. The first two are host-only, so a candidate sees just
- * the settings button rather than a column of controls they cannot use.
+ * Order: **question** (everyone) → assigned questions → all questions → end
+ * session (host only) → settings.
  *
- * Each button toggles its panel; clicking the open one closes it. The panel
- * itself is a resizable column beside this rail — not an overlay — so opening
- * one never dims or covers the editor.
+ * The question comes first because it is the one panel both roles need, and it
+ * is a peer of the others rather than a permanent column — the editor gets the
+ * full width until someone asks for it.
+ *
+ * Every button toggles its panel; clicking the open one closes it. The panel is
+ * a resizable column beside this rail, not an overlay, so opening one never dims
+ * or covers the editor.
+ *
+ * **Panel state is per-viewer.** It is plain React state in `LiveRoomShell`, so
+ * two people in the same room can have different panels open, different sizes and
+ * completely different themes at the same time.
  */
-export function SideRail({ isHost, active, onSelect }: SideRailProps) {
+export function SideRail({ isHost, active, onSelect, canEndSession }: SideRailProps) {
     return (
         <nav
             className="flex w-12 shrink-0 flex-col items-center gap-1 border-r border-border bg-surface-2/30 py-2"
             aria-label="Room panels"
         >
+            <RailButton
+                label="Question"
+                active={active === "question"}
+                onClick={() => onSelect(active === "question" ? null : "question")}
+            >
+                <QuestionIcon />
+            </RailButton>
+
             {isHost && (
                 <>
                     <RailButton
@@ -87,6 +118,20 @@ export function SideRail({ isHost, active, onSelect }: SideRailProps) {
                     </RailButton>
                 </>
             )}
+
+            {/* Ending a session lives on its own panel so it is never one stray
+                click away from the question list. */}
+            {isHost && canEndSession && (
+                <RailButton
+                    label="End session"
+                    active={active === "actions"}
+                    onClick={() => onSelect(active === "actions" ? null : "actions")}
+                >
+                    <StopIcon />
+                </RailButton>
+            )}
+
+            <div className="flex-1" />
 
             <RailButton
                 label="Session settings"

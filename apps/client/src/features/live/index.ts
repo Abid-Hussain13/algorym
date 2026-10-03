@@ -28,7 +28,7 @@ export { EditorControls } from './components/room/EditorControls'
 export { AssignedQuestions } from './components/room/AssignedQuestions'
 export { AllQuestionsPicker } from './components/room/AllQuestionsPicker'
 export { SessionSettingsPanel } from './components/room/SessionSettingsPanel'
-export { HostVerdict } from './components/room/HostVerdict'
+export { SessionActionsPanel } from './components/room/SessionActionsPanel'
 export { HostNotes } from './components/room/HostNotes'
 export { OutputPanel } from './components/room/OutputPanel'
 export type { RailPanel } from './components/room/SideRail'
@@ -55,6 +55,7 @@ export {
     isSupportedLanguage,
 } from './lib/editor-languages'
 export { colorForParticipant, DEFAULT_PARTICIPANT_COLOR } from './lib/participant-colors'
+export { symbolsForLanguage, libraryForLanguage } from './lib/editor-symbols'
 
 export type { LiveSessionState } from './hooks/use-live-session'
 export type { SessionSocket } from './hooks/use-session-socket'

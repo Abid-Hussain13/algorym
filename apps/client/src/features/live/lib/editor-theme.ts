@@ -48,6 +48,51 @@ const base = EditorView.theme({
         borderLeftWidth: "2px",
         borderLeftStyle: "solid",
     },
+    // Autocomplete popup, themed from the same tokens as the editor itself.
+    ".cm-tooltip": {
+        backgroundColor: "var(--color-bg)",
+        color: "var(--color-fg)",
+        border: "1px solid var(--color-border)",
+        borderRadius: "0.5rem",
+        overflow: "hidden",
+        boxShadow: "0 8px 24px -8px rgb(0 0 0 / 0.35)",
+    },
+    ".cm-tooltip.cm-tooltip-autocomplete > ul": {
+        fontFamily: "var(--font-body)",
+        fontSize: "12px",
+        maxHeight: "14rem",
+    },
+    ".cm-tooltip.cm-tooltip-autocomplete > ul > li": {
+        padding: "4px 10px",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+    },
+    ".cm-tooltip-autocomplete ul li[aria-selected]": {
+        backgroundColor: "var(--color-accent-soft)",
+        color: "var(--color-accent-text)",
+    },
+    ".cm-completionIcon": {
+        opacity: "0.7",
+        paddingRight: "2px",
+    },
+    ".cm-completionLabel": { flex: "0 1 auto" },
+    ".cm-completionDetail": {
+        marginLeft: "auto",
+        fontStyle: "italic",
+        color: "var(--color-muted)",
+        fontSize: "11px",
+    },
+    // The docs panel (Enter / Ctrl-Space on a symbol) reuses the same tooltip.
+    ".cm-completionInfo": {
+        backgroundColor: "var(--color-bg)",
+        color: "var(--color-muted)",
+        borderLeft: "1px solid var(--color-border)",
+        fontFamily: "var(--font-body)",
+        fontSize: "11px",
+        maxWidth: "22rem",
+        padding: "6px 8px",
+    },
 });
 
 const highlightStyle = HighlightStyle.define([

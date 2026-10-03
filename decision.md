@@ -837,3 +837,144 @@ Three separate "failures" in the two-browser pass were **my probe's fault, not t
 Lesson applied generally: assert against a **stable identifying hook** (`aria-label`,
 `role`, a known class), never document order or a bare tag name. Two of these looked like real
 product bugs and would have sent me editing working code.
+
+# Editor Autocomplete, Question Panel, Session Actions
+
+## Autocomplete: `override`, not the language-data facet
+Sources are wired with `autocompletion({ override: [...] })` rather than
+`language.data.of({ autocomplete })`.
+
+The facet route **silently did nothing here**: `editorCompletions` was built with a
+valid language and one built-in source, `autocompletion()` was in the extension list,
+`closeBrackets()` from the same function worked — and yet the completion source was
+*never called* and no popup ever appeared, not even on explicit Ctrl-Space. A temporary
+`console.log` probe confirmed the source was constructed and then never invoked. The
+language itself was fine (Lezer token classes were present, highlighting worked), which
+ruled out the obvious explanation.
+
+`override` bypasses `state.languageDataAt("autocomplete", pos)` resolution entirely and
+declares the source list explicitly, so it does not depend on facet resolution order.
+Cost: sources provided by a language's own data facet that we do not list are bypassed —
+acceptable, because every source we want is now listed by hand.
+
+## Two real bugs found by driving a real keyboard
+**`$0` placeholders were typed literally.** Templates use `$0` for "cursor here". A plain
+string insert writes the characters `$0`. CodeMirror's `snippetCompletion()` expands these,
+but it cannot be combined with a custom `apply`. Fixed by stripping `$0` and placing the
+selection at that offset — a single cursor stop is all these templates need.
+
+**One ChangeSet cannot hold both the import and the usage.** Inserting the import at offset
+0 while replacing the usage range that also starts at 0 collided:
+`RangeError: Invalid change range 13 to 17 (in doc of length 4)`. A `ChangeSet` validates
+every position against the **original** document, so shifting the usage range to account for
+the import is invalid. Naively combining them in one set swallowed the newline and produced
+`import "fmt"fmt.Printf(…)`, because an insert at 0 and a replace starting at 0 are the same
+position.
+
+Resolution: **two dispatches** — the import first, then the usage at coordinates valid for the
+already-updated document. Yjs groups the two writes into one undo step.
+
+**Imports land in the header block, not at line 1.** `headerInsertOffset()` walks the
+contiguous run of blank or import-ish lines from the top, so a Go import goes *after*
+`package main`, and a second C++ `#include` groups with the first. Every symbol carrying an
+import also carries an `importMarker`, so accepting the same completion twice inserts nothing.
+
+## What each language actually gets
+| Language | Source |
+|---|---|
+| Python | package's `globalCompletion` (real built-ins) + our keywords/library |
+| JavaScript | package `snippets` + ours |
+| Go | package `snippets` + ours |
+| Java | **ours only — the package ships no completion source** |
+| C++ | **ours only — the package ships no completion source** |
+
+That asymmetry is why `editor-symbols.ts` carries a full standard-library table (with import
+lines) rather than a keyword list: for Java and C++ it *is* the whole experience. Honest
+limitation: these are curated symbol lists, not a language server. There is no type
+inference — a symbol is offered because it exists in the language's standard library, not
+because it type-checks at the call site.
+
+Also added: `closeBrackets()` (typing `(` or `"` inserts the pair, Backspace removes both)
+and `Ctrl-Space` / `Escape` keymaps. The popup is themed from the app's own tokens.
+
+## Question is now a peer panel, not a permanent column
+It moved into the rail as the first item, so the editor gets the full width until someone asks
+for it, and it behaves exactly like the other panels — same column, same resizer, same toggle.
+Removed the always-on `w-72` column.
+
+## Panel state was already per-user — verified, not assumed
+Concern that opening a panel on one side would open it for everyone. Two browsers, side by
+side: host had **Question** open while the guest had **nothing** open; the guest then opened
+**Session** and the host stayed on **Question**. Themes differed too (host `dark`, guest
+`light`), as did panel widths.
+
+This works because `rail` is plain `useState` in `LiveRoomShell` and theme/panel sizes live in
+each browser's own `localStorage`. **Nothing about view-only state crosses the CRDT or the
+socket** — that is worth preserving deliberately, since it is the property that lets two people
+work in the same room without being forced into the same view.
+
+## Ending a session has its own page
+Complete / Cancel moved out of the shared panel footer to a dedicated **Session actions** rail
+panel, host-only, shown only while the session can still be ended. Rationale: these are
+irreversible, and they should never be one stray click away from the question list a host
+opens while thinking about content. Cancelling requires confirmation; completing does not.
+
+The verdict block lives there too, for the same reason — rating and ending belong together and
+nowhere else.
+
+# Fixing the Three Reported Breakages
+
+## 1. `solution.txt` — root cause was a session with no language
+The filename comes from `filenameForLanguage(session.language)`. The old version returned a
+**fallback `"solution.txt"`** for anything unrecognised, which quietly hid the real problem:
+three live sessions (and one legacy `typescript`) have `language = NULL` in the database.
+
+Two changes:
+
+- `filenameForLanguage` now returns **`null`** for an unknown language instead of inventing a
+  plausible-looking filename. A `solution.txt` tab was a symptom being presented as a feature.
+- `useEditorFiles` seeds only when the language is **supported**, and **renames a lone legacy
+  `solution.txt`** to the correct name once the language is known — so rooms created before
+  this fix heal without being recreated.
+
+Yjs documents live in server memory keyed by session id, so a wrongly-named tab could never be
+corrected: the map was already non-empty, so seeding never re-ran.
+
+## 2. No output from `console.log` — a silent `return`
+`handleRun` began with `if (!language) return;`. For a null-language session that produced
+**no output, no toast, and no error** — indistinguishable from a broken executor, which is
+exactly how it read.
+
+Now every guard speaks. Run is disabled with a tooltip naming the cause, the tab row shows a
+**"No language"** badge instead of a dropdown that would do nothing, and the host gets a banner
+with an **Assign a question** shortcut. The executor itself was never at fault: `stdout` came
+back `hello\n`, `accepted`, in 0.4s.
+
+## 3. Ending a session and rating are now one two-step flow
+Rewritten to the specified sequence:
+
+1. **End the session** — Complete or Cancel, and nothing else.
+2. **After completing**, an **Evaluate candidate** form appears: rating (weak / average /
+   strong) plus notes **pre-filled** with whatever the host wrote during the session.
+
+Asking for a verdict before the interview ends invites a snap judgement, and the server rejects
+evaluation until the session is completed anyway. Notes stay editable during the session and
+are carried into the form. Cancelling asks for confirmation; completing does not.
+
+`HostVerdict` is deleted — the new panel owns the whole flow, so keeping a second, differently
+behaved copy of the same UI was a trap.
+
+## A real gap found while testing: rating someone who left
+`candidateId` came only from the awareness roster — people **currently connected**. A candidate
+who joined, closed their tab, and was then rated by the host came back as "No candidate joined
+this session, so there is nobody to rate."
+
+`SessionDetail` now also carries `candidate_participant_id` (first guest, owner-scoped, next to
+the existing `host_participant_id`), and the client prefers whoever is in the room but falls
+back to it. Verified: rating and notes persisted — `strong`, session `completed`.
+
+## Testing note
+Three of the checks in the first pass failed on my own assertions, not the app: CSS
+`text-transform: uppercase` makes rendered `innerText` uppercase (so `"Notes in progress"` was
+never found), and I looked for `"success"` in a class before realising the button was correctly
+`disabled` — because `candidateId` was genuinely null, which is how the last bug was found.
