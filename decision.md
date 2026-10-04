@@ -978,3 +978,93 @@ Three of the checks in the first pass failed on my own assertions, not the app: 
 `text-transform: uppercase` makes rendered `innerText` uppercase (so `"Notes in progress"` was
 never found), and I looked for `"success"` in a class before realising the button was correctly
 `disabled` — because `candidateId` was genuinely null, which is how the last bug was found.
+
+# Ending A Session — Broadcast, Candidate Notice, Then Rating
+
+## The missing broadcast
+`completeSession` and `cancelSession` logged a `session_events` row but never told the room. The
+candidate therefore sat in a finished session with a live editor and no idea anything had
+happened — the only change visible to them was nothing at all.
+
+Both now `broadcast(session.id, { type: "session_completed" | "session_cancelled", payload: {
+session } })`. Those two variants already existed in `WsMessage` and had simply never been sent
+— the same gap that kept `question_change` unwired, and the reason `useLiveSession` was polling
+every 30s.
+
+## Only the candidate gets the notice
+The host already knows: they pressed the button. Showing them a "session ended" dialog would be
+noise at best. `LiveRoomShell` therefore gates the dialog on `role !== "host"`, and it is
+deliberately **not dismissable by accident** — the session is over and there is nothing left to
+edit, so the only ways forward are the two buttons.
+
+**Exit full screen** is offered prominently, and only when actually in full screen. The room puts
+people in full screen to stop them wandering off mid-interview; the courtesy of switching it back
+off when the interview is genuinely over matters, and `Esc` is not something a non-technical
+candidate will try.
+
+The name in the message comes from the **presence roster**, not the host-scoped session detail —
+a candidate has no access to that endpoint, so the obvious prop would always have been empty.
+
+## The actions panel is now strictly two steps
+**Step 1 — End session.** *Only* Complete and Cancel. The notes block and the rating controls
+were removed from here: while a session is live the host's attention belongs on the interview,
+and a rating form one click away invites a snap judgement. Notes stay in the Notes tab where
+they were written.
+
+**Step 2 — Evaluate candidate.** Appears only after completing. Rating (weak / average / strong)
+plus notes **pre-filled** from what the host wrote during the session and freely editable.
+
+Two exits, because rating is optional and must not feel mandatory:
+
+- **Done** — saves the evaluation, then navigates to `/app/sessions`
+- **Rate later** — skips the rating, still persists any edited notes, then navigates to
+  `/app/sessions`
+
+Both land on the sessions page: the room has nothing left to do, and an unrated session stays
+reachable from session detail. `rateLater` writes notes best-effort on the way out so a typed
+thought is never silently discarded by skipping.
+
+## Run is disabled once the session ends
+The server rejects runs unless the session is live, so the button was offering an action that
+could only ever produce a 400. It is now disabled with a tooltip naming the status, and the
+handler explains rather than returning silently — the same class of bug as the missing-language
+guard.
+
+# Notes Could Not Save — Root Cause Was Never the Connection
+
+## Reproduced
+Saving notes on a session with no candidate yet:
+
+```
+PATCH /api/session/:id/notes
+→ 400 "No candidate has joined this session yet"
+```
+
+The same request after a guest joins returns **200**. So the save was never a network problem.
+
+## Why the server refuses
+Notes are stored in `session_evaluations`, whose upsert key is
+`(session_id, evaluated_participant_id)` and whose `evaluated_participant_id` is
+`uuid not null references session_participants(id)`. There is nowhere to put a note without a
+candidate to attach it to, and `getCandidateParticipant` throws a 400 when there is none.
+
+**The bug was the error message, not the request.** The client caught every failure and toasted
+*"Couldn't save notes — check your connection"*, sending the host hunting for a network fault that
+did not exist — the same class of defect as the silent `if (!language) return` on Run.
+
+## Fixes
+1. **The real reason is shown.** Failures now surface the server's own message, so "no candidate
+   yet" and "you are offline" are distinguishable.
+2. **The textarea stays editable.** A host who wants to jot something down before the candidate
+   connects can. The draft is kept locally and marked **"Draft — not saved yet"**, with an inline
+   explanation instead of a toast.
+3. **The draft saves itself later.** `canSave` is in the debounce effect's dependencies, so the
+   moment a candidate appears the pending text is written automatically — no lost keystrokes, no
+   need to remember to retype it.
+4. **`notesCanSave` is derived from real state** — `candidateId` (presence roster, falling back to
+   the DB) plus a live-or-completed session — and the exact blocker is passed through as
+   `notesBlockedReason` so the message is specific rather than generic.
+
+Note that this only affects **notes during a session**. The rating form saves through
+`POST /api/evaluation`, which has the same underlying requirement and is only reachable after a
+candidate exists.

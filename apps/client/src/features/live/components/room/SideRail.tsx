@@ -100,15 +100,15 @@ export function SideRail({ isHost, active, onSelect, canEndSession }: SideRailPr
                 <QuestionIcon />
             </RailButton>
 
+            <RailButton
+                label="Assigned questions"
+                active={active === "questions"}
+                onClick={() => onSelect(active === "questions" ? null : "questions")}
+            >
+                <ListIcon />
+            </RailButton>
             {isHost && (
                 <>
-                    <RailButton
-                        label="Assigned questions"
-                        active={active === "questions"}
-                        onClick={() => onSelect(active === "questions" ? null : "questions")}
-                    >
-                        <ListIcon />
-                    </RailButton>
                     <RailButton
                         label="All questions"
                         active={active === "browse"}

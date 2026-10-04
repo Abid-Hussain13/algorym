@@ -25,6 +25,7 @@ import {
     AllQuestionsPicker,
     SessionSettingsPanel,
     SessionActionsPanel,
+    SessionEndedDialog,
 } from "@/features/live";
 import type { LocalParticipant, RailPanel } from "@/features/live";
 import { useSessionDetail } from "@/features/sessions";
@@ -64,6 +65,7 @@ function LiveRoomShell({
     const isHost = participant.role === "host";
     const [rail, setRail] = useState<RailPanel>(null);
     const [stdin, setStdin] = useState("");
+    const [endedOutcome, setEndedOutcome] = useState<"completed" | "cancelled" | null>(null);
 
     // ── Channel: collaboration (the shared code, and presence rides along) ──
     const collaboration = useCollaboration(sessionId, participant);
@@ -80,6 +82,18 @@ function LiveRoomShell({
     // ── Channel: events (what everyone else ran) ───────────────────────────
     const socket = useSessionSocket(sessionId, participant.id);
     const outputEntries = useRoomOutput(socket, participant.id);
+
+    // The host learns the session ended because they ended it; only the candidate
+    // needs telling, so this is gated on role rather than shown to everyone.
+    const { subscribe } = socket;
+    useEffect(
+        () =>
+            subscribe((message) => {
+                if (message.type === "session_completed") setEndedOutcome("completed");
+                if (message.type === "session_cancelled") setEndedOutcome("cancelled");
+            }),
+        [subscribe]
+    );
 
     // ── The shared files, keyed inside the CRDT ────────────────────────────
     const language = session?.language ?? null;
@@ -125,6 +139,12 @@ function LiveRoomShell({
         hostDetail?.session.candidate_participant_id ??
         null;
 
+    // Notes live in `session_evaluations`, which requires an
+    // `evaluated_participant_id` — so the server refuses them until a candidate
+    // exists. The host is told that plainly instead of seeing a save "fail".
+    const notesCanSave =
+        Boolean(candidateId) && (session?.status === "live" || session?.status === "completed");
+
     const nameFor = useCallback(
         (participantId: string) =>
             collaborators.find((c) => c.participantId === participantId)?.displayName ?? "Someone",
@@ -132,8 +152,15 @@ function LiveRoomShell({
     );
 
     const hasLanguage = isSupportedLanguage(language);
+    // The server refuses runs unless the session is live, so do not offer it.
+    const isLive = session?.status === "live";
 
     const handleRun = useCallback(() => {
+        if (!isLive) {
+            toast.error(`This session is ${session?.status ?? "not live"} — code can no longer be run`);
+            return;
+        }
+
         // Both guards must say something. An earlier revision returned silently
         // when the language was missing, so the room just sat there with no
         // output and no error — indistinguishable from a broken executor.
@@ -152,7 +179,7 @@ function LiveRoomShell({
             { code, language: language!, stdin: stdin || undefined },
             { onError: (error) => toast.error(error.message || "Run failed") }
         );
-    }, [activeText, hasLanguage, language, stdin, runCode]);
+    }, [activeText, hasLanguage, isLive, language, session?.status, stdin, runCode]);
 
     const handleSelectQuestion = useCallback(
         (questionId: string, nextLanguage?: string) => {
@@ -303,12 +330,14 @@ function LiveRoomShell({
                                     }}
                                     onRun={handleRun}
                                     isRunning={runCode.isPending}
-                                    canRun={Boolean(activeText) && hasLanguage}
+                                    canRun={Boolean(activeText) && hasLanguage && isLive}
                                     canChangeLanguage={isHost}
                                     blockedReason={
                                         !hasLanguage
                                             ? "This session has no language set"
-                                            : "Waiting for the shared editor…"
+                                            : !isLive
+                                              ? `This session is ${session?.status ?? "not live"} — code can no longer be run`
+                                              : "Waiting for the shared editor…"
                                     }
                                 />
                             }
@@ -340,10 +369,25 @@ function LiveRoomShell({
                         isHost={isHost}
                         sessionId={sessionId}
                         initialNotes={hostDetail?.session.notes ?? null}
-                        notesEnabled={session?.status === "live" || session?.status === "completed"}
+                        notesCanSave={notesCanSave}
+                        notesBlockedReason={
+                            !candidateId
+                                ? "Notes are saved against the candidate, so they cannot be written until someone joins."
+                                : session?.status !== "live" && session?.status !== "completed"
+                                  ? `Notes can only be saved while a session is live or completed (this one is ${session?.status}).`
+                                  : null
+                        }
                     />
                 </main>
             </div>
+
+            {!isHost && endedOutcome && (
+                <SessionEndedDialog
+                    outcome={endedOutcome}
+                    hostName={collaborators.find((c) => c.role === "host")?.displayName ?? ""}
+                    onDismiss={() => setEndedOutcome(null)}
+                />
+            )}
         </div>
     );
 }

@@ -20,7 +20,9 @@ interface BottomTabsProps {
     isHost: boolean;
     sessionId: string;
     initialNotes: string | null;
-    notesEnabled: boolean;
+    /** A save would succeed right now (a candidate exists). */
+    notesCanSave: boolean;
+    notesBlockedReason?: string | null;
 }
 
 const TabButton = ({
@@ -73,7 +75,8 @@ export function BottomTabs({
     isHost,
     sessionId,
     initialNotes,
-    notesEnabled,
+    notesCanSave,
+    notesBlockedReason,
 }: BottomTabsProps) {
     const [tab, setTab] = useState<BottomTab>("output");
     const [collapsed, setCollapsed] = useState(false);
@@ -168,7 +171,12 @@ export function BottomTabs({
                     )}
 
                     {tab === "notes" && (
-                        <HostNotes sessionId={sessionId} initialNotes={initialNotes} canEdit={notesEnabled} />
+                        <HostNotes
+                            sessionId={sessionId}
+                            initialNotes={initialNotes}
+                            canSave={notesCanSave}
+                            blockedReason={notesBlockedReason}
+                        />
                     )}
                 </div>
             )}

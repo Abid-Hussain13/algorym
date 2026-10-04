@@ -36,7 +36,7 @@ export function useHostActions(sessionId: string) {
         mutationFn: () => sessionsApi.complete(sessionId),
         onSuccess: async () => {
             await invalidate();
-            toast.success("Session completed — you can now rate the candidate");
+            toast.success("Session completed. You can now rate the candidate");
         },
         onError: (error) => toast.error(error.message || "Couldn't complete the session"),
     });
