@@ -192,7 +192,7 @@ export function SessionActionsPanel({
 
             {candidateId && mode !== "interview" && (
                 <p className="text-[11px] leading-relaxed text-muted">
-                    Ratings apply to interview sessions only — this was a practice session.
+                    Ratings apply to interview sessions only. This was a practice session.
                 </p>
             )}
 
