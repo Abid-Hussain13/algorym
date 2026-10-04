@@ -1,5 +1,5 @@
 import db from "../db/pool.js";
-import { Pagination, Question, RoomSession, Session, SessionDetail, SessionListItem, SessionListResponse, SessionRoom, SessionStatus } from "@algorym/shared-types";
+import { Pagination, Question, RoomSession, Session, SessionDetail, SessionListItem, SessionListResponse, SessionQuestionRef, SessionRoom, SessionStatus } from "@algorym/shared-types";
 import { nanoid } from "nanoid";
 import AppError from "../utils/AppError.js";
 import { CreateSessionInput, GetAllSessionsQuery } from "../utils/validation.js";
@@ -296,7 +296,19 @@ export const getSessionRoom = async (sessionId: string): Promise<SessionRoom> =>
         question = (result.rows[0] as Question) ?? null;
     }
 
-    return { session, question };
+    // The full assigned list, not just the current one. A candidate is allowed
+    // to see what else is coming so they know the shape of the interview, but
+    // only the host may switch — see `AssignedQuestions` readOnly.
+    const assigned = await db.query(
+        `SELECT q.id, q.title, sq.position
+         FROM session_questions sq
+         JOIN questions q ON q.id = sq.question_id
+         WHERE sq.session_id = $1
+         ORDER BY sq.position ASC, q.title ASC`,
+        [sessionId]
+    );
+
+    return { session, question, questions: assigned.rows as SessionQuestionRef[] };
 };
 
 const resolveQuestionIds = (data: Partial<CreateSessionInput>, fallback: string[]): string[] => {

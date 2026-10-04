@@ -23,6 +23,10 @@ export interface Collaborator extends CollaboratorPresence {
     role: "host" | "guest";
     isSelf: boolean;
     clientId: number;
+    /** True when their document is hidden — in another tab or minimised. */
+    isAway: boolean;
+    /** When they went away, for the host's benefit. */
+    awaySince: number | null;
 }
 
 /**
@@ -52,6 +56,10 @@ export function useCollaborators(
                 // `state.user` is only present on clients that published the
                 // y-codemirror awareness field, so narrow before reading it.
                 const userColor = (state?.user as { color?: unknown } | undefined)?.color;
+                // Published by `useAwaySignal`.
+                const focus = state?.focus as { away?: unknown; since?: unknown } | undefined;
+                const isAway = focus?.away === true;
+                const awaySince = typeof focus?.since === "number" ? focus.since : null;
 
                 next.push({
                     participantId: participant.participantId,
@@ -62,6 +70,8 @@ export function useCollaborators(
                     color: typeof userColor === "string" ? userColor : colorForParticipant(participant.participantId),
                     isSelf: participant.participantId === selfParticipantId,
                     clientId,
+                    isAway,
+                    awaySince,
                 });
             });
 

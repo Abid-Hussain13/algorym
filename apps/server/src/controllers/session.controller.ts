@@ -146,14 +146,20 @@ export const changeQuestion = async (req: Request, res: Response) => {
     const question = await getQuestionById(question_id, req.user!.id);
 
     const host = await getHostParticipant(session.id, req.user!.id);
-    await sessionEventService.logSessionEvent(session.id, host.id, "question_change", {
+    const payload = {
         question_id: question.id,
         title: question.title,
         description: question.description,
         starter_code: question.starter_code ?? {},
         languages: question.languages,
         language,
-    });
+    };
+
+    await sessionEventService.logSessionEvent(session.id, host.id, "question_change", payload);
+
+    // Tell the room. Without this the candidate's highlighted question lags up
+    // to the 30s poll, which reads as a bug now that they can see the list.
+    broadcast(session.id, { type: "question_change", payload });
 
     res.json({ success: true, data: { session }, message: "Question changed" });
 };

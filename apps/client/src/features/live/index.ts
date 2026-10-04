@@ -43,6 +43,8 @@ export { useRunCode } from './hooks/use-run-code'
 export { useSessionSocket } from './hooks/use-session-socket'
 export { useEditorFiles } from './hooks/use-editor-files'
 export { useRoomOutput } from './hooks/use-room-output'
+export { useCodeSnapshots } from './hooks/use-code-snapshots'
+export { useUnloadGuard, useAwaySignal } from './hooks/use-room-guards'
 export { useHostActions } from './hooks/use-host-actions'
 export { useResizablePane } from './hooks/use-resizable-pane'
 

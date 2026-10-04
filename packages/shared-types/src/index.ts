@@ -92,6 +92,11 @@ export interface RoomSession {
 export interface SessionRoom {
     session: RoomSession;
     question: Question | null;
+    /**
+     * Every question assigned to this session, in order. Visible to candidates so
+     * they know what is coming; only the host can actually switch.
+     */
+    questions: SessionQuestionRef[];
 }
 
 export interface SessionParticipant {
@@ -233,6 +238,8 @@ export interface SessionListResponse {
 
 export interface CodeSnapshotPayload {
     code: string;
+    /** Which buffer this is, so replay can tell a .py from a .js. */
+    filename?: string;
 }
 
 export type RunStatus = 'accepted' | 'wrong_answer' | 'time_limit_exceeded' |

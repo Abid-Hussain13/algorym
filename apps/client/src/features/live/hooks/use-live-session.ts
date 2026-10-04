@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import type { Question, RoomSession } from "@algorym/shared-types";
+import type { Question, RoomSession, SessionQuestionRef } from "@algorym/shared-types";
 import { sessionsApi } from '@/lib/api';
 
 export interface LiveSessionState {
     session: RoomSession | null;
     question: Question | null;
+    /** Every assigned question, so a candidate can see what is coming. */
+    questions: SessionQuestionRef[];
     isLoading: boolean;
     error: Error | null;
     refetch: () => void;
@@ -39,6 +41,7 @@ export function useLiveSession(sessionId: string, participantId: string): LiveSe
     return {
         session: query.data?.session ?? null,
         question: query.data?.question ?? null,
+        questions: query.data?.questions ?? [],
         isLoading: query.isLoading,
         error: (query.error as Error | null) ?? null,
         refetch: () => void query.refetch(),

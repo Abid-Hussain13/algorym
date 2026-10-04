@@ -1068,3 +1068,85 @@ did not exist — the same class of defect as the silent `if (!language) return`
 Note that this only affects **notes during a session**. The rating form saves through
 `POST /api/evaluation`, which has the same underlying requirement and is only reachable after a
 candidate exists.
+
+# Phase 6 Guardrails + Closing the Wiring Gaps
+
+## Phase 6 — Guardrails (was 0 of 3, now complete)
+
+**Both are deliberately passive.** There is no reliable way to stop a candidate switching tabs,
+and a client that fights back — nagging modals, repeated toasts — reads as surveillance and sours
+the interview. These make an accident *visible* rather than trying to prevent it.
+
+### `useUnloadGuard` — browser-level "are you sure?"
+Applies to **both** roles while the session is live, because losing an interview to an accidental
+refresh is expensive for the host too. It is skipped once the session ends, where leaving is the
+expected next action.
+
+The copy cannot be customised — browsers only allow a plain `beforeunload` prompt. That is also
+why this is kept light rather than replaced with a custom dialog we would have to style blind.
+
+### `useAwaySignal` — tab-away, published on **awareness**, not a new message
+The first design returned a callback and would have needed a new `WsClientMessage` type, a server
+handler and a broadcast. Instead it writes `awareness.setLocalStateField("focus", { away, since })`.
+
+That is better on every axis:
+- awareness **already** flows to everyone in the room and carries per-user state
+- it **expires on its own** if the tab dies, so an away participant who never returns disappears
+  instead of lingering as a ghost
+- no new protocol surface
+
+`CollaboratorsBar` shows a small amber dot plus "· away" in the summary line. Information for the
+host, not a warning aimed at the candidate.
+
+`visibilitychange` is used rather than `blur`, because `blur` also fires for devtools and sibling
+windows, whereas `visibility` only flips when the document genuinely becomes hidden.
+
+### Also: a candidate reloading into an ended session
+Previously the "session ended" dialog depended entirely on a broadcast. A candidate who reloaded
+*after* the host finished got no dialog and landed in a dead room. The outcome is now also derived
+from the freshly-fetched status, so the dialog appears on mount. This closes a real path that the
+broadcast-only version could not.
+
+## The three wiring gaps — closed
+
+### 1. Candidate sees the assigned questions (read-only)
+`GET /:id/room` now returns `questions: SessionQuestionRef[]` alongside the current question.
+Riding on the existing endpoint means no new route, no extra request, and it stays fresh through
+the same 30s poll. The candidate's list was previously an **eternal "Loading…"** — `useSessionDetail`
+is owner-scoped, so `hostDetail` was permanently `undefined` for a guest.
+
+**Read-only, not full control.** Both parties share **one** code buffer (`files` is a single
+`Y.Map`). Letting the candidate switch questions independently would mean two people writing
+different solutions into the same buffer, and would make the rating ("strong on the whole set")
+incomparable across candidates. Visibility without control gives the transparency without
+breaking the shared editor. The panel says so explicitly: *"Only the interviewer can switch."*
+
+Note `changeQuestion` rotates the chosen question to the front, so the candidate's list visibly
+reshuffles as the host advances — progress is legible, which is arguably useful.
+
+### 2. `code_snapshot` capture
+**This could not be retrofitted.** Yjs documents live in server memory, so once a session is over
+and the server has restarted the code is simply gone. Capture during the session is the only moment
+the data exists.
+
+`useCodeSnapshots` observes the active `Y.Text` (so remote edits are captured too), debounces 5s
+trailing, skips text identical to what was last sent, and flushes on tab switch and unmount so the
+last edit before a change is never dropped. `filename` is recorded alongside `code` — without it a
+future replay could not tell a `.py` from a `.js`.
+
+Measured: a short test session produced 6 rows, one per real edit, no duplicates while idle.
+A 45-minute interview lands in the **40–120 row** range, roughly 100–600 KB per session.
+
+### 3. `question_change` broadcast
+The last unwired `WsMessage`. The candidate's highlighted question now moves with the host's
+instead of lagging up to 30s — which matters *more* now that they can see the list, because the
+highlight is how they know where they are. The client simply refetches the room payload on
+receipt, so both sides land on the same question through one code path.
+
+`session_started` was **deliberately left unwired**: a candidate joining a `scheduled` session sees
+Run disabled, which is the same self-explanatory signal, and a broadcast would not change what they
+can do.
+
+## Tests
++2 server tests on the `/room` response (ordered list with positions; empty list is not an error).
+**101 → 103.**

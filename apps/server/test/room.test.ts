@@ -51,6 +51,50 @@ describe("GET /api/session/:id/room", () => {
         expect(roomQuestion.starter_code).toEqual({ python: "def reverse(s):\n    pass\n" });
     });
 
+    it("returns the full assigned question list so a candidate can see what is coming", async () => {
+        const { agent } = await signupAgent(app);
+        const first = await createQuestion(agent, { title: "Question Alpha" });
+        const second = await createQuestion(agent, { title: "Question Beta" });
+
+        const session = await createSession(agent, {
+            mode: "interview",
+            question_ids: [first.id, second.id],
+            language: "javascript",
+        });
+        const guest = await joinAnonymously(session.id);
+
+        const res = await request(app)
+            .get(`/api/session/${session.id}/room`)
+            .query({ participantId: guest.id });
+
+        expect(res.status).toBe(200);
+
+        const { questions, question } = res.body.data;
+        expect(Array.isArray(questions)).toBe(true);
+        expect(questions.map((q: { title: string }) => q.title)).toEqual([
+            "Question Alpha",
+            "Question Beta",
+        ]);
+        // position drives the tab order, so it must be present
+        expect(questions[0].position).toBeDefined();
+        expect(questions[0].id).toBe(first.id);
+        // the current question is still returned separately
+        expect(question.title).toBe("Question Alpha");
+    });
+
+    it("returns an empty list — not an error — when nothing is assigned", async () => {
+        const { agent } = await signupAgent(app);
+        const session = await createSession(agent, { mode: "interview" });
+        const guest = await joinAnonymously(session.id);
+
+        const res = await request(app)
+            .get(`/api/session/${session.id}/room`)
+            .query({ participantId: guest.id });
+
+        expect(res.status).toBe(200);
+        expect(res.body.data.questions).toEqual([]);
+    });
+
     it("never leaks the invite token back to a participant", async () => {
         const { agent } = await signupAgent(app);
         const session = await createSession(agent, { mode: "interview" });

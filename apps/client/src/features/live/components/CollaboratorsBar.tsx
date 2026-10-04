@@ -66,6 +66,14 @@ export function CollaboratorsBar({ collaborators, connected, className }: Collab
                         >
                             {initialsOf(collaborator.displayName)}
                         </span>
+                        {/* Quiet, passive: marks that they are in another tab. Never
+                            nags them — it is information for the host, not a warning. */}
+                        {collaborator.isAway && (
+                            <span
+                                className="absolute -left-0.5 -top-0.5 size-2.5 rounded-full border-2 border-bg bg-warning"
+                                title={`${collaborator.displayName} is in another tab`}
+                            />
+                        )}
                         {collaborator.role === "host" && (
                             <span
                                 className="absolute -bottom-0.5 -right-0.5 grid size-3.5 place-items-center rounded-full bg-accent text-[8px] font-bold text-on-accent"
@@ -83,7 +91,7 @@ export function CollaboratorsBar({ collaborators, connected, className }: Collab
                     ? "Waiting for others to join…"
                     : `${others.map((c) => c.displayName).join(", ")} ${
                           others.length === 1 ? "is" : "are"
-                      } here`}
+                      } here${others.some((c) => c.isAway) ? " · away" : ""}`}
             </span>
         </div>
     );

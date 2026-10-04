@@ -29,13 +29,17 @@ export const handleMessage = (ws: WebSocket, sessionId: string, participantId: s
         return;
     }
 
-    const payload = message.payload as { code?: unknown };
+    const payload = message.payload as { code?: unknown; filename?: unknown };
 
     if (typeof payload.code !== "string") {
         ws.send(JSON.stringify({ type: "error", payload: { message: "code_snapshot payload must include a code string" } }));
         return;
     }
 
-    void logSessionEvent(sessionId, participantId ?? null, "code_snapshot", { code: payload.code })
+    // `filename` is optional so a client that has not been updated still works,
+    // but recording it is what lets replay tell a .py apart from a .js later.
+    const filename = typeof payload.filename === "string" ? payload.filename : null;
+
+    void logSessionEvent(sessionId, participantId ?? null, "code_snapshot", { code: payload.code, filename })
         .catch((err) => console.error("Failed to persist code_snapshot:", err));
 };

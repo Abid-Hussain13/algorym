@@ -9,6 +9,9 @@ import {
     useSessionSocket,
     useEditorFiles,
     useRoomOutput,
+    useCodeSnapshots,
+    useUnloadGuard,
+    useAwaySignal,
     useRunCode,
     useHostActions,
     useResizablePane,
@@ -76,24 +79,48 @@ function LiveRoomShell({
     );
 
     // ── Channel: HTTP (session + question, and running code) ───────────────
-    const { session, question, isLoading } = useLiveSession(sessionId, participant.id);
+    const {
+        session,
+        question,
+        questions: roomQuestions,
+        isLoading,
+        refetch: refetchRoom,
+    } = useLiveSession(sessionId, participant.id);
+
+    // The server refuses runs unless the session is live, so do not offer it.
+    const isLive = session?.status === "live";
     const runCode = useRunCode(sessionId, participant.id);
 
     // ── Channel: events (what everyone else ran) ───────────────────────────
     const socket = useSessionSocket(sessionId, participant.id);
     const outputEntries = useRoomOutput(socket, participant.id);
 
-    // The host learns the session ended because they ended it; only the candidate
-    // needs telling, so this is gated on role rather than shown to everyone.
-    const { subscribe } = socket;
+    // Server-pushed events. `question_change` needs no handling of its own — the
+    // room payload is refetched below, so both sides land on the same question.
+    const { subscribe, isConnected } = socket;
+
     useEffect(
         () =>
             subscribe((message) => {
                 if (message.type === "session_completed") setEndedOutcome("completed");
                 if (message.type === "session_cancelled") setEndedOutcome("cancelled");
+                if (message.type === "question_change" || message.type === "session_started") {
+                    void refetchRoom();
+                }
             }),
-        [subscribe]
+        [subscribe, refetchRoom]
     );
+
+    // A candidate who refreshes into a finished session gets no broadcast, so
+    // seed the outcome from what we just fetched. The host is excluded because
+    // they already have the rating form waiting.
+    const endedFromStatus =
+        !isHost && !isLoading && (session?.status === "completed" || session?.status === "cancelled")
+            ? session.status === "completed"
+                ? ("completed" as const)
+                : ("cancelled" as const)
+            : null;
+    const outcome = endedOutcome ?? endedFromStatus;
 
     // ── The shared files, keyed inside the CRDT ────────────────────────────
     const language = session?.language ?? null;
@@ -107,6 +134,21 @@ function LiveRoomShell({
         language,
         !isLoading
     );
+
+    // Phase 6 guardrails. Both are passive: a browser-level "are you sure?"
+    // before an accidental close, and an away marker on the roster. Neither
+    // blocks anything — they make an accident visible instead of silent.
+    useUnloadGuard(isLive);
+    useAwaySignal(collaboration?.provider.awareness ?? null, isLive);
+
+    // Replay data. Only while the session can accept runs, since a snapshot of a
+    // finished session has nothing left to record.
+    useCodeSnapshots({
+        socket,
+        yText: activeText,
+        filename: activeName,
+        enabled: isLive && isConnected,
+    });
 
     // Host-only: the owner-scoped payload carrying the question list and notes.
     // Guests get `undefined`, so the query stays disabled for them.
@@ -152,8 +194,6 @@ function LiveRoomShell({
     );
 
     const hasLanguage = isSupportedLanguage(language);
-    // The server refuses runs unless the session is live, so do not offer it.
-    const isLive = session?.status === "live";
 
     const handleRun = useCallback(() => {
         if (!isLive) {
@@ -246,11 +286,14 @@ function LiveRoomShell({
 
                         {rail === "questions" && (
                             <AssignedQuestions
-                                questions={hostDetail?.session.questions ?? []}
+                                /* From /room, so a candidate can read this too. The
+                                   host-only owner payload is no longer the source. */
+                                questions={roomQuestions}
                                 currentQuestionId={session?.question_id ?? null}
-                                isLoading={!hostDetail}
+                                isLoading={isLoading}
                                 isSwitching={hostActions.changeQuestion.isPending}
                                 onSelect={(id) => handleSelectQuestion(id)}
+                                readOnly={!isHost}
                             />
                         )}
 
@@ -381,9 +424,9 @@ function LiveRoomShell({
                 </main>
             </div>
 
-            {!isHost && endedOutcome && (
+            {!isHost && outcome && (
                 <SessionEndedDialog
-                    outcome={endedOutcome}
+                    outcome={outcome}
                     hostName={collaborators.find((c) => c.role === "host")?.displayName ?? ""}
                     onDismiss={() => setEndedOutcome(null)}
                 />
