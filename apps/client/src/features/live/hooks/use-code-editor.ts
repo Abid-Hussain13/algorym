@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Compartment, EditorState, type Extension } from "@codemirror/state";
-import { EditorView, keymap } from "@codemirror/view";
+import { EditorView, highlightActiveLineGutter, keymap, lineNumbers } from "@codemirror/view";
+import { indentWithTab } from "@codemirror/commands";
 import { minimalSetup } from "codemirror";
 import { vim } from "@replit/codemirror-vim";
 import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
@@ -68,9 +69,12 @@ export function useCodeEditor({ yText, awareness, language }: UseCodeEditorOptio
     const [view, setView] = useState<EditorView | null>(null);
     const { mode, fontSize } = useEditorPreferences();
 
-    // One compartment for the whole preferences extension, created once per
-    // hook instance and reused across buffer switches.
-    const preferencesCompartment = useRef(new Compartment()).current;
+    // One compartment for the whole preferences extension, created once per hook
+    // instance and reused across buffer switches. `useState` with a lazy
+    // initializer rather than `useRef(new Compartment())`: the latter constructs
+    // on every render (the ref discards all but the first), which the compiler
+    // lint rightly rejects.
+    const [preferencesCompartment] = useState(() => new Compartment());
 
     useEffect(() => {
         const parent = containerRef.current;
@@ -89,7 +93,22 @@ export function useCodeEditor({ yText, awareness, language }: UseCodeEditorOptio
                     // vim() has to come before the shared keymaps, or its normal
                     // mode bindings get shadowed by the defaults below.
                     preferencesCompartment.of(preferencesExtension(mode, fontSize)),
-                    keymap.of([...yUndoManagerKeymap, ...completionKeymaps]),
+                    keymap.of([
+                        ...yUndoManagerKeymap,
+                        ...completionKeymaps,
+                        // Without this, Tab is unbound in CodeMirror and the browser
+                        // moves focus to the next control — which in a code editor
+                        // reads as "the editor is broken". Claiming the key inserts an
+                        // indent instead, like every other editor. Listed last so vim's
+                        // normal mode still gets first refusal on Tab.
+                        indentWithTab,
+                    ]),
+                    // `minimalSetup` has no gutters, so line numbers have to be
+                    // asked for. Without this there is no `code`, no error line
+                    // pointer and no current-line marker — which also matters for
+                    // the host, who reads the candidate's line numbers aloud.
+                    lineNumbers(),
+                    highlightActiveLineGutter(),
                     yCollab(yText, awareness, { undoManager }),
                     languageExtension(language),
                     editorCompletions(language),

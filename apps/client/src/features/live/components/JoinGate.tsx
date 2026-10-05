@@ -28,7 +28,7 @@ export function JoinGate({ sessionId, children }: JoinGateProps) {
 
     // Host probe: GET /api/session/:id is owner-scoped, so a 200 proves the
     // visitor is the host (who is never sent through the join form).
-    const { data: hostProbe, isLoading: probing } = useQuery({
+    const { data: hostProbe, isLoading: probing, isError: probeFailed } = useQuery({
         queryKey: ["session", sessionId],
         queryFn: () => sessionsApi.get(sessionId),
         enabled: isAuthResolved && !joined,
@@ -82,10 +82,29 @@ export function JoinGate({ sessionId, children }: JoinGateProps) {
         );
     }
 
+    // Still finding out whether this is the host, so a missing token is not yet a
+    // problem worth reporting. Showing the "incomplete link" error here made a
+    // perfectly valid host URL look broken for as long as the probe took.
     if (!isHost && probing) {
         return (
             <div className="flex min-h-svh items-center justify-center bg-bg">
                 <Spinner size="lg" />
+            </div>
+        );
+    }
+
+    if (!accessToken && probeFailed) {
+        return (
+            <div className="flex min-h-svh items-center justify-center bg-bg p-6">
+                <div className="max-w-sm text-center">
+                    <h1 className="font-display text-lg font-semibold text-fg">
+                        This session isn't available
+                    </h1>
+                    <p className="mt-2 text-sm text-muted">
+                        It may have been deleted, or the link may be for a different account. Ask the
+                        interviewer for a fresh invitation.
+                    </p>
+                </div>
             </div>
         );
     }

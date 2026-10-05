@@ -12,12 +12,14 @@ import {
     useCodeSnapshots,
     useUnloadGuard,
     useFullscreenGuard,
+    useEscapeKeyLock,
+    useEditorPreferences,
     useRunCode,
     useHostActions,
     useResizablePane,
     CollaboratorsBar,
     FullscreenGate,
-    CandidateFocusWarning,
+    FullscreenGuard,
     SessionTimeWarning,
     QuestionPanel,
     EditorTabs,
@@ -29,7 +31,6 @@ import {
     AssignedQuestions,
     AllQuestionsPicker,
     SessionSettingsPanel,
-    SessionActionsPanel,
     SessionEndedDialog,
 } from "@/features/live";
 import type { LocalParticipant, RailPanel } from "@/features/live";
@@ -56,8 +57,7 @@ const PANEL_TITLES: Record<Exclude<RailPanel, null>, string> = {
     question: "Question",
     questions: "Assigned questions",
     browse: "All questions",
-    actions: "Session actions",
-    settings: "Session",
+    settings: "Settings",
 };
 
 function LiveRoomShell({
@@ -147,6 +147,12 @@ function LiveRoomShell({
     useUnloadGuard(isLive);
 
     // Single writer of awareness `focus` — full screen AND tab-away live here.
+    // Vim needs Escape to mean "normal mode". Chrome binds that key to leaving
+    // full screen, so it has to be locked away while both are true.
+    const { mode: editorMode } = useEditorPreferences();
+    const editorIsFullscreen = typeof document !== "undefined" && document.fullscreenElement !== null;
+    useEscapeKeyLock(editorMode === "vim" && editorIsFullscreen);
+
     const focusGuard = useFullscreenGuard({
         awareness: collaboration?.provider.awareness ?? null,
         socket,
@@ -271,7 +277,9 @@ function LiveRoomShell({
             <SessionTimeWarning session={session} />
 
             {/* Host only — a persistent read on whether the candidate is present. */}
-            {isHost && isLive && <CandidateFocusWarning collaborators={collaborators} />}
+            {/* Host-only strip. The candidate's equivalent is FullscreenGate above:
+                no dismiss, escalates to a blurred editor. */}
+            {isHost && isLive && <FullscreenGuard />}
 
             <header className="flex shrink-0 items-center justify-between gap-4 border-b border-border px-5 py-2.5">
                 <div className="flex min-w-0 flex-col gap-0.5">
@@ -282,16 +290,11 @@ function LiveRoomShell({
                         {sessionId.slice(0, 8)} · you are {participant.displayName} ({participant.role})
                     </span>
                 </div>
-                <CollaboratorsBar collaborators={collaborators} connected={connected} />
+                <CollaboratorsBar collaborators={collaborators} connected={connected} isHost={isHost} />
             </header>
 
             <div className="flex min-h-0 flex-1">
-                <SideRail
-                    isHost={isHost}
-                    active={rail}
-                    onSelect={setRail}
-                    canEndSession={session?.status === "live" || session?.status === "scheduled"}
-                />
+                <SideRail isHost={isHost} active={rail} onSelect={setRail} />
 
                 {rail && (
                     <PanelColumn
@@ -325,26 +328,21 @@ function LiveRoomShell({
                             />
                         )}
 
-                        {rail === "actions" && (
-                            <SessionActionsPanel
+                        {rail === "settings" && (
+                            <SessionSettingsPanel
+                                session={session}
+                                collaborators={collaborators}
+                                isHost={isHost}
                                 sessionId={sessionId}
                                 candidateId={candidateId}
-                                mode={session?.mode ?? "interview"}
-                                status={session?.status ?? "scheduled"}
-                                existingRating={(hostDetail?.session.rating as EvaluationRating) ?? null}
+                                existingRating={
+                                    (hostDetail?.session.rating as EvaluationRating) ?? null
+                                }
                                 existingNotes={hostDetail?.session.notes ?? null}
                                 onComplete={() => hostActions.completeSession.mutate()}
                                 onCancel={() => hostActions.cancelSession.mutate()}
                                 isCompleting={hostActions.completeSession.isPending}
                                 isCancelling={hostActions.cancelSession.isPending}
-                            />
-                        )}
-
-                        {rail === "settings" && (
-                            <SessionSettingsPanel
-                                session={session}
-                                collaboratorCount={collaborators.length}
-                                isHost={isHost}
                                 onCopyInvite={isHost ? handleCopyInvite : undefined}
                             />
                         )}

@@ -1280,3 +1280,143 @@ Fixed at both ends:
 `useNow` centralises the ticking clock that the time warning, elapsed time and settings all
 need. Reading `Date.now()` during render is impure and never ticks on its own, so each
 consumer would otherwise subscribe separately and drift out of step.
+
+# Settings Became the Hub
+
+Four related changes, one theme: **the sidebar's Settings panel now owns everything about
+a live room that the host might want to change or check.**
+
+## The fullscreen counter moved into Settings
+The full-width warning bar across the top of the room is gone. The live integrity readout
+now lives in the Settings sidebar panel, and — as specified — it renders **only while the
+candidate is out of full screen**, disappearing the instant they come back.
+
+There is deliberately no "candidate is in full screen" green state. A block that is green
+most of the time teaches the host to stop reading it, which destroys the only moment it
+matters. Silence-when-fine is what makes appear-when-wrong land.
+
+The permanent totals are unaffected: `focus_event` rows still land in `session_events` and
+render as the always-visible `IntegrityCard` on the session detail page.
+
+## Host fullscreen strip restored — candidate untouched
+`FullscreenGuard` is back, host-only: a **Go full screen** button and **Dismiss**, no
+nagging message, because the host is not being watched and the integrity readout now lives
+in Settings.
+
+The candidate's flow is deliberately **unchanged**: `FullscreenGate` still has no Dismiss,
+and still escalates to a blurred editor after four seconds out of full screen. These are
+two different components on purpose — one is an affordance for a cooperating adult, the
+other is an integrity control over someone you are assessing.
+
+Dismissing the host strip does not remove the button; `FullscreenControl` keeps
+**Go full screen** permanently available inside the Settings panel, so the action is never
+more than one click away.
+
+## Complete / Cancel moved out of their own panel
+`SessionActionsPanel` and the **End session** rail item are deleted. Both buttons now sit
+at the **bottom** of Settings, under everything read-only.
+
+The ordering is the point. The host's eye reaches the end of the panel only after passing
+status, language, integrity and editor settings — all neutral — so a destructive action is
+always reachable without ever being the first thing on screen. Cancel still confirms;
+Complete does not, because it is reversible via the rating step.
+
+The two-step flow is preserved by splitting the old panel: `SessionEndControls` (step one)
+and `SessionRatingForm` (step two). The rating form renders **only** once the session is
+`completed` or `cancelled`, so it is still impossible to reach mid-interview.
+
+## Per-user editor settings
+`useEditorPreferences` stores `{ mode, fontSize }` in `localStorage` — per browser profile,
+so two people in the same room can have completely different setups, and both survive a
+reload. A module-level store with `useSyncExternalStore` rather than `useState`, because
+the editor and the settings panel are separate subtrees and `useState` would give each its
+own private copy.
+
+- **Normal / Vim** — swaps the keymap only. Vim's `u` never reaches CodeMirror's own
+  undo, so undo still routes through the Yjs `UndoManager` and only ever touches your own
+  edits.
+- **Font size** (11–20) — code only; the room's chrome does not scale.
+- **Theme** — light/dark, reusing the existing `ThemeToggle`.
+
+All three apply through a **CodeMirror `Compartment`** and `reconfigure`, so switching
+never destroys the view. Rebuilding it on every font-size click would throw away the cursor
+position, the selection and the scroll offset.
+
+`Compartment` is created via `useState(() => new Compartment())` rather than
+`useRef(new Compartment())`: the latter constructs on every render and discards all but
+the first, which the React Compiler lint rejects.
+
+# Four Corrections
+
+## Escape in vim mode was leaving full screen
+Not our bug: **Chrome binds Escape to "exit full screen" at the browser level, below the
+page**, so no `preventDefault` can intercept it. For anyone who left Normal mode that way,
+the full screen guard was effectively a trap.
+
+The only supported escape hatch is the **Keyboard Lock API**, so `useEscapeKeyLock` requests
+a lock on `Escape` whenever vim mode is active *and* the document is full screen.
+
+**The caveat is stated in the code rather than discovered in use:** Chrome only *honours*
+`keyboard.lock()` on Windows. On macOS and Linux the method exists but the promise rejects,
+so Escape keeps exiting full screen there. `supportsKeyboardLocking()` exists so the UI can
+say so instead of leaving the user to work it out. A lock is released on every exit path,
+because a stuck lock is worse than no lock.
+
+## Tab moved browser focus instead of indenting
+CodeMirror does not bind `Tab` by default, so it fell through to the browser and moved focus
+to the next control — in a code editor that reads as "the editor is broken".
+
+Fixed with `indentWithTab` from `@codemirror/commands` (added as a direct dependency; it
+was only present transitively). It is listed **last** in the keymap so vim's normal mode still
+gets first refusal on Tab.
+
+## Integrity problems need to announce themselves
+The counter living only in Settings was correct but insufficient: the host has to already be
+looking at that panel to notice, and during an interview they are looking at the candidate.
+
+Two additions, both host-only:
+- A **red "Out of full screen" pill with the running exit count** in the header, next to the
+  presence indicator.
+- A **pulsing red dot on the candidate's avatar** while they are out.
+
+The Settings readout and the header pill are driven by the same awareness field, so they
+cannot disagree.
+
+## Settings panel was cramped
+Rebuilt around `SettingsSection` / `SettingsRow` / `SettingsCard` / `SettingsField`:
+
+- Sections are separated by **rules, not shadow stacking**, and carry a real heading.
+- Read-only facts became a `divide-y` table with baseline-aligned rows instead of a
+  `gap-1.5` text grid — the previous version was one dense wall of key/value pairs.
+- Interactive things sit in bordered cards, which separates "look at this" from "change this"
+  without needing more colour.
+- Integrity moved to the **top**, because it is the only section that can change from bad to
+  worse by itself. The two destructive buttons stayed **last**.
+
+# Line Numbers, and What the Live-Session Audit Found
+
+## Line numbers
+`minimalSetup` has no gutters, so there were no line numbers at all — swapping away from
+`basicSetup` had silently dropped them. Added `lineNumbers()` and `highlightActiveLineGutter()`.
+This matters beyond cosmetics: the host reads the candidate's line numbers aloud, and it is the
+anchor for pointing at an error.
+
+## A real UX bug in the join gate
+`JoinGate` checked `if (!accessToken)` **before** the host probe had necessarily resolved, so a
+logged-in host following a plain `/live/:id` link was briefly told **"This link is
+incomplete — ask the interviewer to resend the invitation"** for a link that was perfectly
+valid. Reordered so the incomplete-link error only appears once we know the visitor is not the
+host, and added a distinct message for when the probe itself fails (session deleted, or the
+link belongs to a different account) — which is a genuinely different problem from a malformed
+URL and deserves a different sentence.
+
+## Audit result
+Verified in two browsers against a real session: line numbers render and the active line is
+highlighted; the rating form is **absent while live** and **appears only after completing**;
+`Done` persists both rating and notes; the five-minute warning appears with the real remaining
+time and the "can't be reopened" warning, and stays **silent with 30 minutes left**; the expiry
+cron flips the row to `expired` while people are in the room.
+
+Two behaviours are correct by design and were confirmed rather than "fixed": **Rate later**
+skips saving the rating (that is the whole point of the option), and a session with no duration
+never gets a countdown, because it has no deadline to count down to.

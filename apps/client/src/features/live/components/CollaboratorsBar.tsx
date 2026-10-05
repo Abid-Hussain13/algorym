@@ -4,6 +4,8 @@ import type { Collaborator } from "../hooks/use-collaborators";
 interface CollaboratorsBarProps {
     collaborators: Collaborator[];
     connected: boolean;
+    /** Host only: surfaces integrity problems without opening Settings. */
+    isHost?: boolean;
     className?: string;
 }
 
@@ -15,8 +17,19 @@ const initialsOf = (name: string) =>
         .map((part) => part[0]?.toUpperCase() ?? "")
         .join("") || "?";
 
-export function CollaboratorsBar({ collaborators, connected, className }: CollaboratorsBarProps) {
+export function CollaboratorsBar({
+    collaborators,
+    connected,
+    isHost = false,
+    className,
+}: CollaboratorsBarProps) {
     const others = collaborators.filter((c) => !c.isSelf);
+
+    // Only the host needs an integrity signal, and only for a candidate.
+    const guests = collaborators.filter((c) => c.role === "guest");
+    const outOfFullscreen = guests.filter((c) => !c.isFullscreen);
+    const totalExits = guests.reduce((n, c) => n + (c.exitCount ?? 0), 0);
+    const showAlert = isHost && guests.length > 0 && outOfFullscreen.length > 0;
 
     return (
         <div
@@ -74,6 +87,12 @@ export function CollaboratorsBar({ collaborators, connected, className }: Collab
                                 title={`${collaborator.displayName} is in another tab`}
                             />
                         )}
+                        {!collaborator.isFullscreen && collaborator.role === "guest" && (
+                            <span
+                                className="absolute -right-0.5 -top-0.5 size-2.5 animate-pulse rounded-full border-2 border-bg bg-danger"
+                                title={`${collaborator.displayName} is out of full screen`}
+                            />
+                        )}
                         {collaborator.role === "host" && (
                             <span
                                 className="absolute -bottom-0.5 -right-0.5 grid size-3.5 place-items-center rounded-full bg-accent text-[8px] font-bold text-on-accent"
@@ -85,6 +104,23 @@ export function CollaboratorsBar({ collaborators, connected, className }: Collab
                     </li>
                 ))}
             </ul>
+
+            {showAlert && (
+                <span
+                    role="status"
+                    aria-live="assertive"
+                    title={`${outOfFullscreen.map((c) => c.displayName).join(", ")} out of full screen`}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-danger/50 bg-danger/10 px-2 py-0.5 text-[11px] font-semibold text-danger"
+                >
+                    <span className="size-1.5 animate-pulse rounded-full bg-danger" aria-hidden="true" />
+                    Out of full screen
+                    {totalExits > 0 && (
+                        <span className="rounded-full bg-danger/20 px-1.5 tabular-nums">
+                            {totalExits}
+                        </span>
+                    )}
+                </span>
+            )}
 
             <span className="text-xs text-muted">
                 {others.length === 0

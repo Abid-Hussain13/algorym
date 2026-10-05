@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils/cn";
 
-export type RailPanel = "question" | "questions" | "browse" | "actions" | "settings" | null;
+export type RailPanel = "question" | "questions" | "browse" | "settings" | null;
 
 interface SideRailProps {
     /** Host-only panels; hidden entirely for a candidate. */
@@ -8,7 +8,6 @@ interface SideRailProps {
     active: RailPanel;
     onSelect: (panel: RailPanel) => void;
     /** True when the session can still be ended, so the actions icon is shown. */
-    canEndSession: boolean;
 }
 
 interface RailButtonProps {
@@ -62,11 +61,6 @@ const QuestionIcon = () => (
     </svg>
 );
 
-const StopIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" className="size-4" aria-hidden="true">
-        <rect x="6" y="6" width="12" height="12" rx="2" />
-    </svg>
-);
 
 /**
  * The vertical icon column on the **left** edge of the room.
@@ -86,7 +80,7 @@ const StopIcon = () => (
  * two people in the same room can have different panels open, different sizes and
  * completely different themes at the same time.
  */
-export function SideRail({ isHost, active, onSelect, canEndSession }: SideRailProps) {
+export function SideRail({ isHost, active, onSelect }: SideRailProps) {
     return (
         <nav
             className="flex w-12 shrink-0 flex-col items-center gap-1 border-r border-border bg-surface-2/30 py-2"
@@ -119,22 +113,10 @@ export function SideRail({ isHost, active, onSelect, canEndSession }: SideRailPr
                 </>
             )}
 
-            {/* Ending a session lives on its own panel so it is never one stray
-                click away from the question list. */}
-            {isHost && canEndSession && (
-                <RailButton
-                    label="End session"
-                    active={active === "actions"}
-                    onClick={() => onSelect(active === "actions" ? null : "actions")}
-                >
-                    <StopIcon />
-                </RailButton>
-            )}
-
             <div className="flex-1" />
 
             <RailButton
-                label="Session settings"
+                label="Settings"
                 active={active === "settings"}
                 onClick={() => onSelect(active === "settings" ? null : "settings")}
             >

@@ -4,7 +4,6 @@ export { JoinGate } from './components/JoinGate'
 export { JoinSessionForm } from './components/JoinSessionForm'
 export { CollaboratorsBar } from './components/CollaboratorsBar'
 export { FullscreenGate } from './components/FullscreenGate'
-export { CandidateFocusWarning } from './components/CandidateFocusWarning'
 export { SessionTimeWarning } from './components/SessionTimeWarning'
 export { useNow } from './hooks/use-now'
 
@@ -31,7 +30,6 @@ export { EditorControls } from './components/room/EditorControls'
 export { AssignedQuestions } from './components/room/AssignedQuestions'
 export { AllQuestionsPicker } from './components/room/AllQuestionsPicker'
 export { SessionSettingsPanel } from './components/room/SessionSettingsPanel'
-export { SessionActionsPanel } from './components/room/SessionActionsPanel'
 export { SessionEndedDialog } from './components/room/SessionEndedDialog'
 export { HostNotes } from './components/room/HostNotes'
 export { OutputPanel } from './components/room/OutputPanel'
@@ -68,3 +66,9 @@ export { symbolsForLanguage, libraryForLanguage } from './lib/editor-symbols'
 export type { LiveSessionState } from './hooks/use-live-session'
 export type { SessionSocket } from './hooks/use-session-socket'
 export type { RoomOutputEntry } from './hooks/use-room-output'
+export { SessionRatingForm } from "./components/room/SessionRatingForm";
+export { SessionEndControls } from "./components/room/SessionEndControls";
+export { useEditorPreferences, FONT_SIZES } from "./hooks/use-editor-preferences";
+export type { EditorMode, EditorPreferences } from "./hooks/use-editor-preferences";
+export { FullscreenGuard } from "./components/FullscreenGuard";
+export { useEscapeKeyLock, supportsKeyboardLocking } from "./hooks/use-escape-key-lock";
