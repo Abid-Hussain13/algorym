@@ -3,7 +3,7 @@ create extension if not exists "pgcrypto";
 create type difficulty_level as enum ('easy', 'medium', 'hard');
 create type session_mode as enum ('interview', 'practice');
 create type session_status as enum ('scheduled', 'live', 'completed', 'cancelled', 'expired');
-create type event_type as enum ('code_snapshot', 'run_result', 'question_change', 'session_started', 'session_completed', 'session_cancelled');
+create type event_type as enum ('code_snapshot', 'run_result', 'question_change', 'session_started', 'session_completed', 'session_cancelled', 'focus_event');
 create type evaluation_rating as enum ('weak', 'average', 'strong');
 create type participant_role as enum ('host', 'guest');
 create type token_type as enum ('email_verification', 'password_reset');

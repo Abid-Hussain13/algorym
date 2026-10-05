@@ -24,6 +24,28 @@ export const handleMessage = (ws: WebSocket, sessionId: string, participantId: s
         return;
     }
 
+    if (message.type === "focus_event") {
+        const payload = message.payload as { kind?: unknown; durationSeconds?: unknown } | undefined;
+        const kind = payload?.kind;
+
+        if (kind !== "fullscreen_exit" && kind !== "tab_away") {
+            ws.send(JSON.stringify({ type: "error", payload: { message: "focus_event kind must be fullscreen_exit or tab_away" } }));
+            return;
+        }
+
+        const duration =
+            typeof payload?.durationSeconds === "number" && Number.isFinite(payload.durationSeconds)
+                ? Math.max(0, Math.round(payload.durationSeconds))
+                : null;
+
+        // Recorded rather than merely counted, so the timestamps survive and the
+        // host can see *when* and for *how long* — that is what evidences it.
+        void logSessionEvent(sessionId, participantId ?? null, "focus_event", { kind, durationSeconds: duration }).catch(
+            (err) => console.error("Failed to persist focus_event:", err)
+        );
+        return;
+    }
+
     if (message.type !== "code_snapshot") {
         ws.send(JSON.stringify({ type: "error", payload: { message: `Unknown message type: ${message.type}` } }));
         return;

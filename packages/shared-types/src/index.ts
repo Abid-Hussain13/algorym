@@ -4,7 +4,20 @@ export type SessionMode = 'interview' | 'practice';
 
 export type SessionStatus = 'scheduled' | 'live' | 'completed' | 'cancelled' | 'expired';
 
-export type EventType = 'code_snapshot' | 'run_result' | 'question_change' | 'session_started' | 'session_completed' | 'session_cancelled';
+export type EventType = 'code_snapshot' | 'run_result' | 'question_change' | 'session_started' | 'session_completed' | 'session_cancelled' | 'focus_event';
+
+/**
+ * Why a focus event was recorded. Both are integrity signals the host reviews
+ * after the session: leaving full screen is the stronger one, because the room
+ * explicitly asks the candidate to stay in it.
+ */
+export type FocusEventKind = 'fullscreen_exit' | 'tab_away';
+
+export interface FocusEventPayload {
+    kind: FocusEventKind;
+    /** How long they were out, in seconds. Null for an exit we never saw end. */
+    durationSeconds?: number | null;
+}
 
 export type EvaluationRating = 'weak' | 'average' | 'strong';
 
@@ -66,6 +79,9 @@ export interface SessionDetail extends Session {
      * the room — the awareness roster only knows about people still connected.
      */
     candidate_participant_id: string | null;
+    /** Integrity signals recorded against the candidate during the session. */
+    candidate_fullscreen_exits: number;
+    candidate_tab_aways: number;
 }
 
 /**
@@ -284,6 +300,7 @@ export type WsMessage =
     | { type: 'session_started'; payload: SessionStatePayload }
     | { type: 'session_completed'; payload: SessionStatePayload }
     | { type: 'session_cancelled'; payload: SessionStatePayload }
+    | { type: 'session_expired'; payload: SessionStatePayload }
     | { type: 'join'; payload: Record<string, never> }
     | { type: 'leave'; payload: Record<string, never> }
     | { type: 'pong'; payload: Record<string, never> };
@@ -292,6 +309,7 @@ export type WsMessage =
  *  accidentally construct a broadcast message. */
 export type WsClientMessage =
     | { type: 'code_snapshot'; payload: CodeSnapshotPayload }
+    | { type: 'focus_event'; payload: FocusEventPayload }
     | { type: 'ping' };
 
 

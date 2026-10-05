@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Card, CardContent } from "@/components/ui/Card";
 import { useJoinSession } from "../hooks/use-join-session";
+import { useFullscreen } from "../hooks/use-fullscreen";
 import type { UserSafe } from "@/stores/auth-slice";
 import type { LocalParticipant } from "../lib/participant-store";
 
@@ -23,6 +24,14 @@ export function JoinSessionForm({ sessionId, accessToken, user, onJoined }: Join
     const [consent, setConsent] = useState(false);
     const [nameError, setNameError] = useState<string>();
     const [emailError, setEmailError] = useState<string>();
+    /**
+     * Consent is collected first, then the rules are shown and acknowledged. Doing
+     * it in this order means nobody is asked to agree to rules they have not read,
+     * and the full screen request is a gesture — which is the only way a browser
+     * will allow it.
+     */
+    const [showRules, setShowRules] = useState(false);
+    const { isFullscreen, enter } = useFullscreen();
 
     const joinSession = useJoinSession(sessionId);
 
@@ -59,6 +68,11 @@ export function JoinSessionForm({ sessionId, accessToken, user, onJoined }: Join
             return;
         }
 
+        // Identity and consent are captured; the rules come next.
+        setShowRules(true);
+    };
+
+    const joinNow = () => {
         const body: JoinSessionBody = {
             access_token: accessToken,
             consent_to_contact: consent,
@@ -100,6 +114,49 @@ export function JoinSessionForm({ sessionId, accessToken, user, onJoined }: Join
                         </p>
                     </div>
 
+                    {showRules ? (
+                        <div className="flex flex-col gap-4">
+                            <div className="flex flex-col gap-3 rounded-lg border border-warning/30 bg-warning/10 px-3.5 py-3">
+                                <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-warning">
+                                    Before you start
+                                </span>
+                                <ul className="flex list-disc flex-col gap-1.5 pl-4 text-xs leading-relaxed text-fg">
+                                    <li>
+                                        This interview runs in <strong>full screen</strong>. If you leave it or
+                                        switch tabs, the interviewer is told straight away.
+                                    </li>
+                                    <li>
+                                        Every departure is <strong>recorded with your session</strong> and
+                                        shown to the interviewer afterwards.
+                                    </li>
+                                    <li>
+                                        It is not a punishment — but it does leave an impression, and it is
+                                        the easiest way to look like you are not paying attention.
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <Button
+                                type="button"
+                                variant={isFullscreen ? "ghost" : "primary"}
+                                loading={false}
+                                onClick={() => {
+                                    void enter().then(() => joinNow());
+                                }}
+                                className="w-full"
+                            >
+                                {isFullscreen ? "Enter the interview" : "Go full screen & join"}
+                            </Button>
+
+                            <button
+                                type="button"
+                                onClick={joinNow}
+                                className="text-[11px] text-muted underline underline-offset-2 transition-colors hover:text-fg"
+                            >
+                                Join without full screen
+                            </button>
+                        </div>
+                    ) : (
                     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                         {isAuthenticated ? (
                             <div className="flex flex-col gap-1.5 rounded-lg border border-border bg-surface px-3 py-2.5">
@@ -155,6 +212,7 @@ export function JoinSessionForm({ sessionId, accessToken, user, onJoined }: Join
                             Join session
                         </Button>
                     </form>
+                    )}
                 </CardContent>
             </Card>
         </div>

@@ -4,7 +4,7 @@ import { useFullscreen } from "../../hooks/use-fullscreen";
 
 interface SessionEndedDialogProps {
     /** Which event ended it — cancelled reads very differently from completed. */
-    outcome: "completed" | "cancelled";
+    outcome: "completed" | "cancelled" | "expired";
     /** The host's name, so the message can address them. */
     hostName: string;
     onDismiss: () => void;
@@ -28,6 +28,7 @@ export function SessionEndedDialog({ outcome, hostName, onDismiss }: SessionEnde
     const { isFullscreen, exit } = useFullscreen();
 
     const wasCancelled = outcome === "cancelled";
+    const wasExpired = outcome === "expired";
 
     const leave = () => {
         onDismiss();
@@ -59,7 +60,7 @@ export function SessionEndedDialog({ outcome, hostName, onDismiss }: SessionEnde
                         className="size-5"
                         aria-hidden="true"
                     >
-                        {wasCancelled ? (
+                        {wasCancelled || wasExpired ? (
                             <>
                                 <circle cx="12" cy="12" r="9" />
                                 <path d="m15 9-6 6M9 9l6 6" />
@@ -74,10 +75,19 @@ export function SessionEndedDialog({ outcome, hostName, onDismiss }: SessionEnde
 
                 <div className="flex flex-col gap-1.5">
                     <h1 id="session-ended-title" className="font-display text-base font-semibold text-fg">
-                        {wasCancelled ? "This session was cancelled" : "That's a wrap"}
+                        {wasExpired
+                            ? "This session has ended"
+                            : wasCancelled
+                              ? "This session was cancelled"
+                              : "That's a wrap"}
                     </h1>
                     <p className="text-xs leading-relaxed text-muted">
-                        {wasCancelled ? (
+                        {wasExpired ? (
+                            <>
+                                This interview reached its time limit, so the editor is now closed. Your
+                                work is saved, but nothing further will be collected.
+                            </>
+                        ) : wasCancelled ? (
                             <>The interview ended early. Your work is saved, but nothing further was collected.</>
                         ) : (
                             // A candidate has no access to the host-scoped session

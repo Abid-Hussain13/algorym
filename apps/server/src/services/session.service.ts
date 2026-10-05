@@ -254,7 +254,13 @@ export const getSessionDetail = async (userId: string, sessionId: string): Promi
                  ORDER BY hp.joined_at ASC LIMIT 1) AS host_participant_id,
                 (SELECT cp.id FROM session_participants cp
                  WHERE cp.session_id = s.id AND cp.role = 'guest'
-                 ORDER BY cp.joined_at ASC LIMIT 1) AS candidate_participant_id
+                 ORDER BY cp.joined_at ASC LIMIT 1) AS candidate_participant_id,
+                (SELECT count(*)::int FROM session_events se
+                 WHERE se.session_id = s.id AND se.event_type = 'focus_event'
+                   AND se.payload->>'kind' = 'fullscreen_exit') AS candidate_fullscreen_exits,
+                (SELECT count(*)::int FROM session_events se
+                 WHERE se.session_id = s.id AND se.event_type = 'focus_event'
+                   AND se.payload->>'kind' = 'tab_away') AS candidate_tab_aways
          FROM sessions s
          LEFT JOIN session_participants sp ON sp.session_id = s.id AND sp.role = 'guest'
          LEFT JOIN session_evaluations se ON se.session_id = s.id

@@ -27,6 +27,13 @@ export interface Collaborator extends CollaboratorPresence {
     isAway: boolean;
     /** When they went away, for the host's benefit. */
     awaySince: number | null;
+    /** False when the candidate is not in full screen right now. */
+    isFullscreen: boolean;
+    /**
+     * How many times they have left full screen this session. Live value from
+     * awareness — the durable total comes from `session_events` at session end.
+     */
+    exitCount: number;
 }
 
 /**
@@ -57,9 +64,16 @@ export function useCollaborators(
                 // y-codemirror awareness field, so narrow before reading it.
                 const userColor = (state?.user as { color?: unknown } | undefined)?.color;
                 // Published by `useAwaySignal`.
-                const focus = state?.focus as { away?: unknown; since?: unknown } | undefined;
+                const focus = state?.focus as
+                    | { away?: unknown; since?: unknown; fullscreen?: unknown; exitCount?: unknown }
+                    | undefined;
                 const isAway = focus?.away === true;
                 const awaySince = typeof focus?.since === "number" ? focus.since : null;
+                // Absent `fullscreen` means an older client that never reported it.
+                // Defaulting to true avoids accusing someone of leaving when we
+                // simply do not know.
+                const isFullscreen = focus?.fullscreen !== false;
+                const exitCount = typeof focus?.exitCount === "number" ? focus.exitCount : 0;
 
                 next.push({
                     participantId: participant.participantId,
@@ -72,6 +86,8 @@ export function useCollaborators(
                     clientId,
                     isAway,
                     awaySince,
+                    isFullscreen,
+                    exitCount,
                 });
             });
 

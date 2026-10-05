@@ -11,12 +11,14 @@ import {
     useRoomOutput,
     useCodeSnapshots,
     useUnloadGuard,
-    useAwaySignal,
+    useFullscreenGuard,
     useRunCode,
     useHostActions,
     useResizablePane,
     CollaboratorsBar,
-    FullscreenGuard,
+    FullscreenGate,
+    CandidateFocusWarning,
+    SessionTimeWarning,
     QuestionPanel,
     EditorTabs,
     EditorControls,
@@ -68,7 +70,7 @@ function LiveRoomShell({
     const isHost = participant.role === "host";
     const [rail, setRail] = useState<RailPanel>(null);
     const [stdin, setStdin] = useState("");
-    const [endedOutcome, setEndedOutcome] = useState<"completed" | "cancelled" | null>(null);
+    const [endedOutcome, setEndedOutcome] = useState<"completed" | "cancelled" | "expired" | null>(null);
 
     // ── Channel: collaboration (the shared code, and presence rides along) ──
     const collaboration = useCollaboration(sessionId, participant);
@@ -104,6 +106,7 @@ function LiveRoomShell({
             subscribe((message) => {
                 if (message.type === "session_completed") setEndedOutcome("completed");
                 if (message.type === "session_cancelled") setEndedOutcome("cancelled");
+                if (message.type === "session_expired") setEndedOutcome("expired");
                 if (message.type === "question_change" || message.type === "session_started") {
                     void refetchRoom();
                 }
@@ -114,11 +117,13 @@ function LiveRoomShell({
     // A candidate who refreshes into a finished session gets no broadcast, so
     // seed the outcome from what we just fetched. The host is excluded because
     // they already have the rating form waiting.
+    const ENDED_STATUSES = ["completed", "cancelled", "expired"] as const;
     const endedFromStatus =
-        !isHost && !isLoading && (session?.status === "completed" || session?.status === "cancelled")
-            ? session.status === "completed"
-                ? ("completed" as const)
-                : ("cancelled" as const)
+        !isHost &&
+        !isLoading &&
+        session &&
+        (ENDED_STATUSES as readonly string[]).includes(session.status)
+            ? (session.status as "completed" | "cancelled" | "expired")
             : null;
     const outcome = endedOutcome ?? endedFromStatus;
 
@@ -135,11 +140,18 @@ function LiveRoomShell({
         !isLoading
     );
 
-    // Phase 6 guardrails. Both are passive: a browser-level "are you sure?"
-    // before an accidental close, and an away marker on the roster. Neither
-    // blocks anything — they make an accident visible instead of silent.
+    // Phase 6 guardrails. Passive by design: they make an accident *visible*
+    // rather than trying to prevent it, because browsers do not allow that.
+    // The unload prompt applies to both roles; the full screen gate and the exit
+    // count apply to the candidate only — the host manages their own screen.
     useUnloadGuard(isLive);
-    useAwaySignal(collaboration?.provider.awareness ?? null, isLive);
+
+    // Single writer of awareness `focus` — full screen AND tab-away live here.
+    const focusGuard = useFullscreenGuard({
+        awareness: collaboration?.provider.awareness ?? null,
+        socket,
+        enabled: isLive && !isHost,
+    });
 
     // Replay data. Only while the session can accept runs, since a snapshot of a
     // finished session has nothing left to record.
@@ -250,8 +262,16 @@ function LiveRoomShell({
     const availableLanguages = questionLanguages.length > 0 ? questionLanguages : language ? [language] : [];
 
     return (
-        <div className="flex h-svh flex-col overflow-hidden bg-bg text-fg">
-            <FullscreenGuard isHost={isHost} />
+        <div className="relative flex h-svh flex-col overflow-hidden bg-bg text-fg">
+
+            {/* Candidate only — the host is never guarded and never nagged. */}
+            {!isHost && <FullscreenGate guard={focusGuard} exitCount={focusGuard.exitCount} />}
+
+            {/* Both roles benefit from knowing the clock. */}
+            <SessionTimeWarning session={session} />
+
+            {/* Host only — a persistent read on whether the candidate is present. */}
+            {isHost && isLive && <CandidateFocusWarning collaborators={collaborators} />}
 
             <header className="flex shrink-0 items-center justify-between gap-4 border-b border-border px-5 py-2.5">
                 <div className="flex min-w-0 flex-col gap-0.5">
@@ -424,7 +444,7 @@ function LiveRoomShell({
                 </main>
             </div>
 
-            {!isHost && outcome && (
+            {outcome && (
                 <SessionEndedDialog
                     outcome={outcome}
                     hostName={collaborators.find((c) => c.role === "host")?.displayName ?? ""}

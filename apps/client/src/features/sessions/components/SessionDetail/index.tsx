@@ -5,6 +5,7 @@ import { useSessionDetail } from "../../hooks/use-session-detail";
 import { SessionHeader } from "./SessionHeader";
 import { SessionInfoCard } from "./SessionInfoCard";
 import { NotesCard } from "./NotesCard";
+import { IntegrityCard } from "./IntegrityCard";
 import { ReplayPlaceholder } from "./ReplayPlaceholder";
 import { SessionDetailSkeleton } from "./SessionDetailSkeleton";
 import { SessionDetailError } from "./SessionDetailError";
@@ -50,7 +51,9 @@ export function SessionDetail({ sessionId }: SessionDetailProps) {
                 />
             </div>
 
-            <ReplayPlaceholder className="animate-rise [animation-delay:200ms]" />
+            <IntegrityCard session={session} className="animate-rise [animation-delay:200ms]" />
+
+            <ReplayPlaceholder className="animate-rise [animation-delay:260ms]" />
         </div>
     );
 }

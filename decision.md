@@ -1150,3 +1150,133 @@ can do.
 ## Tests
 +2 server tests on the `/room` response (ordered list with positions; empty list is not an error).
 **101 → 103.**
+
+# Full Screen Enforcement & Session Integrity
+
+## What the candidate experiences
+
+**1. Before joining** — consent is collected *first*, then a rules dialog. That order matters:
+nobody is asked to agree to rules they have not read, and the "Go full screen & join" button is a
+user gesture, which is the only way a browser permits entering full screen. The dialog says plainly
+that the interviewer is told, that it is recorded, and that it leaves an impression. A secondary
+"Join without full screen" link exists — it is a candour choice, not a loophole: blocking it
+outright would be theatre, since the candidate can always close the tab, and refusing to let them
+in would just produce a support ticket. What matters is that they were told before joining, and
+then cannot silently drift.
+
+**2. While in the room** — `FullscreenGate` has **no dismiss button, deliberately.** The previous
+version had one, and it defeated the entire feature: a candidate could clear the warning once and
+then work outside full screen for the rest of the interview.
+
+Escalation is two-stage so it never nags someone mid-adjustment:
+1. out of full screen → a quiet strip naming the count so far, plus the button
+2. still out after `ESCALATE_AFTER_MS` (4s) → the room **blurs behind a modal** that offers only
+   "Return to full screen"
+
+The blur is `backdrop-blur` over the whole room, so the editor, question panel and output are all
+unusable until they return. That is the strongest thing a browser can actually do — and returning
+to full screen is the only exit.
+
+## What the host experiences
+**Nothing is imposed on the host.** The old `FullscreenGuard` strip — the "Stay in this window"
+message and its Dismiss button — is deleted entirely. The host manages their own screen.
+
+The host instead gets `CandidateFocusWarning`: a **persistent** bar that is up for as long as the
+candidate is out of full screen and clears the moment they return. A three-second toast would let
+the host glance away during exactly the moment that matters. It also carries the cumulative exit
+count, so "they drifted once" reads differently from "they have drifted ten times".
+
+## Persistence: events, not a counter column
+`focus_event` is a new value on the existing `event_type` enum
+(`db/migrations/004_focus_events.sql`, also updated in `schema.sql` because that file is what
+builds the test database). Reported over the **existing `/ws`**, so there is no new endpoint and no
+new auth path — the socket is already participant-verified.
+
+An event log rather than a denormalised counter, because the timestamps are the actual evidence:
+the host can see *when* and this leaves room for *how long* later, without a migration.
+
+Reported **once per transition, on the way out** — a candidate who never returns still leaves a
+record. Reporting on the way back would lose precisely the case that matters most.
+
+`SessionDetail` exposes `candidate_fullscreen_exits` and `candidate_tab_aways` as count subqueries.
+They are **host-only** (owner-scoped endpoint); `/room` deliberately omits them, with a test
+asserting a candidate cannot read them. Being watched is not something to advertise to the watched.
+
+## Integrity on the session detail page
+`IntegrityCard` renders the two counts plus a verdict:
+
+| Level | Trigger | Wording |
+|---|---|---|
+| `clean` | no departures | "Stayed in full screen" |
+| `notable` | ≥1 exit or ≥3 tab-aways | "Worth a question" |
+| `flagged` | ≥3 exits or ≥6 total | "Flagged for review" |
+
+The wording stays **factual and conservative**: "flagged for review", not an accusation. One
+accidental `Esc` must not label somebody a cheater, and this can only ever prove *behaviour*, never
+intent. The card says so explicitly, and only renders when a candidate actually joined.
+
+## Two channels, chosen for what each is good at
+- **Awareness** carries `focus.fullscreen` → the host's warning is **live**: appears the instant they
+  leave, clears the instant they return. Nothing persisted, because it is a momentary state.
+- **`/ws` `focus_event`** → the **durable** record, read by the session detail page.
+
+Awareness was the right home rather than a new protocol message: it already carries per-user state
+to the whole room, and it expires on its own if the tab dies — so an away participant who never
+returns disappears rather than lingering as a ghost.
+
+`isFullscreen` defaults to `true` when the field is absent, so an older client that never reports is
+never falsely accused of leaving.
+
+# Four Reported Breakages
+
+## 1. Host was never warned — **two hooks owned one awareness field**
+`useFullscreenGuard` published `focus = { away, since, fullscreen, exitCount }`.
+`useAwaySignal` published `focus = { away, since }` — **with no `fullscreen` key**.
+
+Awareness fields are whole-object writes, so last writer wins. The moment a candidate
+switched tabs, `useAwaySignal` overwrote the field, `fullscreen` became `undefined`, the
+reader defaulted it to `true` ("we don't know"), and **the host's warning disappeared
+exactly when it mattered most**. It also wrote `fullscreen: false` on mount, a false
+positive on every load.
+
+Fixed by **merging tab-away into `useFullscreenGuard` and deleting `useAwaySignal`**, so
+exactly one hook writes `focus`. This is now the documented rule in that file: *two writers
+of one field is always a race.* My earlier browser check missed it because it asserted the
+warning within a few seconds of a full screen exit and never switched tabs afterwards.
+
+The counter also only rendered in the "all clear" branch, so the host could not see the
+running total while the candidate was out. It now renders in **both** states.
+
+## 2. Integrity card appeared to be missing
+It was gated behind `session.candidate_participant_id`, so any session without a joined
+candidate showed nothing at all — indistinguishable from "this feature doesn't exist". It
+now always renders, with an explicit *"Nobody joined this session, so there is nothing to
+report"* state.
+
+## 3. Five-minute warning — new
+`SessionTimeWarning` appears once five minutes remain, showing the **actual** remaining time
+rather than "time is short". Silent before that on purpose: an always-on countdown is noise
+the host learns to ignore.
+
+Deadline is `expires_at`, falling back to `started_at + duration_minutes`. A session with no
+duration has no deadline and is never warned about — correct, since there is nothing to warn
+about.
+
+## 4. Expiry stranded people in a dead room — new
+The cron flipped `live → expired` **in the database only**. Anyone in the editor sat there
+waiting on a code runner that would now reject every submission, with no notification and no
+way out.
+
+Fixed at both ends:
+- The cron now `RETURNING id` and **broadcasts `session_expired`** to each affected room.
+  It also broadcasts `session_started` for auto-started scheduled sessions, which was the
+  same class of silence.
+- `expired` is treated as a third ended outcome alongside `completed` and `cancelled`, with
+  its own dialog copy explaining the time limit. It is also **derived from the fetched
+  status**, not only from the broadcast, so a missed message — or a server restart — still
+  ejects the candidate. The host gets the same notice rather than being stranded.
+
+## Shared clock
+`useNow` centralises the ticking clock that the time warning, elapsed time and settings all
+need. Reading `Date.now()` during render is impure and never ticks on its own, so each
+consumer would otherwise subscribe separately and drift out of step.

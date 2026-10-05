@@ -183,3 +183,67 @@ describe("GET /api/session/:id/room", () => {
         expect(res.body.data.session.language).toBe("javascript");
     });
 });
+
+describe("focus events (session integrity)", () => {
+    it("counts full screen exits and tab-aways per kind on the session detail", async () => {
+        const { agent } = await signupAgent(app);
+        const question = await createQuestion(agent);
+        const session = await createSession(agent, {
+            mode: "interview",
+            question_ids: [question.id],
+        });
+        const guest = await joinAnonymously(session.id);
+        const guestId = guest.id as string;
+
+        await db.query(
+            `INSERT INTO session_events (session_id, actor_participant_id, event_type, payload)
+             VALUES ($1, $2, 'focus_event', '{"kind":"fullscreen_exit"}'),
+                    ($1, $2, 'focus_event', '{"kind":"fullscreen_exit"}'),
+                    ($1, NULL,     'focus_event', '{"kind":"tab_away"}')`,
+            [session.id, guestId]
+        );
+
+        const res = await agent.get(`/api/session/${session.id}`);
+        expect(res.status).toBe(200);
+        expect(res.body.data.session.candidate_fullscreen_exits).toBe(2);
+        expect(res.body.data.session.candidate_tab_aways).toBe(1);
+    });
+
+    it("reports zero for a session where nobody left full screen", async () => {
+        const { agent } = await signupAgent(app);
+        const question = await createQuestion(agent);
+        const session = await createSession(agent, {
+            mode: "interview",
+            question_ids: [question.id],
+        });
+
+        const res = await agent.get(`/api/session/${session.id}`);
+        expect(res.status).toBe(200);
+        expect(res.body.data.session.candidate_fullscreen_exits).toBe(0);
+        expect(res.body.data.session.candidate_tab_aways).toBe(0);
+    });
+
+    it("does not leak the counts to a candidate via /room", async () => {
+        const { agent } = await signupAgent(app);
+        const question = await createQuestion(agent);
+        const session = await createSession(agent, {
+            mode: "interview",
+            question_ids: [question.id],
+        });
+        const guest = await joinAnonymously(session.id);
+
+        await db.query(
+            `INSERT INTO session_events (session_id, event_type, payload)
+             VALUES ($1, 'focus_event', '{"kind":"fullscreen_exit"}')`,
+            [session.id]
+        );
+
+        const res = await request(app)
+            .get(`/api/session/${session.id}/room`)
+            .query({ participantId: guest.id });
+
+        expect(res.status).toBe(200);
+        // Integrity counts are the host's business, not the candidate's.
+        expect(JSON.stringify(res.body.data)).not.toContain("fullscreen_exit");
+    });
+});

@@ -9,6 +9,7 @@ export { useSaveNotes } from './hooks/use-save-notes'
 export { CreateSessionModal } from './components/CreateSessionModal'
 export { EditSessionModal } from './components/EditSessionModal'
 export { SessionDetail } from './components/SessionDetail'
+export { IntegrityCard } from './components/SessionDetail/IntegrityCard'
 export { QuestionPicker, resolveSessionLanguage } from './components/QuestionPicker'
 export {
     DURATION_OPTIONS,
