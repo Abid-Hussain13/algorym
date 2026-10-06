@@ -134,7 +134,22 @@ function TimeSlotGroup({
                         key={t.value}
                         type="button"
                         disabled={disabled}
-                        onClick={() => onSelect(t.value)}
+                        // A slot you cannot click must say why, or it reads as a
+                        // broken control rather than a deliberate rule.
+                        title={
+                            blocked
+                                ? "Overlaps a session you already have booked"
+                                : disabled
+                                  ? "Already past"
+                                  : undefined
+                        }
+                        aria-disabled={blocked || disabled}
+                        onClick={() => {
+                            // Blocked slots stay clickable rather than disabled, so
+                            // the reason is reachable by mouse as well as by hover.
+                            if (blocked) return;
+                            onSelect(t.value);
+                        }}
                         className={cn(
                             "flex w-full items-center justify-between px-3 py-2 text-left text-sm transition-colors",
                             disabled && "opacity-30 cursor-not-allowed",

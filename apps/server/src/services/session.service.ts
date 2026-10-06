@@ -24,23 +24,44 @@ export const createSession = async (userId: string, data: CreateSessionInput): P
     let startTime: Date;
     let status: SessionStatus;
     let startedAt: string | null;
+    /**
+     * `scheduled_at` means "this session was booked for a time". An immediate
+     * session must leave it NULL — writing `now()` there made every instant
+     * session look scheduled, which is what made the calendar in the create
+     * wizard mark past dates as booked and why "is this scheduled?" could never
+     * be trusted anywhere downstream.
+     */
+    let scheduledAtISO: string | null;
 
     if (scheduled_at) {
         startTime = new Date(scheduled_at);
         status = "scheduled";
         startedAt = null;
+        scheduledAtISO = startTime.toISOString();
+
+        if (startTime.getTime() <= Date.now()) {
+            throw new AppError("Pick a time in the future to schedule a session", 400);
+        }
 
         const endCheck = duration_minutes
             ? new Date(startTime.getTime() + duration_minutes * 60000)
             : new Date(startTime.getTime() + 30 * 60000);
 
+        // Overlap against anything still occupying that window: other scheduled
+        // sessions *and* the live session, which occupies [started_at, expires_at].
         const overlapCheck = await db.query(
             `SELECT id FROM sessions
              WHERE created_by = $1
-               AND status = 'scheduled'
-               AND scheduled_at IS NOT NULL
-               AND scheduled_at < $2
-               AND (scheduled_at + COALESCE(duration_minutes, 30) * interval '1 minute') > $3`,
+               AND (
+                    (status = 'scheduled'
+                     AND scheduled_at IS NOT NULL
+                     AND scheduled_at < $2
+                     AND (scheduled_at + COALESCE(duration_minutes, 30) * interval '1 minute') > $3)
+                 OR (status = 'live'
+                     AND COALESCE(started_at, now()) < $2
+                     AND COALESCE(expires_at, now() + interval '30 minutes') > $3)
+               )
+             LIMIT 1`,
             [userId, endCheck.toISOString(), startTime.toISOString()]
         );
 
@@ -48,13 +69,36 @@ export const createSession = async (userId: string, data: CreateSessionInput): P
             throw new AppError("You already have a session scheduled during this time", 409);
         }
     } else {
+        /**
+         * One live interview per interviewer, enforced here rather than in the UI.
+         *
+         * A client-side check would be a suggestion: two tabs, or the API called
+         * directly, would both walk straight past it. The host cannot supervise
+         * two rooms at once anyway, and a second "live" room silently competes
+         * for the candidate's attention and the host's own.
+         *
+         * The window is not permanent — `session-expiry.service` flips stale rows
+         * to `expired`, so this clears itself rather than needing a manual reset.
+         */
+        const liveCheck = await db.query(
+            "SELECT id FROM sessions WHERE created_by = $1 AND status = 'live' LIMIT 1",
+            [userId]
+        );
+
+        if (liveCheck.rows.length > 0) {
+            throw new AppError(
+                "Finish or cancel your current live session before starting another",
+                409
+            );
+        }
+
         startTime = new Date();
         status = "live";
         startedAt = startTime.toISOString();
+        scheduledAtISO = null;
     }
 
     const expiresAt = duration_minutes ? new Date(startTime.getTime() + duration_minutes * 60000).toISOString() : null;
-    const scheduledAtISO = startTime.toISOString();
 
     try {
         await db.query("BEGIN")
@@ -424,6 +468,20 @@ export const startSession = async (userId: string, sessionId: string): Promise<S
     const session = existing.rows[0];
     if (!session) throw new AppError("Session not found", 404);
     if (session.status !== "scheduled") throw new AppError("Session is not scheduled", 400);
+
+    // Same one-live-session rule as immediate creation. Starting a scheduled
+    // session is just as much a second live room as creating one, so it cannot
+    // be the loophole that lets a host end up with two.
+    const liveCheck = await db.query(
+        "SELECT id FROM sessions WHERE created_by = $1 AND status = 'live' AND id <> $2 LIMIT 1",
+        [userId, sessionId]
+    );
+    if (liveCheck.rows.length > 0) {
+        throw new AppError(
+            "Finish or cancel your current live session before starting another",
+            409
+        );
+    }
 
     const { rows } = await db.query(
         `UPDATE sessions SET status = 'live', started_at = now() WHERE id = $1 AND created_by = $2 RETURNING *`,

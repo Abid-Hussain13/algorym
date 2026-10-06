@@ -111,3 +111,9 @@ create index idx_session_questions_question on session_questions(question_id);
 create index idx_events_session on session_events(session_id);
 create unique index idx_evaluations_session_candidate
     on session_evaluations(session_id, evaluated_participant_id);
+
+-- One live interview per interviewer. Partial, so history is unconstrained.
+-- Mirrors apps/server/src/db/migrations/005_one_live_session.sql.
+create unique index if not exists idx_sessions_one_live_per_user
+    on sessions (created_by)
+    where status = 'live';

@@ -1420,3 +1420,158 @@ cron flips the row to `expired` while people are in the room.
 Two behaviours are correct by design and were confirmed rather than "fixed": **Rate later**
 skips saving the rating (that is the whole point of the option), and a session with no duration
 never gets a countdown, because it has no deadline to count down to.
+
+# Editable Ratings, and One Theme Source of Truth
+
+## Ratings were a one-way door
+The rating form only existed between completing a session and leaving the room, so
+**"Rate later" was a dead end** — the host had to remember to go back, and once they had
+rated there was nowhere to change their mind. A rating is a judgement, and judgements get
+revised; making it permanent the first time it was tapped was wrong.
+
+`RatingCard` on the session detail page makes it editable at any time. It saves through the
+existing `POST /api/evaluation`, which is already an `ON CONFLICT ... DO UPDATE` upsert, so
+**editing and first-rating are literally the same request** — no second endpoint, and no way
+for the two paths to drift apart.
+
+Two details that are easy to get wrong:
+- The request **passes `session.notes` through unchanged**. This endpoint owns both columns,
+  so an edit that sent only the rating would silently blank the notes.
+- It renders only for a **completed interview with a candidate**. A cancelled session has no
+  evaluation, and a practice session is not assessed — showing an editable control there would
+  promise something the server does not accept.
+
+## Three theme toggles, two sources of truth
+There were three controls and they disagreed. The navbar toggle and the live-room settings
+wrote the **Redux slice**; the profile preferences page wrote the **server** record and then
+pushed the result into Redux.
+
+Redux won for rendering, so changing the theme in the room looked right — but the server kept
+the old value. The preferences page then displayed a *different* selection than the theme
+actually in use, and signing in elsewhere restored the stale one. `system` made it worse: Redux
+only stores `light | dark`, so the instant `system` resolved to a concrete theme, every trace
+of "follow the OS" was gone.
+
+`useThemeControl` is now the only place allowed to write the theme:
+
+- **Redux is the runtime truth** — it alone owns `data-theme`, which is what everything renders
+  against.
+- **`preference`** (`light | dark | system`) is the persisted value, mirrored to the server for
+  signed-in users and to `localStorage` for everyone. It lives outside Redux precisely because
+  `system` is a property of the *preference*, not of the applied theme.
+- Changes made through the plain toggle are **written back to the preference**, which is what
+  closes the loop that made the preferences page lie.
+- While the preference is `system`, a `matchMedia` listener follows the OS, so a theme change at
+  sunset applies without a reload.
+
+The navbar, the live-room settings and the preferences page are now three views of one value
+rather than three writers of three.
+
+# Scheduling, One Live Session, and a Rotting Test Suite
+
+## Three real bugs, found by reading the code the user had already written
+
+### 1. `scheduled_at` was `now()` on immediate sessions
+```ts
+const scheduledAtISO = startTime.toISOString();   // startTime = new Date() when not scheduled
+```
+An immediate session was therefore written with `scheduled_at` set to the instant it was
+created. `scheduled_at` is supposed to mean *"booked for a time"*, so every instant session
+looked booked. That corrupted `useScheduleOverlap`, which filters on
+`s.scheduled_at` — so the create wizard's calendar marked **today as already booked** because
+of a session that had already ended. Now `NULL` unless a date was genuinely chosen.
+
+### 2. No limit on live sessions
+The overlap check ran **only** in the `scheduled_at` branch. Creating a session without a
+date went straight to `status = 'live'` with no check at all. The database proved it:
+
+```
+created_by                            | live_sessions
+c3504229-2af1-46f5-970b-5e3ccfa26260  | 4
+```
+
+Enforced in three layers, because each catches what the others miss:
+- **Service** — refuse with a 409 that names the fix ("finish or cancel…"), applied to
+  `createSession` *and* `startSession`, since starting a scheduled session is just as much a
+  second live room as creating one.
+- **Database** — a partial unique index on `created_by WHERE status = 'live'`. The service
+  check is read-then-write, so two concurrent requests can both pass it; the index is the
+  final arbiter. Partial, so history stays unconstrained.
+- **UI** — the button is disabled with the reason, so the host finds out on the first screen
+  rather than after choosing questions, a duration and a date.
+
+The window is not permanent: `session-expiry.service` flips stale rows to `expired`, so the
+invariant clears itself.
+
+### 3. Overlap ignored the live session's own window
+Scheduling at 15:00 on a day with a live session running until 16:00 was allowed, because the
+query only looked at `status = 'scheduled'`. Now the live session is compared against its real
+`[started_at, expires_at]`, and `scheduled_at` in the past is rejected outright.
+
+## The scheduling UI was there — and invisible
+Nothing was missing from the code: the wizard had a calendar, a time picker, blocked-slot
+detection and auto-switching. It was buried under a label reading **"Schedule (optional)"**
+with the hint *"Leave empty to start immediately"*, which reads as a niche feature rather than
+the main decision it is.
+
+Replaced with an explicit two-button choice — **Start now** / **Schedule** — equal in weight,
+with the date and time pickers revealed by the second. The Review step reports
+"Starts immediately" or the booked slot, and a scheduled session without a date says
+**"Pick a date"** rather than silently starting now.
+
+## The test suite was a time bomb
+Every scheduled-session assertion hardcoded `2026-09-01`. That was a *future* date when written
+and is now in the past — so the moment the server started (correctly) rejecting past
+`scheduled_at`, eleven unrelated tests failed. The tests had been quietly rotting since the day
+that date passed.
+
+Replaced with `futureIso(hoursAhead)` derived from `Date.now()`. Also fixed the two tests that
+created two live sessions for one user, which the new guard correctly refuses.
+
+# Creating a Session Failed Silently
+
+## The button did nothing, and that is exactly what the user saw
+Pressing **Create Session** produced no message, no toast, no change. Three separate causes,
+all of which had to be fixed — any one of them alone would have reproduced it:
+
+1. **`disabled={!!liveSession}`**, added in the previous change, meant the click never reached
+   `handleCreate`, so the explanatory toast inside it never ran. A disabled control with no
+   visible reason is indistinguishable from a broken one.
+2. **`onError` called `handleClose(false)`**, so a genuine server failure *closed the dialog* —
+   discarding the questions, duration and date the host had already chosen — and left only a
+   four-second toast in a corner to explain it.
+3. **Toasts are the wrong medium for a blocked action.** They expire before you have read them
+   and they are not next to the button you pressed.
+
+## What replaced it
+`FormAlert` — an inline, persistent `role="alert" aria-live="assertive"` message sitting
+directly above the footer, i.e. the last thing read before the button that produced it.
+
+Every way this can fail now reports in place:
+
+| Case | Message |
+|---|---|
+| No question picked | "Choose at least one question…" — and jumps back to the question step |
+| Live session running | Warning banner with an **Open it** button to reach the room |
+| Schedule with no date | "Pick a date, or switch back to Start now." |
+| Slot overlaps another | Names the date and slot, and what to do |
+| `401` | "Your session expired. Sign in again to continue." |
+| `409` | The server's own sentence, which is already human |
+| `422` | The per-field validation messages, not a generic string |
+| `5xx` | "Something broke on our side. Your details are still here — try again." |
+| Offline | "Can't reach the server." |
+
+`explainError` also fixes the fallback: it used to surface the raw `Error.message`, which for a
+failed fetch is the string **`Failed to fetch`** — technically true and completely useless.
+
+The dialog **no longer closes on failure**, which is the part that actually cost the user work.
+
+Blocked slots in the time picker now carry a `title` explaining why they cannot be picked,
+rather than just going semi-transparent.
+
+## Verified against the real server
+The server-error paths were exercised without mocking: a **401** by invalidating the auth
+cookie mid-flow, and a **409** by booking the chosen slot through the API *after* the wizard had
+loaded — the genuine race a client-side check cannot prevent. Both showed an inline reason,
+kept the dialog open with its contents intact, and never reached the success screen. Plus the
+client-side cases and a clean success path that leaves no stale error behind.

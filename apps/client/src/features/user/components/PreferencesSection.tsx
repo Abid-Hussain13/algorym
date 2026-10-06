@@ -1,6 +1,6 @@
 import { toast } from "sonner"
 import { cn } from "@/lib/utils/cn"
-import { useTheme } from "@/hooks/use-theme"
+import { useThemeControl } from '@/hooks/use-theme-control'
 import { AVAILABLE_LANGUAGES } from "@/features/questions/constants"
 import { DURATION_OPTIONS } from "@/features/sessions/constants"
 import { useUserPreferences, useUpdatePreferences } from "../hooks/use-user"
@@ -15,21 +15,10 @@ const THEME_OPTIONS: Array<{ value: ThemePreference; label: string }> = [
 ]
 
 export function PreferencesSection() {
-    const { setTheme: applyTheme } = useTheme()
+    const { preference, selectPreference } = useThemeControl()
     const { data: prefs } = useUserPreferences()
     const updatePrefs = useUpdatePreferences()
 
-    const handleThemeChange = (theme: ThemePreference) => {
-        updatePrefs.mutate(
-            { theme },
-            {
-                onSuccess: (data) => {
-                    applyTheme(data.theme === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : data.theme)
-                    toast.success("Theme updated")
-                },
-            }
-        )
-    }
 
     const handleLanguageChange = (language: string) => {
         updatePrefs.mutate(
@@ -53,10 +42,10 @@ export function PreferencesSection() {
                         {THEME_OPTIONS.map((opt) => (
                             <button
                                 key={opt.value}
-                                onClick={() => handleThemeChange(opt.value)}
+                                onClick={() => selectPreference(opt.value)}
                                 className={cn(
                                     "relative px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-150",
-                                    prefs?.theme === opt.value
+                                    preference === opt.value
                                         ? "bg-accent text-on-accent shadow-sm"
                                         : "text-muted hover:text-fg hover:bg-surface-2"
                                 )}

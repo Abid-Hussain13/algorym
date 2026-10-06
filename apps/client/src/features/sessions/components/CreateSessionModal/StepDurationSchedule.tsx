@@ -8,6 +8,9 @@ interface StepDurationScheduleProps {
     onDurationChange: (v: number) => void;
     roleContext: string;
     onRoleContextChange: (v: string) => void;
+    /** Explicit start-now vs schedule-for-later, rather than inferring from an empty date. */
+    when: "now" | "later";
+    onWhenChange: (when: "now" | "later") => void;
     scheduledDates: Set<string>;
     scheduledDate: Date | undefined;
     onDateSelect: (date: Date | undefined) => void;
@@ -22,6 +25,8 @@ export function StepDurationSchedule({
     onDurationChange,
     roleContext,
     onRoleContextChange,
+    when,
+    onWhenChange,
     scheduledDates,
     scheduledDate,
     onDateSelect,
@@ -66,21 +71,67 @@ export function StepDurationSchedule({
                 />
             </div>
 
+            {/*
+              Start-now vs schedule is a two-way choice with two buttons, not an
+              optional calendar you have to know to scroll to. Booking a slot is
+              how an interview is normally arranged, so it gets equal billing with
+              pressing go immediately.
+            */}
             <div>
-                <label className="text-xs font-medium text-fg mb-1.5 block">
-                    Schedule <span className="text-muted font-normal">(optional)</span>
-                </label>
-                <p className="text-[11px] text-muted mb-2">Leave empty to start immediately</p>
+                <label className="text-xs font-medium text-fg mb-1.5 block">When</label>
+                <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                        type="button"
+                        onClick={() => onWhenChange("now")}
+                        className={cn(
+                            "rounded-lg border px-3 py-2 text-left transition-all",
+                            when === "now"
+                                ? "border-accent bg-accent-soft text-fg ring-1 ring-accent"
+                                : "border-border text-muted hover:border-border-strong hover:text-fg"
+                        )}
+                    >
+                        <span className="block text-xs font-semibold">Start now</span>
+                        <span className="mt-0.5 block text-[11px] text-muted">
+                            Room opens immediately
+                        </span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => onWhenChange("later")}
+                        className={cn(
+                            "rounded-lg border px-3 py-2 text-left transition-all",
+                            when === "later"
+                                ? "border-accent bg-accent-soft text-fg ring-1 ring-accent"
+                                : "border-border text-muted hover:border-border-strong hover:text-fg"
+                        )}
+                    >
+                        <span className="block text-xs font-semibold">Schedule</span>
+                        <span className="mt-0.5 block text-[11px] text-muted">
+                            Pick a date and time
+                        </span>
+                    </button>
+                </div>
+            </div>
 
-                <CalendarDatePicker
-                    scheduledDates={scheduledDates}
-                    selectedDate={scheduledDate}
-                    onSelect={onDateSelect}
-                />
+            {when === "later" && (
+                <div>
+                    <label className="text-xs font-medium text-fg mb-1.5 block">
+                        Session date <span className="text-muted font-normal">(required)</span>
+                    </label>
+                    <p className="text-[11px] text-muted mb-2">
+                        Dates already booked are crossed out.
+                    </p>
 
-                {scheduledDate && (
+                    <CalendarDatePicker
+                        scheduledDates={scheduledDates}
+                        selectedDate={scheduledDate}
+                        onSelect={onDateSelect}
+                    />
+
                     <div className="mt-2">
-                        <label className="text-[11px] font-medium text-muted mb-1 block">Time</label>
+                        <label className="text-xs font-medium text-fg mb-1 block">
+                            Start time <span className="text-muted font-normal">(required)</span>
+                        </label>
                         <TimePicker
                             value={scheduledTime}
                             onChange={onTimeChange}
@@ -88,8 +139,8 @@ export function StepDurationSchedule({
                             isBlocked={isTimeSlotBlocked}
                         />
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 }

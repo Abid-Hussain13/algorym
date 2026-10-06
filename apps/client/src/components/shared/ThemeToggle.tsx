@@ -5,7 +5,7 @@ import { useReducedMotion } from 'motion/react'
 import { useEffect, useState, type ComponentPropsWithoutRef } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 
-import { useTheme } from '@/hooks/use-theme'
+import { useThemeControl } from '@/hooks/use-theme-control'
 import { cn } from '@/lib/utils/cn'
 
 const VT_STYLE_ID = 'algorym-theme-vt'
@@ -38,7 +38,7 @@ export interface ThemeToggleProps extends Omit<ComponentPropsWithoutRef<'button'
 }
 
 export function ThemeToggle({ className, iconClassName, ...rest }: ThemeToggleProps) {
-  const { theme, setTheme } = useTheme()
+  const { theme, toggle: toggleTheme } = useThemeControl()
   const reduce = useReducedMotion()
   const [mounted, setMounted] = useState(false)
   /* eslint-disable react-hooks/set-state-in-effect */ // hydration check
@@ -57,10 +57,8 @@ export function ThemeToggle({ className, iconClassName, ...rest }: ThemeTogglePr
   const isDark = mounted && theme === 'dark'
 
   const toggle = () => {
-    const next = isDark ? 'light' : 'dark'
-
     if (reduce || !('startViewTransition' in document)) {
-      setTheme(next)
+      toggleTheme()
       return
     }
 
@@ -72,7 +70,7 @@ export function ThemeToggle({ className, iconClassName, ...rest }: ThemeTogglePr
       document as Document & {
         startViewTransition(cb: () => void): { finished: Promise<void> }
       }
-    ).startViewTransition(() => setTheme(next))
+    ).startViewTransition(() => toggleTheme())
 
     vt.finished.finally(() => {
       delete root.dataset.vt

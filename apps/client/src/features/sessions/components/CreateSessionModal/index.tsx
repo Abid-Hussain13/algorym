@@ -12,6 +12,7 @@ import {
     DialogFooter,
 } from "@/components/ui/Dialog";
 import { useQuestions } from "@/features/questions";
+import { useSessions } from "../../hooks/use-sessions";
 import { useCreateSession, useScheduleOverlap, useAutoSwitchTime, computeScheduledISO } from "@/features/sessions";
 import { useUserPreferences } from "@/features/user";
 import { resolveSessionLanguage } from "@/features/sessions/components/QuestionPicker";
@@ -21,12 +22,37 @@ import { StepQuestion } from "./StepQuestion";
 import { StepDurationSchedule } from "./StepDurationSchedule";
 import { StepReview } from "./StepReview";
 import { StepSuccess } from "./StepSuccess";
+import { FormAlert } from "./FormAlert";
+import { ApiError } from "@/lib/api/client";
+import { useNavigate } from "react-router-dom";
 
 const STEP_TITLES = ["Session Mode", "Choose Questions", "Duration & Schedule", "Review & Create"];
 
 interface CreateSessionModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+}
+
+/**
+ * Turns whatever the server said into one sentence a person can act on.
+ *
+ * The generic fallback used to be the raw `Error.message`, which for a failed fetch is
+ * `Failed to fetch` — technically true and completely useless.
+ */
+function explainError(err: unknown): string {
+    if (err instanceof ApiError) {
+        // A validation failure carries per-field messages that beat any generic text.
+        if (err.errors?.length) {
+            return err.errors.map((e) => e.message).join(". ");
+        }
+        if (err.status === 0) return "Can't reach the server. Check your connection and try again.";
+        if (err.status === 401 || err.status === 403) return "Your session expired. Sign in again to continue.";
+        if (err.status === 409) return err.message; // already human, e.g. the live-session conflict
+        if (err.status === 422 || err.status === 400) return err.message;
+        if (err.status >= 500) return "Something broke on our side. Your details are still here — try again.";
+        return err.message;
+    }
+    return "Couldn't create the session. Nothing was lost — try again.";
 }
 
 export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalProps) {
@@ -39,11 +65,39 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
     const [scheduledTime, setScheduledTime] = useState("09:00");
     const [roleContext, setRoleContext] = useState("");
     const [questionSearch, setQuestionSearch] = useState("");
+    /**
+     * The one piece of state the user actually needs: why the last attempt failed.
+     *
+     * Cleared on every successful create, and whenever they change something that could
+     * fix it — a stale error sitting next to a form they have since corrected is worse
+     * than no message.
+     */
+    const [problem, setProblem] = useState<string | null>(null);
 
     const { data: questionsData, isLoading: questionsLoading } = useQuestions();
     const { data: prefs } = useUserPreferences();
     const { scheduledDates, isTimeSlotBlocked } = useScheduleOverlap();
     const createSession = useCreateSession();
+    const { data: sessionsData } = useSessions({});
+    const navigate = useNavigate();
+
+    /**
+     * Start now, or pick a slot. This was previously implicit — an empty date
+     * meant "immediate", buried under a calendar labelled *(optional)*, which
+     * read as "scheduling is a niche feature" rather than "you choose when this
+     * interview happens".
+     */
+    const [when, setWhen] = useState<"now" | "later">("now");
+
+    /**
+     * One live interview at a time. The server enforces this; showing it here
+     * as well means the host finds out on the first screen rather than after
+     * picking questions, a duration and a date.
+     */
+    const liveSession = useMemo(
+        () => sessionsData?.sessions?.find((s) => s.status === "live") ?? null,
+        [sessionsData]
+    );
 
     useAutoSwitchTime(scheduledDate, duration, scheduledTime, setScheduledTime, isTimeSlotBlocked);
 
@@ -77,7 +131,8 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
 
     const isToday = scheduledDate && format(scheduledDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
 
-    const scheduledISO = computeScheduledISO(scheduledDate, scheduledTime);
+    const scheduledISO =
+        when === "later" ? (computeScheduledISO(scheduledDate, scheduledTime) ?? undefined) : undefined;
 
     const reset = useCallback(() => {
         setStep(0);
@@ -93,15 +148,47 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
 
     const handleClose = useCallback(
         (v: boolean) => {
-            if (!v) reset();
+            // Cleared here rather than in an effect on `open`: the dialog is
+            // always closed before it is reopened, so this is the one place the
+            // lifecycle actually happens — and a setState-in-effect would just
+            // cause a second render pass to achieve the same thing.
+            if (!v) {
+                reset();
+                setProblem(null);
+            }
             onOpenChange(v);
         },
         [onOpenChange, reset]
     );
 
     const handleCreate = useCallback(() => {
-        if (scheduledDate && isTimeSlotBlocked(scheduledTime, duration, scheduledDate)) {
-            toast.error("This time slot is already booked. Please choose another time.");
+        setProblem(null);
+
+        // Every precondition is checked here and reported inline. Previously these
+        // returned silently, or toasted and then closed the dialog, so a failed
+        // attempt looked identical to a button that did nothing.
+        if (liveSession) {
+            setProblem(
+                "You already have a live session running. Finish or cancel it before starting another — a host cannot run two rooms at once."
+            );
+            return;
+        }
+
+        if (when === "later" && !scheduledDate) {
+            setProblem("Pick a date, or switch back to Start now.");
+            return;
+        }
+
+        if (when === "later" && scheduledDate && isTimeSlotBlocked(scheduledTime, duration, scheduledDate)) {
+            setProblem(
+                `${format(scheduledDate, "MMM d")} at ${scheduledTime} overlaps another session. Pick a different slot.`
+            );
+            return;
+        }
+
+        if (mode === "interview" && questionIds.length === 0) {
+            setProblem("Choose at least one question for this interview.");
+            setStep(1);
             return;
         }
 
@@ -116,16 +203,17 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
 
         createSession.mutate(body, {
             onSuccess: () => {
+                setProblem(null);
                 toast.success("Session created successfully");
                 setStep(4);
             },
             onError: (err) => {
-                const message = err instanceof Error ? err.message : "Failed to create session";
-                toast.error(message);
-                handleClose(false);
+                // Deliberately does NOT close the dialog: closing threw away the
+                // questions, duration and date the host had already chosen.
+                setProblem(explainError(err));
             },
         });
-    }, [mode, duration, questionIds, language, roleContext, scheduledISO, scheduledDate, scheduledTime, createSession, reset, handleClose, isTimeSlotBlocked]);
+    }, [mode, duration, questionIds, language, roleContext, scheduledISO, scheduledDate, scheduledTime, when, liveSession, createSession, reset, isTimeSlotBlocked, format]);
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
@@ -179,6 +267,8 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
                             roleContext={roleContext}
                             onRoleContextChange={setRoleContext}
                             scheduledDates={scheduledDates}
+                            when={when}
+                            onWhenChange={setWhen}
                             scheduledDate={scheduledDate}
                             onDateSelect={setScheduledDate}
                             scheduledTime={scheduledTime}
@@ -195,6 +285,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
                             roleContext={roleContext}
                             selectedQuestions={selectedQuestions}
                             language={language}
+                            when={when}
                             scheduledDate={scheduledDate}
                             scheduledTime={scheduledTime}
                         />
@@ -208,6 +299,35 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
                         />
                     )}
                 </div>
+
+                {/* Sits directly above the footer so it is the last thing read
+                    before the button that produced it. */}
+                {step < 4 && (problem || createSession.isPending || liveSession) && (
+                    <div className="px-6 pb-1">
+                        {liveSession && (
+                            <FormAlert
+                                tone="warning"
+                                title="You have a session live right now"
+                                action={
+                                    <Button
+                                        variant="default"
+                                        size="sm"
+                                        onClick={() => {
+                                            handleClose(false);
+                                            navigate(`/live/${liveSession.id}`);
+                                        }}
+                                    >
+                                        Open it
+                                    </Button>
+                                }
+                            >
+                                A host can only run one interview at a time. Finish or cancel
+                                the live session first.
+                            </FormAlert>
+                        )}
+                        {!liveSession && problem && <FormAlert title={problem} />}
+                    </div>
+                )}
 
                 {/* Footer */}
                 {step < 4 && (

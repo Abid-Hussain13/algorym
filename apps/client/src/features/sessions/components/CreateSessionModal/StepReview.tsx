@@ -16,6 +16,7 @@ interface StepReviewProps {
     roleContext: string;
     selectedQuestions: Question[];
     language: string;
+    when: "now" | "later";
     scheduledDate: Date | undefined;
     scheduledTime: string;
 }
@@ -26,6 +27,7 @@ export function StepReview({
     roleContext,
     selectedQuestions,
     language,
+    when,
     scheduledDate,
     scheduledTime,
 }: StepReviewProps) {
@@ -95,9 +97,11 @@ export function StepReview({
                     <div className="flex justify-between">
                         <span className="text-muted">Schedule</span>
                         <span className="font-medium text-fg">
-                            {scheduledDate
-                                ? `${format(scheduledDate, "MMM d, yyyy")} at ${formatTime12(scheduledTime)}`
-                                : "Start now"}
+                            {when === "later"
+                                ? scheduledDate
+                                    ? `${format(scheduledDate, "MMM d, yyyy")} at ${formatTime12(scheduledTime)}`
+                                    : "Pick a date"
+                                : "Starts immediately"}
                         </span>
                     </div>
                 </div>

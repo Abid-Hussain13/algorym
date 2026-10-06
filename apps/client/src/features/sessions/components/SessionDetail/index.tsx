@@ -5,6 +5,7 @@ import { useSessionDetail } from "../../hooks/use-session-detail";
 import { SessionHeader } from "./SessionHeader";
 import { SessionInfoCard } from "./SessionInfoCard";
 import { NotesCard } from "./NotesCard";
+import { RatingCard } from "./RatingCard";
 import { IntegrityCard } from "./IntegrityCard";
 import { ReplayPlaceholder } from "./ReplayPlaceholder";
 import { SessionDetailSkeleton } from "./SessionDetailSkeleton";
@@ -50,6 +51,10 @@ export function SessionDetail({ sessionId }: SessionDetailProps) {
                     height={isTwoColumn ? infoCardHeight || undefined : undefined}
                 />
             </div>
+
+            {/* The rating sits beside the notes it usually describes, so revising
+                one and the other happens in the same place. */}
+            <RatingCard session={session} className="animate-rise [animation-delay:200ms]" />
 
             <IntegrityCard session={session} className="animate-rise [animation-delay:200ms]" />
 

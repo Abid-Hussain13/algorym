@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import request from "supertest";
 // agent type = request.agent(app) return type
 import app from "../src/app.js";
-import { signupAgent, createSession } from "./helpers.js";
+import { signupAgent, createSession, futureIso } from "./helpers.js";
 import db from "../src/db/pool.js";
 
 describe("Session evaluation", () => {
@@ -73,7 +73,7 @@ describe("Session evaluation", () => {
         it("rejects notes on a scheduled session", async () => {
             const session = await createSession(agent, {
                 mode: "interview",
-                scheduled_at: "2026-09-01T10:00:00.000Z",
+                scheduled_at: futureIso(),
             });
             const res = await agent.patch(`/api/session/${session.id}/notes`).send({ notes: "x" });
             expect(res.status).toBe(409);

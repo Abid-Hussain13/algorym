@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import request from "supertest";
 import app from "../src/app.js";
-import { signupAgent, createSession } from "./helpers.js";
+import { signupAgent, createSession, futureIso } from "./helpers.js";
 import db from "../src/db/pool.js";
 
 // Mock the external SandboxAPI so tests never hit the network / paid API
@@ -66,7 +66,7 @@ describe("POST /api/run", () => {
         const { agent } = await signupAgent(app);
         const session = await createSession(agent, {
             mode: "practice",
-            scheduled_at: "2026-09-01T10:00:00.000Z",
+            scheduled_at: futureIso(),
         });
         const guest = await joinGuest(session.id);
 

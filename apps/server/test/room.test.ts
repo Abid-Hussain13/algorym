@@ -140,8 +140,11 @@ describe("GET /api/session/:id/room", () => {
     it("403s a participantId that belongs to another session", async () => {
         const { agent } = await signupAgent(app);
         const sessionA = await createSession(agent, { mode: "interview" });
-        const sessionB = await createSession(agent, { mode: "interview" });
+        // Join while it is still live, then close it: only one live session per
+        // host is permitted, so the second has to come after.
         const guestA = await joinAnonymously(sessionA.id);
+        await agent.patch(`/api/session/${sessionA.id}/complete`).send({});
+        const sessionB = await createSession(agent, { mode: "interview" });
 
         const res = await request(app).get(`/api/session/${sessionB.id}/room`)
             .query({ participantId: guestA.id });

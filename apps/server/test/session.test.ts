@@ -2,7 +2,7 @@ import request from "supertest";
 // agent type = request.agent(app) return type
 import { describe, it, expect, beforeEach } from "vitest";
 import app from "../src/app.js";
-import { signupAgent, createQuestion, createSession, uniqueEmail } from "./helpers.js";
+import { signupAgent, createQuestion, createSession, uniqueEmail, futureIso } from "./helpers.js";
 import db from "../src/db/pool.js";
 
 describe("Session", () => {
@@ -26,16 +26,68 @@ describe("Session", () => {
             expect(res.body.data.session.duration_minutes).toBeNull();
         });
 
-        it("creates a scheduled session with duration", async () => {
+        /**
+         * The invariant that was silently broken: an immediate session used to be
+         * written with `scheduled_at = now()`, which made every instant session
+         * look booked and made this assertion impossible to even write.
+         */
+        it("leaves scheduled_at null for an immediate session", async () => {
+            const res = await agent.post("/api/session").send({ mode: "practice" });
+            expect(res.status).toBe(201);
+            expect(res.body.data.session.scheduled_at).toBeNull();
+        });
+
+        it("refuses a second live session for the same host", async () => {
+            const first = await agent.post("/api/session").send({ mode: "practice" });
+            expect(first.status).toBe(201);
+
+            const second = await agent.post("/api/session").send({ mode: "practice" });
+            expect(second.status).toBe(409);
+            expect(second.body.message).toMatch(/current live session/i);
+        });
+
+        it("allows a new live session once the first is completed", async () => {
+            const first = await agent.post("/api/session").send({ mode: "practice" });
+            await agent.patch(`/api/session/${first.body.data.session.id}/complete`).send({});
+
+            const second = await agent.post("/api/session").send({ mode: "practice" });
+            expect(second.status).toBe(201);
+        });
+
+        it("rejects a scheduled_at in the past", async () => {
             const res = await agent.post("/api/session").send({
                 mode: "interview",
-                scheduled_at: "2026-09-01T10:00:00.000Z",
+                scheduled_at: new Date(Date.now() - 60_000).toISOString(),
+                duration_minutes: 30,
+            });
+            expect(res.status).toBe(400);
+            expect(res.body.message).toMatch(/future/i);
+        });
+
+        it("blocks scheduling on top of the live session's own window", async () => {
+            await agent.post("/api/session").send({ mode: "practice", duration_minutes: 60 });
+            const inside = new Date(Date.now() + 10 * 60_000).toISOString();
+            const res = await agent.post("/api/session").send({
+                mode: "interview",
+                scheduled_at: inside,
+                duration_minutes: 30,
+            });
+            expect(res.status).toBe(409);
+        });
+
+        it("creates a scheduled session with duration", async () => {
+            // Captured once: `futureIso()` is `Date.now()`-derived, so calling it
+            // twice would differ by a few milliseconds and fail the equality.
+            const when = futureIso();
+            const res = await agent.post("/api/session").send({
+                mode: "interview",
+                scheduled_at: when,
                 duration_minutes: 45,
             });
             expect(res.status).toBe(201);
             expect(res.body.data.session.status).toBe("scheduled");
             expect(res.body.data.session.duration_minutes).toBe(45);
-            expect(res.body.data.session.scheduled_at).toBe("2026-09-01T10:00:00.000Z");
+            expect(res.body.data.session.scheduled_at).toBe(when);
             expect(res.body.data.session.expires_at).toBeTruthy();
         });
 
@@ -65,7 +117,10 @@ describe("Session", () => {
 
     describe("GET /api/session", () => {
         it("lists own sessions with pagination", async () => {
+            // Only one session may be live at a time, so the second is completed
+            // first — the listing should include both regardless of status.
             const s1 = await liveSession();
+            await agent.patch(`/api/session/${s1.id}/complete`).send({});
             const s2 = await liveSession();
 
             const res = await agent.get("/api/session");
@@ -122,7 +177,7 @@ describe("Session", () => {
         it("updates a scheduled session", async () => {
             const s = await createSession(agent, {
                 mode: "interview",
-                scheduled_at: "2026-09-01T10:00:00.000Z",
+                scheduled_at: futureIso(),
                 duration_minutes: 45,
             });
             const res = await agent.patch(`/api/session/${s.id}`).send({ duration_minutes: 60 });
@@ -142,7 +197,7 @@ describe("Session", () => {
         it("start: only scheduled sessions can be started", async () => {
             const s = await createSession(agent, {
                 mode: "interview",
-                scheduled_at: "2026-09-01T10:00:00.000Z",
+                scheduled_at: futureIso(),
             });
             const started = await agent.patch(`/api/session/${s.id}/start`);
             expect(started.status).toBe(200);
@@ -156,7 +211,7 @@ describe("Session", () => {
         });
 
         it("complete: only live sessions can be completed", async () => {
-            const s = await createSession(agent, { scheduled_at: "2026-09-01T10:00:00.000Z" });
+            const s = await createSession(agent, { scheduled_at: futureIso() });
             expect((await agent.patch(`/api/session/${s.id}/complete`)).status).toBe(400);
 
             const s2 = await liveSession();
@@ -174,7 +229,7 @@ describe("Session", () => {
             expect(cancelledLive.body.data.session.ended_at).toBeTruthy();
 
             // scheduled → cancelled, and started_at is null so ended_at stays null
-            const scheduled = await createSession(agent, { scheduled_at: "2026-09-01T10:00:00.000Z" });
+            const scheduled = await createSession(agent, { scheduled_at: futureIso() });
             const cancelled = await agent.patch(`/api/session/${scheduled.id}/cancel`);
             expect(cancelled.status).toBe(200);
             expect(cancelled.body.data.session.status).toBe("cancelled");
@@ -262,7 +317,7 @@ describe("Session", () => {
 
         it("cannot change question on a non-live session", async () => {
             const q = await createQuestion(agent);
-            const s = await createSession(agent, { scheduled_at: "2026-09-01T10:00:00.000Z" });
+            const s = await createSession(agent, { scheduled_at: futureIso() });
             const res = await agent.patch(`/api/session/${s.id}/question`).send({ question_id: q.id, language: "python" });
             expect(res.status).toBe(400);
             expect(res.body.message).toBe("Can only change question in a live session");

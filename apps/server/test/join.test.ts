@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import request from "supertest";
 import app from "../src/app.js";
-import { signupAgent, createSession } from "./helpers.js";
+import { signupAgent, createSession, futureIso } from "./helpers.js";
 import db from "../src/db/pool.js";
 
 const accessTokenFor = async (sessionId: string) => {
@@ -142,7 +142,7 @@ describe("POST /api/session/join", () => {
 
         const scheduled = await createSession(hostAgent, {
             mode: "practice",
-            scheduled_at: "2026-09-01T10:00:00.000Z",
+            scheduled_at: futureIso(),
         });
         const ok = await request(app)
             .post("/api/session/join")
@@ -151,7 +151,7 @@ describe("POST /api/session/join", () => {
 
         const closable = await createSession(hostAgent, {
             mode: "practice",
-            scheduled_at: "2026-09-02T10:00:00.000Z",
+            scheduled_at: futureIso(72),
         });
         const cancelled = await hostAgent.patch(`/api/session/${closable.id}/cancel`);
         expect(cancelled.status).toBe(200);
