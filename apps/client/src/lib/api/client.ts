@@ -59,14 +59,40 @@ async function refreshToken(): Promise<void | null> {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const response = await fetch(`${API_BASE}${path}`, {
-        credentials: 'include',
-        ...options,
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers,
-        },
-    })
+    let response: Response;
+
+    try {
+        response = await fetch(`${API_BASE}${path}`, {
+            credentials: 'include',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            },
+        });
+    } catch (cause) {
+        /**
+         * `fetch` only rejects when the request never produced a response — the
+         * server is down, the URL is wrong, or **the browser blocked it**.
+         *
+         * That last one is the one worth naming. When CORS refuses, the browser
+         * discards the response and `fetch` throws a bare `TypeError: Failed to
+         * fetch`, indistinguishable from having no internet. The UI then shows
+         * a generic "Something went wrong", which is how a one-variable deploy
+         * mistake ends up looking like an outage.
+         *
+         * So this turns the most invisible failure in a deployed app into a
+         * message that says what to actually check. The message cannot know
+         * *which* of the three causes it is, so it names them.
+         */
+        throw new ApiError(
+            0,
+            `Can't reach the server at ${API_BASE}. ` +
+                `If the page is loaded, the usual cause is that the server's CLIENT_URL ` +
+                `does not exactly match this site's origin — the browser blocks the request. ` +
+                `(Original error: ${cause instanceof Error ? cause.message : String(cause)})`
+        );
+    }
 
     if (response.status === 401) {
         if (!PUBLIC_AUTH_APIS.includes(path)) {
