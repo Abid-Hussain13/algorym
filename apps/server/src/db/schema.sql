@@ -1,28 +1,3 @@
--- ============================================================================
--- Algorym — canonical database schema.
--- ============================================================================
---
--- This file is the **single source of truth** for the database shape. The
--- numbered `migrations/*.sql` files that used to sit beside it are gone: they
--- had drifted out of sync with this file, which meant "which one is right?" was
--- answerable in two ways. Every change to the schema is made here.
---
--- To create a database:
---
---     pnpm --filter server db:setup          # refuses to touch a non-empty DB
---     pnpm --filter server db:setup --force  # drops everything and recreates
---
--- or directly:
---
---     psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f apps/server/src/db/schema.sql
---
--- Works against a local Postgres and against Supabase unchanged — nothing here
--- is provider-specific.
---
--- Verified equivalent to a database that was built by applying the old
--- migrations in order, so this is a faithful replacement rather than a rewrite.
--- ============================================================================
-
 create extension if not exists "pgcrypto";
 
 create type difficulty_level as enum ('easy', 'medium', 'hard');

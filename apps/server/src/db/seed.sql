@@ -1,6 +1,3 @@
--- Seed data for Algorym dashboard
--- Run: psql -U postgres -d algorym -f apps/server/src/db/seed.sql
-
 -- ============================================================
 -- 1. USERS
 -- ============================================================

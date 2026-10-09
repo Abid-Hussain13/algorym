@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import router from "./routes/index.js";
+import healthRoute from "./routes/health.routes.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import notFound from "./middlewares/notFound.js";
 
@@ -21,6 +22,10 @@ app.use(cookieParser());
 if (process.env.NODE_ENV !== "production") {
     app.use(morgan("dev"));
 }
+
+// At the root, not under /api: this is the path a platform health probe or a
+// keep-alive ping expects to find.
+app.use("/", healthRoute);
 
 app.use("/api", router);
 
