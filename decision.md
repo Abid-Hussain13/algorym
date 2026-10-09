@@ -1575,3 +1575,50 @@ cookie mid-flow, and a **409** by booking the chosen slot through the API *after
 loaded — the genuine race a client-side check cannot prevent. Both showed an inline reason,
 kept the dialog open with its contents intact, and never reached the success screen. Plus the
 client-side cases and a clean success path that leaves no stale error behind.
+
+# Cross-Site Auth Cookies (Netlify + Render)
+
+## The bug
+Signing up worked, then every dashboard request died with *"Session expired, please
+login again"* — right after creating an account.
+
+Both auth cookies were set `SameSite=Strict`:
+
+```ts
+res.cookie("refreshToken", refreshToken, {
+    httpOnly: true, secure: ..., sameSite: "strict", path: "/api/auth/refresh",
+});
+```
+
+`SameSite=Strict` means *"only ever attach this cookie to requests made by a page on this
+same site"*. But in production the frontend is `algorym-dev.netlify.app` and the API is
+`algorym-api.onrender.com` — two different registrable domains, so **every API call is
+cross-site by the browser's definition**.
+
+The result was silent and total: the browser refused to send the refresh token, the refresh
+endpoint saw no cookie and answered 401, and the client logged the user out. Local
+development never showed it, because `localhost:5173 → localhost:3000` differs only by port,
+and **ports are not part of "site"**.
+
+## The fix
+`SameSite=None; Secure` in production, `lax` without `secure` in development. The spec
+requires `None` to be paired with `Secure`, and `Secure` requires https — which Render
+provides, and which is why the two are gated on the same condition rather than set
+independently.
+
+Local development keeps `lax`, because that is genuinely correct there and `Secure` cookies
+are rejected over plain http.
+
+## The remaining limitation, stated honestly
+`SameSite=None` depends on the browser not blocking third-party cookies outright:
+
+- **Firefox** (including Zen) — allows it; Total Cookie Protection *partitions* rather than
+  blocks, and since a visitor only ever uses one site, partitioning is invisible.
+- **Chrome / Edge** — currently allows it by default.
+- **Safari** — blocks third-party cookies by default. A Safari user would hit this same
+  "session expired" wall.
+
+The architecturally clean fix is to stop being cross-site: serve the built client from the
+**same origin as the API**. That makes `SameSite=Strict` valid again and immune to any
+browser's cookie policy. It was not chosen here because the frontend is already deployed to
+Netlify, and moving it means dropping the CDN.
