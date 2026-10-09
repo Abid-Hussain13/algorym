@@ -16,7 +16,11 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(morgan("dev"));
+// Request logging is a development aid. In production it is noise that also
+// records query strings, so it is off unless explicitly enabled.
+if (process.env.NODE_ENV !== "production") {
+    app.use(morgan("dev"));
+}
 
 app.use("/api", router);
 

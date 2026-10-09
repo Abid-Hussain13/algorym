@@ -8,7 +8,13 @@ const server = http.createServer(app);
 initializeWebSocketServer(server);
 startSessionExpiryCron();
 
-const port = 3000;
+/**
+ * `PORT` first, because every PaaS (Northflank, Render, Koyeb, Fly) assigns the
+ * port and tells the process about it through the environment. Hardcoding 3000
+ * meant the container listened somewhere nothing was routing to, and the deploy
+ * looked like a mystery connection refusal.
+ */
+const port = Number(process.env.PORT) || 3000;
 
 server.listen(port, () => {
     console.log(`Server is listening on port ${port}`);
