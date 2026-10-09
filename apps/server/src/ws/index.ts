@@ -22,8 +22,41 @@ const rejectUpgrade = (socket: Duplex, status: number, reason: string): void => 
     socket.destroy();
 };
 
+/**
+ * Held at module scope because `initializeWebSocketServer` creates the server
+ * internally, so a caller that wants to shut it down later has no other handle
+ * on it. Only ever one process, one server.
+ */
+let activeServer: WebSocketServer | null = null;
+
+/**
+ * Close every WebSocket, telling clients why first.
+ *
+ * Closing the server alone is not enough: `wss.close()` only stops accepting new
+ * connections and leaves existing ones hanging, which reads to the client as a
+ * network fault and makes it sit out its whole reconnect backoff. Sending a
+ * proper close frame with a reason lets the browser reconnect immediately.
+ *
+ * `1001` is "going away", the standard code for a server restart.
+ */
+export const shutdownWebSocketServer = (code = 1001, reason = "Server restarting"): void => {
+    const wss = activeServer;
+    if (!wss) return;
+
+    for (const client of wss.clients) {
+        try {
+            client.close(code, reason);
+        } catch {
+            // Already closing or destroyed; nothing to do.
+        }
+    }
+    wss.close();
+    activeServer = null;
+};
+
 export const initializeWebSocketServer = (server: HttpServer): WebSocketServer => {
     const wss = new WebSocketServer({ noServer: true });
+    activeServer = wss;
 
     server.on("upgrade", (request: IncomingMessage, socket: Duplex, head: Buffer) => {
         const { pathname } = new URL(request.url ?? "/", "http://localhost");

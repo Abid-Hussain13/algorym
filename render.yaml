@@ -1,0 +1,76 @@
+# Render blueprint — deploys the API as a free web service.
+#
+# Render reads this when you use "New → Blueprint" in the dashboard and point it
+# at the repository. It creates the service with the right build and start
+# commands already filled in.
+#
+# Only the backend lives here. The frontend is a static Vite build and goes on
+# Netlify, which is a better fit for it.
+
+services:
+  - type: web
+    name: algorym-api
+    runtime: node
+    plan: free
+    # Pick the closest to your users. Supabase is on ap-northeast-1 (Tokyo),
+    # so singapore keeps the API and the database in the same part of the world.
+    region: singapore
+    branch: master
+    # Repository root, NOT apps/server. This is a pnpm workspace, and the server
+    # depends on `@algorym/shared-types`, which lives in packages/. Setting
+    # rootDir to apps/server cuts the workspace root out of the picture and
+    # `pnpm install` cannot resolve that dependency at all.
+    rootDir: .
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter server build
+    startCommand: node apps/server/dist/index.js
+    healthCheckPath: /health
+
+    envVars:
+      # ── Runtime ──────────────────────────────────────────────────────────
+      # NODE_ENV=production is what switches off request logging (morgan).
+      - key: NODE_ENV
+        value: production
+
+      # Render assigns PORT and tells the process about it. Do not hardcode.
+      # Render detects and supplies this itself when `PORT` is not declared here.
+
+      # ── Database ─────────────────────────────────────────────────────────
+      # Supabase, SESSION pooler (port 5432). Paste this into Render's dashboard
+      # rather than committing it.
+      #
+      # NOTE: if the password contains `@ : / ? # &`, it must be URL-encoded or
+      # the connection string silently breaks. Enter it directly in the Render
+      # UI rather than through a shell — a trailing `$` would otherwise be
+      # interpreted as a variable.
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_POOL_MAX
+        value: "10"
+
+      # ── Client ───────────────────────────────────────────────────────────
+      # Exact Netlify origin. CORS and the auth cookie are both keyed off this,
+      # so it must match with no trailing slash. Fill in after Netlify exists.
+      - key: CLIENT_URL
+        sync: false
+
+      # ── Secrets ──────────────────────────────────────────────────────────
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: CODE_RUN_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: VERIFY_TOKEN_EXPIRY_HOURS
+        value: "24"
+      - key: RESET_TOKEN_EXPIRY_MINUTES
+        value: "30"
+      - key: CODE_RUN_URL
+        value: https://sandboxapi.p.rapidapi.com
+      - key: CODE_RUN_API_HOST
+        value: sandboxapi.p.rapidapi.com

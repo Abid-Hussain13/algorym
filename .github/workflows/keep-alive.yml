@@ -1,0 +1,63 @@
+# Keeps the Render free service awake.
+#
+# Render spins a free web service down after 15 minutes without inbound traffic.
+# That includes an active interview — but only while one is running — so between
+# interviews the service sleeps and the next person to open a room waits out a
+# ~60 second cold start.
+#
+# A ping every 14 minutes (rather than 15) keeps the 15 minute idle timer from
+# ever expiring, while leaving a margin for a delayed or skipped run.
+#
+# Two things that make this quietly useless if you get them wrong:
+#
+#   1. **Do not ping `/robots.txt`.** While a free service is asleep, Render
+#      answers that path itself. The request returns a healthy 200, the job
+#      reports success, and the service still sleeps. `/health` is a real route
+#      this app serves.
+#   2. **Do not ping a route that touches the database.** It is the only thing
+#      keeping a hosted database from being paused for inactivity, so the deep
+#      form is the one that matters here.
+#
+# Cost: a free service held awake 24/7 uses ~744 of the 750 free instance hours
+# in a month, so this is fine for exactly one service and leaves no room for a
+# second.
+
+name: Keep Render awake
+
+on:
+  schedule:
+    # Every 14 minutes.
+    - cron: "*/14 * * * *"
+  workflow_dispatch: # so it can be triggered manually while testing
+
+jobs:
+  ping:
+    name: Ping health endpoint
+    runs-on: ubuntu-latest
+    # GitHub disables scheduled workflows after 60 days without repository
+    # activity, so if pings stop working check this first.
+    timeout-minutes: 5
+
+    steps:
+      - name: Ping
+        env:
+          # Set as a repository secret: the deployed Render URL + /health?deep=1
+          HEALTH_URL: ${{ secrets.RENDER_HEALTH_URL }}
+        run: |
+          if [ -z "$HEALTH_URL" ]; then
+            echo "::error::RENDER_HEALTH_URL secret is not set"
+            exit 1
+          fi
+
+          status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$HEALTH_URL")
+          echo "GET $HEALTH_URL -> $status"
+
+          # 503 is expected and still fine: it means the app answered but the
+          # database is unreachable, and Render has counted the request either
+          # way. Anything else is a genuine problem worth failing the job over.
+          if [ "$status" = "200" ] || [ "$status" = "503" ]; then
+            echo "Service is awake."
+          else
+            echo "::error::Unexpected status $status"
+            exit 1
+          fi

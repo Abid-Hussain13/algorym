@@ -1,9 +1,21 @@
 import cron from "node-cron";
+import type { ScheduledTask } from "node-cron";
 import db from "../db/pool.js";
 import { broadcast } from "../ws/connectionManager.js";
 
+/**
+ * Held so shutdown can stop it. Left running, it would fire once more
+ * mid-teardown and open a query on a database pool that is being closed.
+ */
+let expiryTask: ScheduledTask | null = null;
+
+export function stopSessionExpiryCron(): void {
+    expiryTask?.stop();
+    expiryTask = null;
+}
+
 export function startSessionExpiryCron() {
-    cron.schedule("* * * * *", async () => {
+    expiryTask = cron.schedule("* * * * *", async () => {
         try {
             const expired = await db.query<{ id: string }>(
                 `UPDATE sessions
