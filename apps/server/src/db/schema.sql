@@ -106,6 +106,11 @@ create index idx_tokens_token on tokens(token);
 create index idx_questions_owner on questions(owner_id);
 create index idx_sessions_created_by on sessions(created_by);
 create index idx_participants_session on session_participants(session_id);
+-- One row per person per session, so re-joining updates instead of duplicating.
+-- Mirrors the intent of migrations/006_unique_participant.sql, which is applied
+-- by hand rather than kept in this directory.
+create unique index if not exists idx_participants_session_email
+    on session_participants (session_id, email);
 create index idx_session_questions_session on session_questions(session_id);
 create index idx_session_questions_question on session_questions(question_id);
 create index idx_events_session on session_events(session_id);

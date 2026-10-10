@@ -7,36 +7,15 @@ import { useQueryClient } from "@tanstack/react-query";
 
 interface HostNotesProps {
     sessionId: string;
-    /** Seed value from the host's existing notes, when any. */
-    initialNotes: string | null;
-    /**
-     * Whether a save would actually succeed right now. Notes are stored against a
-     * candidate (`session_evaluations.evaluated_participant_id` is NOT NULL), so
-     * the server rejects them until a guest has joined.
-     */
-    canSave: boolean;
-    /** Why `canSave` is false, shown inline. */
-    blockedReason?: string | null;
+        initialNotes: string | null;
+        canSave: boolean;
+        blockedReason?: string | null;
 }
 
 const SAVE_DEBOUNCE = 1200;
 
 type SaveState = "idle" | "saving" | "saved" | "failed";
 
-/**
- * Private interview notes — host only, in the Notes tab under the editor.
- *
- * **The textarea stays editable even when saving is impossible.** A host who
- * wants to jot something down before the candidate connects should be able to;
- * the draft simply stays unsaved and is written the moment a candidate appears
- * (the save effect re-runs because `canSave` is in its dependencies).
- *
- * The alternative — a disabled box — reads as "broken", and the previous version
- * was worse still: it fired saves that failed with a 400 and reported
- * *"Couldn't save notes — check your connection"*, which sent the host hunting
- * for a network problem that did not exist. Errors now show what the server
- * actually said.
- */
 export function HostNotes({ sessionId, initialNotes, canSave, blockedReason }: HostNotesProps) {
     // `draft` stays null until the host actually types, so the server's value
     // flows through untouched instead of being copied into state by an effect.
@@ -51,11 +30,14 @@ export function HostNotes({ sessionId, initialNotes, canSave, blockedReason }: H
         if (!canSave || !isDirty) return;
 
         const timer = setTimeout(async () => {
+                        const saved = notes;
             setState("saving");
             try {
-                await sessionsApi.saveNotes(sessionId, notes);
+                await sessionsApi.saveNotes(sessionId, saved);
                 await queryClient.invalidateQueries({ queryKey: ["session", sessionId] });
-                setDraft(null); // the server now holds this text
+                // Only release the draft if nothing has been typed since. If it has,
+                // keep it so the pending debounce still has the newest text.
+                setDraft((current) => (current === saved ? null : current));
                 setState("saved");
             } catch (error) {
                 setState("failed");

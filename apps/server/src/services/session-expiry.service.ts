@@ -17,21 +17,58 @@ export function stopSessionExpiryCron(): void {
 export function startSessionExpiryCron() {
     expiryTask = cron.schedule("* * * * *", async () => {
         try {
-            const expired = await db.query<{ id: string }>(
-                `UPDATE sessions
-                 SET status = 'expired', ended_at = now()
-                 WHERE status = 'live'
-                   AND expires_at IS NOT NULL
-                   AND expires_at < now()
-                 RETURNING id`
+            /**
+             * Time is up, but whether that counts as "expired" or "completed"
+             * depends entirely on whether anyone was actually there.
+             *
+             * A session that timed out with a candidate present was worked, and
+             * the host has notes and possibly a rating to give it. Marking that
+             * `expired` throws the interview into a bucket with "nobody turned
+             * up", which is wrong: it hides it from the host's completed list and
+             * makes the evaluation form unreachable, because rating is only
+             * offered on a completed interview.
+             *
+             * So: **a guest ever joined → completed. Host alone → expired.**
+             * The check is on participants rather than live sockets on purpose —
+             * a candidate who closed their tab ten minutes ago still attended.
+             */
+            const timedOut = await db.query<{ id: string; attended: boolean }>(
+                `UPDATE sessions s
+                 SET status = CASE WHEN EXISTS (
+                       SELECT 1 FROM session_participants p
+                       WHERE p.session_id = s.id AND p.role = 'guest'
+                     ) THEN 'completed'::session_status ELSE 'expired'::session_status END,
+                     ended_at = now()
+                 WHERE s.status = 'live'
+                   AND s.expires_at IS NOT NULL
+                   AND s.expires_at < now()
+                 RETURNING s.id,
+                           EXISTS (
+                               SELECT 1 FROM session_participants p
+                               WHERE p.session_id = s.id AND p.role = 'guest'
+                           ) AS attended`
             );
-            if (expired.rows.length > 0) {
-                console.log(`[cron] Expired ${expired.rows.length} live session(s)`);
+
+            const completed = timedOut.rows.filter((r) => r.attended);
+            const expired = timedOut.rows.filter((r) => !r.attended);
+
+            if (completed.length > 0) {
+                console.log(`[cron] Completed ${completed.length} attended session(s) on timeout`);
+                for (const session of completed) {
+                    broadcast(session.id, {
+                        type: "session_completed",
+                        payload: { session: { id: session.id, status: "completed" } },
+                    });
+                }
+            }
+
+            if (expired.length > 0) {
+                console.log(`[cron] Expired ${expired.length} unattended session(s)`);
 
                 // Tell whoever is still in the room. Without this the expiry only
                 // exists in the database: people sat in a dead session waiting on
                 // a code runner that would now reject every submission.
-                for (const session of expired.rows) {
+                for (const session of expired) {
                     broadcast(session.id, {
                         type: "session_expired",
                         payload: { session: { id: session.id, status: "expired" } },

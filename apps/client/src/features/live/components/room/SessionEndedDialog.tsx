@@ -3,37 +3,48 @@ import { Button } from "@/components/ui/Button";
 import { useFullscreen } from "../../hooks/use-fullscreen";
 
 interface SessionEndedDialogProps {
-    /** Which event ended it — cancelled reads very differently from completed. */
     outcome: "completed" | "cancelled" | "expired";
-    /** The host's name, so the message can address them. */
     hostName: string;
+    /** True for the host, who stays in the room to rate the candidate. */
+    isHost: boolean;
     onDismiss: () => void;
 }
 
 /**
- * Blocking notice shown to the **candidate** when the host ends the session.
+ * Blocking notice shown when a session ends.
  *
- * It is deliberately not dismissable by accident: the session is over, there is
- * nothing left to edit, and leaving the candidate staring at a live editor they
- * can no longer use is worse than one clear screen with a way out. The only ways
- * forward are the buttons.
+ * **One button, and which one depends on who you are.**
  *
- * **Exit full screen** is offered first and prominently. The room puts people in
- * full screen to stop them wandering off mid-interview, so the courtesy of
- * switching it back off when the interview is genuinely over matters — and
- * `Esc` is not something a non-technical candidate will think to try.
+ * - **Candidate** — leaves full screen (the room put them in it, so switching it
+ *   back off is a courtesy they won't think to ask for) and goes to the public
+ *   home page, since they have no account and `/app/sessions` would bounce them
+ *   to the login screen.
+ * - **Host** — goes back to wherever they came from with `navigate(-1)`, which
+ *   puts them on their own sessions list or wherever they launched the room
+ *   from. They must be able to reach the rating, and `navigate(-1)` never leaves
+ *   them stranded on a marketing page they did not ask for.
+ *
+ * Not dismissable by accident: the session is over, there is nothing left to
+ * edit, and leaving someone in a live editor they can no longer use is worse
+ * than one clear screen with a way out.
  */
-export function SessionEndedDialog({ outcome, hostName, onDismiss }: SessionEndedDialogProps) {
+export function SessionEndedDialog({
+    outcome,
+    hostName,
+    isHost,
+    onDismiss,
+}: SessionEndedDialogProps) {
     const navigate = useNavigate();
     const { isFullscreen, exit } = useFullscreen();
 
     const wasCancelled = outcome === "cancelled";
     const wasExpired = outcome === "expired";
 
-    const leave = () => {
+    const leave = async () => {
+        if (isFullscreen) await exit();
         onDismiss();
-        // A candidate has no account, so /app/sessions would bounce them to login.
-        navigate("/");
+        if (isHost) navigate(-1);
+        else navigate("/");
     };
 
     return (
@@ -46,7 +57,9 @@ export function SessionEndedDialog({ outcome, hostName, onDismiss }: SessionEnde
             <div className="flex w-full max-w-sm flex-col items-center gap-4 rounded-2xl border border-border bg-surface p-6 text-center shadow-2xl">
                 <span
                     className={`grid size-11 place-items-center rounded-full ${
-                        wasCancelled ? "bg-danger/10 text-danger" : "bg-success/10 text-success"
+                        wasCancelled || wasExpired
+                            ? "bg-danger/10 text-danger"
+                            : "bg-success/10 text-success"
                     }`}
                 >
                     <svg
@@ -66,15 +79,16 @@ export function SessionEndedDialog({ outcome, hostName, onDismiss }: SessionEnde
                                 <path d="m15 9-6 6M9 9l6 6" />
                             </>
                         ) : (
-                            <>
-                                <path d="M20 6 9 17l-5-5" />
-                            </>
+                            <path d="M20 6 9 17l-5-5" />
                         )}
                     </svg>
                 </span>
 
                 <div className="flex flex-col gap-1.5">
-                    <h1 id="session-ended-title" className="font-display text-base font-semibold text-fg">
+                    <h1
+                        id="session-ended-title"
+                        className="font-display text-base font-semibold text-fg"
+                    >
                         {wasExpired
                             ? "This session has ended"
                             : wasCancelled
@@ -84,35 +98,23 @@ export function SessionEndedDialog({ outcome, hostName, onDismiss }: SessionEnde
                     <p className="text-xs leading-relaxed text-muted">
                         {wasExpired ? (
                             <>
-                                This interview reached its time limit, so the editor is now closed. Your
-                                work is saved, but nothing further will be collected.
+                                Nobody joined this session, so it timed out. Nothing was collected.
                             </>
                         ) : wasCancelled ? (
                             <>The interview ended early. Your work is saved, but nothing further was collected.</>
+                        ) : hostName ? (
+                            <>
+                                {hostName} has ended the interview. Thanks for your time.
+                            </>
                         ) : (
-                            // A candidate has no access to the host-scoped session
-                            // detail, so the name comes from the presence roster
-                            // they are already on.
-                            hostName ? (
-                                <>
-                                    {hostName} has ended the interview. Thanks for your time.
-                                </>
-                            ) : (
-                                <>The interview is complete. Thanks for your time.</>
-                            )
+                            <>The interview is complete. Thanks for your time.</>
                         )}
                     </p>
                 </div>
 
                 <div className="flex w-full flex-col gap-2">
-                    {isFullscreen && (
-                        <Button variant="primary" size="sm" onClick={() => void exit()}>
-                            Exit full screen
-                        </Button>
-                    )}
-
-                    <Button variant={isFullscreen ? "ghost" : "primary"} size="sm" onClick={leave}>
-                        {isFullscreen ? "Leave the room" : "Leave the room"}
+                    <Button variant="primary" size="sm" onClick={() => void leave()}>
+                        {isHost ? "Go back" : "Leave full screen and finish"}
                     </Button>
                 </div>
             </div>

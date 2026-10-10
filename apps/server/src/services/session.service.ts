@@ -24,14 +24,7 @@ export const createSession = async (userId: string, data: CreateSessionInput): P
     let startTime: Date;
     let status: SessionStatus;
     let startedAt: string | null;
-    /**
-     * `scheduled_at` means "this session was booked for a time". An immediate
-     * session must leave it NULL — writing `now()` there made every instant
-     * session look scheduled, which is what made the calendar in the create
-     * wizard mark past dates as booked and why "is this scheduled?" could never
-     * be trusted anywhere downstream.
-     */
-    let scheduledAtISO: string | null;
+        let scheduledAtISO: string | null;
 
     if (scheduled_at) {
         startTime = new Date(scheduled_at);
@@ -69,18 +62,7 @@ export const createSession = async (userId: string, data: CreateSessionInput): P
             throw new AppError("You already have a session scheduled during this time", 409);
         }
     } else {
-        /**
-         * One live interview per interviewer, enforced here rather than in the UI.
-         *
-         * A client-side check would be a suggestion: two tabs, or the API called
-         * directly, would both walk straight past it. The host cannot supervise
-         * two rooms at once anyway, and a second "live" room silently competes
-         * for the candidate's attention and the host's own.
-         *
-         * The window is not permanent — `session-expiry.service` flips stale rows
-         * to `expired`, so this clears itself rather than needing a manual reset.
-         */
-        const liveCheck = await db.query(
+                const liveCheck = await db.query(
             "SELECT id FROM sessions WHERE created_by = $1 AND status = 'live' LIMIT 1",
             [userId]
         );
@@ -317,13 +299,6 @@ export const getSessionDetail = async (userId: string, sessionId: string): Promi
     return rows[0] as SessionDetail;
 }
 
-/**
- * Everything a participant needs to render the live room.
- *
- * Separate from `getSessionDetail` because that one is owner-scoped (and gated
- * behind `protect`), while guests may be completely anonymous — they have no
- * account to authenticate against, only a participantId they were given at join.
- */
 export const getSessionRoom = async (sessionId: string): Promise<SessionRoom> => {
     const { rows } = await db.query(
         `SELECT id, question_id, mode, status, role_context, language, scheduled_at,
@@ -606,9 +581,14 @@ export const joinSession = async (data: JoinSessionData, userId?: string): Promi
         if (!displayName) throw new AppError("Name is required to join a session", 400);
     }
 
-    const { rows } = await db.query(
+        const { rows } = await db.query(
         `INSERT INTO session_participants (session_id, user_id, email, display_name, role, consent_to_contact, consent_timestamp)
-         VALUES ($1, $2, $3, $4, $5, $6, now()) RETURNING *`,
+         VALUES ($1, $2, $3, $4, $5, $6, now())
+         ON CONFLICT (session_id, email) DO UPDATE
+           SET display_name = EXCLUDED.display_name,
+               consent_to_contact = EXCLUDED.consent_to_contact,
+               consent_timestamp = now()
+         RETURNING *`,
         [session.id, userId || null, email, displayName, role, consent]
     );
 

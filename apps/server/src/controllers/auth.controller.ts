@@ -10,28 +10,6 @@ import type { User } from "@algorym/shared-types";
 const ACCESS_TOKEN_MAX_AGE = 15 * 60 * 1000;
 const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 1000;
 
-/**
- * `SameSite` has to match how the app is actually deployed.
- *
- * In production the frontend and the API are on **different domains** —
- * `*.netlify.app` and `*.onrender.com` are separate registrable domains, so from
- * the browser's point of view every API call is *cross-site*.
- *
- * `SameSite=Strict` (or even `Lax`) means "only ever send this cookie for requests
- * made by a page on this same site". On a cross-site deployment that is never
- * true, so the browser silently **refused to send the refresh token at all**. The
- * refresh endpoint then saw no cookie, answered 401, and the client logged the
- * user out with "Session expired" — even though they had just signed up.
- *
- * `SameSite=None` is the only value that permits a cross-site cookie, and the
- * spec requires it to be paired with `Secure`. Both are gated on production
- * because local development is genuinely same-site (same host, only the port
- * differs), where `Secure` cookies would be rejected over plain http anyway.
- *
- * Caveat worth knowing: `SameSite=None` depends on the browser not blocking
- * third-party cookies outright. Chrome and Firefox allow it; Safari does not by
- * default. See the note in decision.md for the options.
- */
 const isProduction = process.env.NODE_ENV === "production";
 
 const cookieSiteSettings = {
@@ -51,8 +29,6 @@ const setAuthCookies = (res: Response, accessToken: string, refreshToken: string
         httpOnly: true,
         ...cookieSiteSettings,
         maxAge: REFRESH_TOKEN_MAX_AGE,
-        // Scoped to the one endpoint that needs it, so the long-lived refresh
-        // token is not attached to every ordinary API call.
         path: "/api/auth/refresh",
     });
 };

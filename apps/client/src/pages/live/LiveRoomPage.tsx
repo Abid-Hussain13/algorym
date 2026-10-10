@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -107,7 +107,18 @@ function LiveRoomShell({
                 if (message.type === "session_completed") setEndedOutcome("completed");
                 if (message.type === "session_cancelled") setEndedOutcome("cancelled");
                 if (message.type === "session_expired") setEndedOutcome("expired");
-                if (message.type === "question_change" || message.type === "session_started") {
+
+                if (
+                    message.type === "question_change" ||
+                    message.type === "session_started" ||
+                    // The host does not see the ended dialog, so a status change
+                    // pushed from outside — the expiry cron, or another tab —
+                    // would otherwise leave them on a stale "live" room with no
+                    // rating form. Refetching is what makes the form appear.
+                    message.type === "session_completed" ||
+                    message.type === "session_cancelled" ||
+                    message.type === "session_expired"
+                ) {
                     void refetchRoom();
                 }
             }),
@@ -125,7 +136,34 @@ function LiveRoomShell({
         (ENDED_STATUSES as readonly string[]).includes(session.status)
             ? (session.status as "completed" | "cancelled" | "expired")
             : null;
-    const outcome = endedOutcome ?? endedFromStatus;
+    /**
+     * The host is deliberately excluded from the blocking ended dialog.
+     *
+     * It used to show for both roles, and that broke two things at once: it
+     * covered the room, so the Settings panel — which is where the rating form
+     * lives — was unreachable, and its "leave" button pushed the host to `/`,
+     * which is the marketing page. The host has work left to do after ending a
+     * session: rate the candidate. So they stay put and the panel does its job.
+     */
+    /**
+     * Open Settings for the host the moment the session ends.
+     *
+     * Completing a session is only half the job — the rating is the other half,
+     * and it lives in the Settings panel. Requiring the host to go looking for it
+     * is how sessions end up permanently unrated. Tracked on the live → ended
+     * transition only, so it never fights the host for control of the sidebar
+     * after that.
+     */
+    const sessionEnded = session?.status === "completed" || session?.status === "cancelled";
+    const wasLive = useRef(session?.status === "live");
+
+    useEffect(() => {
+        if (wasLive.current && sessionEnded) setRail("settings");
+        wasLive.current = session?.status === "live";
+    }, [sessionEnded, session?.status]);
+
+    const candidateOutcome = endedFromStatus ?? (isHost ? null : endedOutcome);
+    const outcome = candidateOutcome;
 
     // ── The shared files, keyed inside the CRDT ────────────────────────────
     const language = session?.language ?? null;
@@ -446,6 +484,7 @@ function LiveRoomShell({
                 <SessionEndedDialog
                     outcome={outcome}
                     hostName={collaborators.find((c) => c.role === "host")?.displayName ?? ""}
+                    isHost={false}
                     onDismiss={() => setEndedOutcome(null)}
                 />
             )}

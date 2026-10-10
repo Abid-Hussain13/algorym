@@ -1622,3 +1622,66 @@ The architecturally clean fix is to stop being cross-site: serve the built clien
 **same origin as the API**. That makes `SameSite=Strict` valid again and immune to any
 browser's cookie policy. It was not chosen here because the frontend is already deployed to
 Netlify, and moving it means dropping the CDN.
+
+# Session End UX, and What "Expired" Should Actually Mean
+
+## The host never saw the rating form, and landed on the marketing page
+One cause, two symptoms.
+
+`SessionEndedDialog` is a full-screen blocker intended for the **candidate** — a
+non-technical person who would otherwise be stranded in an editor they cannot use.
+It was rendering for the host too, because `endedOutcome` is set from the
+`session_completed` broadcast, and only `endedFromStatus` had been guarded with
+`!isHost`.
+
+So when the host completed a session:
+
+1. the dialog covered the room, and the Settings panel — the only place the rating
+   form lives — was unreachable underneath it;
+2. its "Leave the room" button called `navigate("/")`, which is the **marketing
+   layout**, not the host's sessions list.
+
+The host now never sees that dialog. They stay in the room, where the form is.
+
+Two supporting fixes, because the host's data has to be right *and* findable:
+
+- **The ended broadcasts now refetch the room.** Only the candidate showed anything,
+  so a status change pushed from outside — the cron, or a second tab — left the host
+  looking at a stale "live" room with no form. `session_completed`, `session_cancelled`
+  and `session_expired` all refetch now.
+- **Settings auto-opens on the live → ended transition.** Completing a session is only
+  half the job; the rating is the other half. Requiring the host to go looking for it is
+  how sessions end up permanently unrated. Tracked on the transition only, so it never
+  fights the host for the sidebar afterwards.
+
+## One button, and which one depends on who you are
+Two buttons (Exit full screen / Leave the room) was redundant — leaving the room
+implies the same thing. Now there is one, and it does the right thing per role:
+
+- **Candidate** — exits full screen and goes to `/`. They have no account, so
+  `/app/sessions` would bounce them to the login screen.
+- **Host** — `navigate(-1)`, back to wherever they launched the room from.
+
+## Timed out does not mean expired
+The cron was marking every timed-out session `expired`, which put a session where a
+candidate sat through the whole interview into the same bucket as one where nobody
+ever showed up. That is wrong in a way that matters: rating is only offered on a
+**completed** interview, so an attended-but-timed-out session could not be rated at
+all, and it vanished from the host's completed list.
+
+Now the cron decides on attendance:
+
+| Anyone joined? | Result | Broadcast |
+|---|---|---|
+| A guest participated | `completed` | `session_completed` |
+| Host alone | `expired` | `session_expired` |
+
+The check is on `session_participants`, not on live sockets, on purpose: a candidate
+who closed their tab ten minutes ago still attended. The candidate's copy was also
+changed — the old "reached its time limit" text now only appears for a session where
+nobody came, which is the only case it is true for.
+
+## Verified end to end
+Two browsers, one real session: form appears for the host, no blocking dialog, host
+lands on `/app/sessions` rather than `/`, and both expiry branches produce the right
+status in the database.

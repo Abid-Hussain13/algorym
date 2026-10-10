@@ -173,4 +173,36 @@ describe("POST /api/session/join", () => {
         expect(res.status).toBe(400);
         expect(res.body.message).toBe("Validation failed");
     });
+
+    /**
+     * Regression: re-joining used to INSERT a new participant row every time.
+     * A reload or a double-clicked Join produced three or four rows for one
+     * person, which duplicated them in the roster and made "the candidate"
+     * ambiguous — every participant row is somebody the host could rate.
+     */
+    it("does not duplicate a participant who joins twice", async () => {
+        const { agent } = await signupAgent(app);
+        const session = await createSession(agent, { mode: "practice" });
+
+        const body = {
+            access_token: session.access_token,
+            email: "twice@example.com",
+            display_name: "Twice",
+            consent_to_contact: true,
+        };
+
+        const first = await request(app).post("/api/session/join").send(body);
+        expect(first.status).toBe(200);
+        const firstId = first.body.data.participant.id;
+
+        const second = await request(app).post("/api/session/join").send(body);
+        expect(second.status).toBe(200);
+        expect(second.body.data.participant.id).toBe(firstId);
+
+        const { rows } = await db.query(
+            "SELECT count(*)::int AS count FROM session_participants WHERE session_id = $1 AND email = $2",
+            [session.id, "twice@example.com"]
+        );
+        expect(rows[0].count).toBe(1);
+    });
 });
