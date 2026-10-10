@@ -2,7 +2,18 @@ import type { ApiResponse } from '@algorym/shared-types'
 
 import { authApi } from './endpoints'
 
-const API_BASE = import.meta.env.VITE_API_URL;
+/**
+ * Baked in at **build** time, so changing it needs a rebuild, not a restart.
+ *
+ * Failing loudly here beats the alternative: with no value, every request went to
+ * `undefined/api/...`, which fails in the browser with a confusing CORS or network
+ * error that looks like a server problem rather than a missing env var. Vite
+ * replaces `import.meta.env.*` at build time, so `import.meta.env.DEV` is `false`
+ * in production and this stays a ~40 byte string in the shipped bundle.
+ */
+const API_BASE: string =
+    import.meta.env.VITE_API_URL ||
+    (import.meta.env.DEV ? "http://localhost:3000" : "");
 
 // Track refresh state to prevent race conditions
 let isRefreshing = false;

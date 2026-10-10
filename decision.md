@@ -1729,3 +1729,46 @@ Verified both ways:
 
 - `DATABASE_URL=<supabase> pnpm test` → suite runs against local, Supabase untouched
 - `.env.test` repointed at Supabase → `REFUSING TO RUN TESTS. Connected to database "postgres"`
+
+# Netlify Was Ignoring `netlify.toml`
+
+## Symptom
+The build reported success — `✓ built in 1.00s`, exit 0 — but deep links were broken, and
+the one line that mattered was buried in the middle of the log:
+
+```
+Config file:  No config file was defined: using default values.
+packagePath:  apps/client
+```
+
+## Cause
+**Netlify only looks for `netlify.toml` inside the configured base directory**, and never
+searches upwards. The base directory was set to `apps/client` in the dashboard, so the
+repo-root `netlify.toml` was invisible — the SPA redirect, the cache headers and the
+publish path were all silently discarded, and Netlify fell back to its own defaults.
+
+The build still *succeeded*, which is what makes this easy to miss: the output is a static
+bundle either way. The redirect only matters at request time, so the breakage shows up in
+the browser, not the deploy log.
+
+Netlify's fallback command (`pnpm --filter client... run build`) happened to work, because
+pnpm walks upwards to find `pnpm-workspace.yaml`. That made the build look correct and
+delayed the cause — a reminder that a green deploy only proves the *build* worked, not that
+the *serving* is configured.
+
+## Fix
+Added `apps/client/netlify.toml`, so the config is found at the base directory Netlify is
+actually using. Paths inside it are relative to that directory, which is why they differ
+from the root copy (`publish = "dist"` versus `apps/client/dist`).
+
+The root `netlify.toml` is kept and remains correct for base `/`. Setting the dashboard's
+base directory to `/` is the tidier end state, at which point the `apps/client` copy can be
+deleted — noted in that file so it is not mistaken for dead weight.
+
+## Also: a missing `VITE_API_URL` had no fallback
+```ts
+const API_BASE = import.meta.env.VITE_API_URL;   // undefined when unset
+```
+Unset, every request went to `undefined/api/...`, surfacing in the browser as a CORS or
+network failure that reads like a server problem. It now falls back to localhost in dev and
+fails fast in production rather than issuing nonsense URLs.

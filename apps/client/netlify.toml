@@ -1,0 +1,41 @@
+# Netlify configuration for when the dashboard's base directory is `apps/client`.
+#
+# Netlify only looks for `netlify.toml` **inside** the configured base directory,
+# so the repo-root copy is invisible when the base is `apps/client` — the build
+# log confirms it ("No config file was defined"), which meant the SPA redirect
+# below was never applied and every deep link 404'd.
+#
+# Set the base directory to `/` in the Netlify dashboard and this file can be
+# deleted: the repo-root `netlify.toml` covers that case. Paths here are relative
+# to this directory, which is why they differ from the root file.
+
+[build]
+  command = "pnpm --filter client... run build"
+  publish = "dist"
+
+# The app uses react-router's BrowserRouter, so `/app/sessions`, `/login` and
+# `/live/<id>` are real URLs with no matching file in dist/. Without this a
+# refresh on the sessions page breaks, and sharing a session link 404s.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Vite fingerprints these, so they can be cached forever. index.html must not be,
+# or browsers keep loading a build whose assets no longer exist.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
