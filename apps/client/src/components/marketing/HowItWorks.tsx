@@ -105,9 +105,7 @@ export function HowItWorks() {
                                     <div className="acc-icon">
                                         <panel.icon aria-hidden="true" />
                                     </div>
-                                    <span className="acc-title-v" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
-                                        {panel.title}
-                                    </span>
+                                    <span className="acc-title-v">{panel.title}</span>
                                 </div>
                                 <div
                                     className="acc-expanded"

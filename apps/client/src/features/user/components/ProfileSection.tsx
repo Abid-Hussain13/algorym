@@ -34,14 +34,17 @@ export function ProfileSection() {
 
                     <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-medium text-muted">Password</label>
+                        {/* min-w-0 is required: a flex item defaults to its intrinsic
+                            width, so the input refused to shrink and pushed Change
+                            past the card edge on narrow screens. */}
                         <div className="flex items-center gap-3">
                             <input
                                 type="password"
                                 value="••••••••"
                                 readOnly
-                                className="flex-1 rounded-lg border border-border bg-inset px-3 py-2 text-sm text-fg cursor-not-allowed opacity-70"
+                                className="min-w-0 flex-1 rounded-lg border border-border bg-inset px-3 py-2 text-sm text-fg cursor-not-allowed opacity-70"
                             />
-                            <Button variant="primary" size="sm" onClick={() => setPasswordOpen(true)}>
+                            <Button variant="primary" size="sm" className="shrink-0" onClick={() => setPasswordOpen(true)}>
                                 Change
                             </Button>
                         </div>

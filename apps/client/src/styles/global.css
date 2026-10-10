@@ -1739,12 +1739,31 @@ html[data-theme="dark"] .rp-timeline-marker {
   .faq-head {
     margin-bottom: 32px;
   }
-  .faq-card {
-    width: 300px;
-    padding: 24px 22px 26px;
-  }
   .faq-rows {
     gap: 16px;
+  }
+}
+
+/* The FAQ is an auto-scrolling marquee on wide screens. Below a tablet it
+   becomes a plain stacked list: content that moves on its own cannot be
+   read at a comfortable pace, cannot be paused by a keyboard user, and at
+   tablet widths the cards were clipped at both edges. */
+@media (max-width: 900px) {
+  .faq-track,
+  .faq-track-reverse {
+    animation: none;
+    width: 100%;
+    flex-direction: column;
+  }
+  .faq-track-group {
+    flex-direction: column;
+    width: 100%;
+    gap: 14px;
+    padding: 0;
+  }
+  .faq-track-group > .faq-card {
+    width: 100%;
+    padding: 20px 18px 22px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1945,4 +1964,28 @@ html[data-theme="dark"] .rp-timeline-marker {
 [data-slot="sidebar"][data-state="collapsed"] [data-slot="sidebar-menu"] li button .truncate,
 [data-slot="sidebar"][data-state="collapsed"] [data-slot="sidebar-menu"] li a .truncate {
   display: none;
+}
+
+/* ── Marketing + auth: small-screen floor ─────────────────────────────
+   Touch targets were 28–32px, below the 44px minimum comfortable on a
+   phone, and the section gutters were inconsistent between breakpoints. */
+@media (max-width: 640px) {
+  .how,
+  .cs-sec,
+  .rp-sec,
+  .faq-sec,
+  .foot-sec {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .acc-panel {
+    flex: 0 0 auto;
+    padding: 0 16px;
+  }
+  .acc-expanded {
+    padding: 20px 16px 24px;
+  }
+  .acc-expanded h3 {
+    font-size: 19px;
+  }
 }

@@ -4,14 +4,14 @@ import { LiveSessionCard } from '@/components/marketing/HeroStageCards/LiveSessi
 import { ReplayEvalCard } from '@/components/marketing/HeroStageCards/ReplayEvalCard'
 
 const ORBITS = [
-  { wrap: 'h-[200px] w-[200px] [animation-delay:-0.25s]', ring: 'border-accent/22 animate-orbit', dot: 'bg-accent' },
-  { wrap: 'h-[280px] w-[280px] [animation-delay:-0.12s]', ring: 'border-p-teal/28 animate-orbit-reverse', dot: 'bg-p-teal' },
-  { wrap: 'h-[360px] w-[360px]', ring: 'border-p-violet/26 animate-orbit-slow', dot: 'bg-p-violet' },
+  { wrap: 'h-[136px] w-[136px] sm:h-[164px] sm:w-[164px] md:h-[200px] md:w-[200px] [animation-delay:-0.25s]', ring: 'border-accent/22 animate-orbit', dot: 'bg-accent' },
+  { wrap: 'h-[190px] w-[190px] sm:h-[228px] sm:w-[228px] md:h-[280px] md:w-[280px] [animation-delay:-0.12s]', ring: 'border-p-teal/28 animate-orbit-reverse', dot: 'bg-p-teal' },
+  { wrap: 'h-[244px] w-[244px] sm:h-[294px] sm:w-[294px] md:h-[360px] md:w-[360px]', ring: 'border-p-violet/26 animate-orbit-slow', dot: 'bg-p-violet' },
 ]
 
 export function HeroStage() {
   return (
-    <div className="relative z-[3] h-[440px] w-[440px] flex-shrink-0 animate-rise overflow-visible max-[1280px]:[zoom:.9] max-[1200px]:[zoom:.82] max-[1150px]:[zoom:.74] max-[1100px]:[zoom:.66] max-[1024px]:[zoom:.6] max-[768px]:[zoom:.52] max-[640px]:[zoom:.46] max-[480px]:[zoom:.4] min-[1600px]:[zoom:1.12] min-[2400px]:[zoom:1.3]">
+    <div className="relative z-[3] h-[300px] w-[300px] flex-shrink-0 animate-rise overflow-visible sm:h-[360px] sm:w-[360px] md:h-[440px] md:w-[440px] min-[1600px]:h-[520px] min-[1600px]:w-[520px]">
       {/* Orbit rings + dots — appear/disappear together with bouncy scale, like reference */}
       {ORBITS.map((orbit) => (
         <div
@@ -27,7 +27,7 @@ export function HeroStage() {
       ))}
 
       {/* Center avatar */}
-      <div className="il-center absolute left-1/2 top-1/2 z-10 h-[160px] w-[160px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full">
+      <div className="il-center absolute left-1/2 top-1/2 z-10 h-[108px] w-[108px] sm:h-[130px] sm:w-[130px] md:h-[160px] md:w-[160px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full">
         <img
           src={heroHost}
           alt="Host"

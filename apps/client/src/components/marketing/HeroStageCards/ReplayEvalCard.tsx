@@ -6,7 +6,7 @@ const RATINGS = [
 
 export function ReplayEvalCard() {
   return (
-    <div className="il-card c3 animate-card-3 absolute bottom-0 left-1/2 z-20 w-[180px] overflow-hidden rounded-md border border-border bg-surface opacity-0 shadow-md pointer-events-none [transform:translateX(-50%)]">
+    <div className="il-card c3 animate-card-3 hidden lg:block absolute bottom-0 left-1/2 z-20 w-[180px] overflow-hidden rounded-md border border-border bg-surface opacity-0 shadow-md pointer-events-none [transform:translateX(-50%)]">
       <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
         <span className="grid h-[22px] w-[22px] flex-shrink-0 place-items-center rounded-full bg-accent">
           <svg viewBox="0 0 12 14" className="ml-px h-[9px] w-[9px] fill-white" aria-hidden="true">
@@ -25,10 +25,10 @@ export function ReplayEvalCard() {
             <span className="h-1 w-1 rounded-full bg-border" />
           </span>
         </span>
-        <span className="flex-shrink-0 font-mono text-[8px] text-muted">02:34</span>
+        <span className="flex-shrink-0 font-mono text-[10px] text-muted">02:34</span>
       </div>
       <div className="px-3 py-2">
-        <div className="mb-[5px] text-[8px] font-semibold uppercase tracking-[0.05em] text-muted">
+        <div className="mb-[5px] text-[10px] font-semibold uppercase tracking-[0.05em] text-muted">
           Evaluation
         </div>
         <div className="flex gap-[5px]">
@@ -36,7 +36,7 @@ export function ReplayEvalCard() {
             <span
               key={rating.label}
               style={{ animationDelay: rating.delay }}
-              className={`il-rating flex-1 animate-rate rounded-sm border px-0 py-[5px] text-center text-[9px] font-semibold opacity-0 ${
+              className={`il-rating flex-1 animate-rate rounded-sm border px-0 py-[5px] text-center text-[10px] font-semibold opacity-0 ${
                 rating.strong
                   ? 'border-p-teal bg-p-teal/10 text-p-teal'
                   : 'border-border text-muted'
@@ -46,7 +46,7 @@ export function ReplayEvalCard() {
             </span>
           ))}
         </div>
-        <div className="mt-1.5 flex items-center gap-[3px] text-[8px] tracking-[0.02em] text-faint">
+        <div className="mt-1.5 flex items-center gap-[3px] text-[10px] tracking-[0.02em] text-faint">
           <svg
             viewBox="0 0 12 12"
             fill="none"

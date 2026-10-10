@@ -49,7 +49,6 @@ export function AppRouter() {
                 <Route path="app/sessions/:sessionId" element={<SessionDetailPage />} />
             </Route>
             <Route path="live" element={<LiveLayout />}>
-                {/* A room always needs a session id; bare /live is a dead end. */}
                 <Route index element={<Navigate to="/app/sessions" replace />} />
                 <Route path=":sessionId" element={<LiveRoomPage />} />
             </Route>

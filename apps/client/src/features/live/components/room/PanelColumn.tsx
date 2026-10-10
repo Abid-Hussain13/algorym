@@ -34,8 +34,17 @@ export function PanelColumn({
 }: PanelColumnProps) {
     return (
         <aside
-            className="relative flex shrink-0 flex-col border-r border-border bg-bg"
-            style={{ width }}
+            /*
+             * Below md the column overlays the editor instead of sitting beside
+             * it. A fixed 240–560px column plus the 48px rail leaves the shared
+             * editor about 70px on a 360px phone — the code becomes unreadable,
+             * which is the one thing this screen cannot afford.
+             */
+            className={cn(
+                "relative flex shrink-0 flex-col border-r border-border bg-bg",
+                "max-md:absolute max-md:inset-y-0 max-md:left-12 max-md:z-20 max-md:shadow-2xl"
+            )}
+            style={{ width: `min(${width}px, calc(100vw - 3rem))` }}
         >
             <header className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-2.5">
                 <h2 className="truncate font-display text-xs font-semibold uppercase tracking-wide text-muted">

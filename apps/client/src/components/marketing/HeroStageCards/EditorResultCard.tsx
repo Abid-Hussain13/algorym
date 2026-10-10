@@ -56,16 +56,16 @@ const LINES = [
 
 export function EditorResultCard() {
   return (
-    <div className="il-card c2 animate-card-2 absolute right-2 top-11 z-20 w-[170px] overflow-hidden rounded-md border border-border bg-surface opacity-0 shadow-md pointer-events-none">
+    <div className="il-card c2 animate-card-2 hidden lg:block absolute right-2 top-11 z-20 w-[170px] overflow-hidden rounded-md border border-border bg-surface opacity-0 shadow-md pointer-events-none">
       <div className="flex border-b border-border bg-inset">
-        <div className="flex-1 border-b-2 border-accent px-2 py-1.5 text-center text-[9px] font-semibold tracking-[0.02em] text-fg">
+        <div className="flex-1 border-b-2 border-accent px-2 py-1.5 text-center text-[10px] font-semibold tracking-[0.02em] text-fg">
           Editor
         </div>
-        <div className="flex-1 border-b-2 border-transparent px-2 py-1.5 text-center text-[9px] font-semibold tracking-[0.02em] text-muted">
+        <div className="flex-1 border-b-2 border-transparent px-2 py-1.5 text-center text-[10px] font-semibold tracking-[0.02em] text-muted">
           Output
         </div>
       </div>
-      <div className="min-h-[70px] border-b border-border px-3 py-2.5 font-mono text-[9px] leading-[1.7] text-muted">
+      <div className="min-h-[70px] border-b border-border px-3 py-2.5 font-mono text-[10px] leading-[1.7] text-muted">
         {LINES.map((line) => (
           <div key={line.n} className="flex gap-2">
             <span className="min-w-[12px] select-none text-right text-faint">{line.n}</span>
@@ -80,7 +80,7 @@ export function EditorResultCard() {
             Accepted
           </span>
         </div>
-        <span className="font-mono text-[9px] text-muted">0.18s</span>
+        <span className="font-mono text-[10px] text-muted">0.18s</span>
       </div>
     </div>
   )

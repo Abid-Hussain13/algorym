@@ -38,7 +38,7 @@ export function CollaboratorsBar({
             aria-live="polite"
         >
             <span
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-muted"
+                className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-muted"
                 title={connected ? "Live sync connected" : "Connecting to live sync…"}
             >
                 <span
@@ -48,7 +48,9 @@ export function CollaboratorsBar({
                     )}
                     aria-hidden="true"
                 />
-                {connected ? "Live" : "Connecting"}
+                {/* The word only appears once there is room for it; the dot alone
+                    still carries the state on a phone. */}
+                <span className="hidden sm:inline">{connected ? "Live" : "Connecting"}</span>
             </span>
 
             <ul className="flex items-center gap-1.5">
@@ -122,7 +124,10 @@ export function CollaboratorsBar({
                 </span>
             )}
 
-            <span className="text-xs text-muted">
+            {/* Hidden below md: on a phone this sentence wraps to three lines
+                and squeezes the session title down to a few characters. The
+                avatars already answer "who is here". */}
+            <span className="hidden truncate text-xs text-muted md:inline">
                 {others.length === 0
                     ? "Waiting for others to join…"
                     : `${others.map((c) => c.displayName).join(", ")} ${

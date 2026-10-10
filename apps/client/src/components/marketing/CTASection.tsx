@@ -19,7 +19,7 @@ export function CTASection({
 }: CTAProps) {
     return (
         <section className={cn('relative pt-[72px] pb-[96px] md:pt-[96px] md:pb-[120px]', className)}>
-            <div className="relative mx-auto flex aspect-[16/7] w-full max-w-[1120px] items-center justify-center overflow-hidden rounded-[24px] max-[767px]:aspect-[16/9] max-[480px]:aspect-[3/4]">
+            <div className="relative mx-auto flex aspect-[16/7] w-full max-w-[1120px] items-center justify-center overflow-hidden rounded-[24px] max-lg:aspect-[16/9] max-sm:aspect-[3/4]">
                 <img
                     src="/cta backgound.png"
                     alt=""

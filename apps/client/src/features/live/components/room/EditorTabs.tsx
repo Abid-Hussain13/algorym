@@ -25,8 +25,10 @@ interface EditorTabsProps {
  * lands to the right of the existing tabs.
  */
 export function EditorTabs({ fileNames, activeName, onSelect, onAdd, onClose, toolbar }: EditorTabsProps) {
+    // pr-3 rather than pr-2: the language <select> sits flush against the right
+    // edge at phone widths and its chevron was clipped by the rail.
     return (
-        <div className="flex h-9 shrink-0 items-stretch border-b border-border bg-surface-2/40 pl-2 pr-2">
+        <div className="flex h-9 shrink-0 items-stretch border-b border-border bg-surface-2/40 pl-2 pr-3">
             <div className="flex min-w-0 flex-1 items-stretch gap-1 overflow-x-auto" role="tablist" aria-label="Open files">
                 {fileNames.map((name) => {
                     const isActive = name === activeName;

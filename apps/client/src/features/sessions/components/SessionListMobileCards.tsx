@@ -23,7 +23,7 @@ export function SessionListMobileCards({ sessions, onEdit, onDelete, isDeleting 
     const navigate = useNavigate();
 
     return (
-        <div className="flex flex-col gap-3 p-4 md:hidden">
+        <div className="flex flex-col gap-3 p-4 lg:hidden">
             {sessions.map((session) => (
                 <div
                     key={session.id}

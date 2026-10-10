@@ -217,9 +217,12 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
-            <DialogContent className="sm:max-w-lg p-0 gap-0" showCloseButton={false}>
+            {/* flex (not the default grid) so the scroll area can shrink: with a
+                tall step + the live-session alert, grid rows refused to compress
+                and pushed the footer buttons out of the dialog. */}
+            <DialogContent className="sm:max-w-lg p-0 gap-0 flex flex-col" showCloseButton={false}>
                 {/* Step indicator */}
-                <div className="flex items-center gap-1 px-6 pt-5">
+                <div className="flex items-center gap-1 px-6 pt-5 shrink-0">
                     {STEP_TITLES.map((_, i) => (
                         <div
                             key={i}
@@ -231,7 +234,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
                     ))}
                 </div>
 
-                <DialogHeader className="px-6 pt-4 pb-0">
+                <DialogHeader className="px-6 pt-4 pb-0 shrink-0">
                     <DialogTitle className="text-base">{STEP_TITLES[step]}</DialogTitle>
                     <DialogDescription className="text-xs">
                         {step === 0 && "Select the type of session you want to create."}
@@ -241,8 +244,9 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
                     </DialogDescription>
                 </DialogHeader>
 
-                {/* Step content */}
-                <div className="px-6 py-4 overflow-y-auto max-h-[calc(100dvh-12rem)]">
+                {/* Step content — flex-1/min-h-0 lets it shrink inside the dialog
+                    instead of forcing the footer past the bottom edge. */}
+                <div className="px-6 py-4 overflow-y-auto min-h-0 flex-1">
                     {step === 0 && (
                         <StepMode mode={mode} onModeChange={setMode} />
                     )}
@@ -303,7 +307,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
                 {/* Sits directly above the footer so it is the last thing read
                     before the button that produced it. */}
                 {step < 4 && (problem || createSession.isPending || liveSession) && (
-                    <div className="px-6 pb-1">
+                    <div className="px-6 pb-1 shrink-0">
                         {liveSession && (
                             <FormAlert
                                 tone="warning"
@@ -331,7 +335,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
 
                 {/* Footer */}
                 {step < 4 && (
-                    <DialogFooter className="px-6 pb-5 pt-3 border-t border-border">
+                    <DialogFooter className="px-6 pb-5 pt-3 border-t border-border shrink-0">
                         <div className="flex items-center justify-between w-full">
                             {step > 0 ? (
                                 <Button
@@ -376,7 +380,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
                 )}
 
                 {step === 4 && (
-                    <DialogFooter className="px-6 pb-5 pt-3 border-t border-border">
+                    <DialogFooter className="px-6 pb-5 pt-3 border-t border-border shrink-0">
                         <div className="flex items-center justify-center w-full">
                             <Button
                                 variant="primary"

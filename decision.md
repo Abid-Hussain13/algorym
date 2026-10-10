@@ -1822,3 +1822,63 @@ RECOVERED after ~6s past load         ✓ recovered on its own
 This makes the app *tolerate* a cold start. It does not prevent one. Set the GitHub secret
 `RENDER_HEALTH_URL=https://algorym-api.onrender.com/health?deep=1` so the workflow in
 `.github/workflows/keep-alive.yml` pings every 14 minutes and the server simply stays up.
+
+# Responsive Pass: Marketing and Auth
+
+Scope was the marketing routes and the unauthenticated pages (login, signup, forgot-password).
+The dashboard and the live room were left alone deliberately.
+
+## Method
+Guessing at breakpoints is how responsive work goes wrong, so this was measured first: every
+route rendered at 360, 390, 430, 768, 1024, 1280, 1440, 1920 and 2560 px, checking for
+horizontal overflow, then read as full-page screenshots at 360, 768 and 1920.
+
+That immediately showed there was **no overflow anywhere** — 8 routes × 9 widths, zero. The
+problem was never width. It was **cramping**: content scaled down rather than reflowed, and
+text too small to read.
+
+## What was actually broken
+
+**1. An inline style was overriding the mobile breakpoint.**
+`HowItWorks` put `writingMode: 'vertical-rl'` inline on the accordion titles. Inline styles
+outrank the stylesheet, so the `writing-mode: horizontal-tb` inside the `max-width: 900px`
+media query never applied and the vertical labels stayed vertical on phones — a column of
+one letter per line down the left edge. The rule was correct all along; it just could not win.
+Moving the property into CSS let it work.
+
+**2. The hero used `zoom` to fake responsiveness.**
+`HeroStage` was a fixed 440px box with `[zoom:.9]`, `[zoom:.82]`, … down to `[zoom:.4]` at
+480px. On a 360px phone that rendered a 176px graphic, too small to read as anything. Replaced
+with genuine responsive sizing (300 → 360 → 440 → 520px) and proportional scaling of the orbit
+rings and avatar inside it.
+
+**3. The hero could not stack.**
+The header used arbitrary breakpoints in both directions and never collapsed to a column on
+phones, so a 300px stage sat beside the copy and crushed it to one word per line. Now
+`flex-col` by default, side-by-side from `lg`.
+
+**4. The FAQ was an auto-scrolling marquee below desktop width.**
+Content that moves on its own cannot be read at a comfortable pace, cannot be paused, and at
+768px the cards were clipped at both edges. It is now a plain stacked list below 900px.
+
+**5. Navbar wrapped to two rows on phones.**
+Ad-hoc `max-[480px]` overrides produced a logo row and a divider and a second row of buttons.
+Rebuilt on the standard scale: one row at every size, the user's name collapsing out at
+`lg`, and a dropdown entry for "Dashboard" replacing the button that used to overflow.
+
+**6. Six different mobile breakpoints in use** — 480, 600, 768, 900, 960, 1024 — with no
+scheme behind them. Normalised to Tailwind's scale (`sm` 640, `md` 768, `lg` 1024,
+`xl` 1280) so a future change is predictable.
+
+**7. Text at 8–9px** in the hero mock-UI cards, unreadable even as a stylised screenshot.
+Floored at 10px.
+
+## Also
+The floating hero cards are hidden below `lg`. They contain 10px mock interface text and
+orbits sized for a 440px stage; scaled down they were unreadable clutter, and the avatar with
+its orbit rings carries the idea on its own.
+
+## Result
+Zero horizontal overflow across 8 routes × 9 widths (360–2560), no text under 11px, and
+verified by eye at 360, 768 and 1920 — including the large screens that could not be tested
+by hand.

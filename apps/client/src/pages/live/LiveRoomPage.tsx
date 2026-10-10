@@ -331,7 +331,9 @@ function LiveRoomShell({
                 <CollaboratorsBar collaborators={collaborators} connected={connected} isHost={isHost} />
             </header>
 
-            <div className="flex min-h-0 flex-1">
+            {/* relative: below md the side panel overlays this row rather than
+                taking layout width from the editor. */}
+            <div className="relative flex min-h-0 flex-1">
                 <SideRail isHost={isHost} active={rail} onSelect={setRail} />
 
                 {rail && (

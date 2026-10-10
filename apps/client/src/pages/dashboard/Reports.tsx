@@ -39,11 +39,13 @@ export function Reports() {
 
     return (
         <div className="flex flex-col gap-6 p-6">
-            <div className="flex items-center justify-between">
+            {/* flex-wrap: at ~360px the five range buttons stack and the row is
+                taller than the title, so a single non-wrapping line overlapped it. */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <h1 className="font-display text-2xl font-semibold tracking-tight text-fg">
                     Reports
                 </h1>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                     <TimeFilter value={range} onChange={setRange} />
                     <Button variant="primary" size="sm" onClick={handleExport} loading={exporting}>
                         <svg

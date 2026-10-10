@@ -23,17 +23,17 @@ export function SessionListTable({ sessions, onEdit, onDelete, isDeleting }: Ses
     const navigate = useNavigate();
 
     return (
-        <div className="hidden overflow-x-auto md:block">
+        <div className="hidden overflow-x-auto lg:block">
             <table className="w-full text-left text-sm">
                 <thead>
                     <tr className="border-b border-border">
-                        <th className="px-5 py-3 font-medium text-muted">Session</th>
-                        <th className="px-5 py-3 font-medium text-muted">Mode</th>
-                        <th className="px-5 py-3 font-medium text-muted">Candidate</th>
-                        <th className="px-5 py-3 font-medium text-muted">Language</th>
-                        <th className="px-5 py-3 font-medium text-muted">Status</th>
-                        <th className="px-5 py-3 font-medium text-muted">Rating</th>
-                        <th className="px-5 py-3 font-medium text-muted">Date</th>
+                        <th className="px-3 py-3 font-medium text-muted">Session</th>
+                        <th className="px-3 py-3 font-medium text-muted">Mode</th>
+                        <th className="px-3 py-3 font-medium text-muted">Candidate</th>
+                        <th className="px-3 py-3 font-medium text-muted">Language</th>
+                        <th className="px-3 py-3 font-medium text-muted">Status</th>
+                        <th className="px-3 py-3 font-medium text-muted">Rating</th>
+                        <th className="px-3 py-3 font-medium text-muted">Date</th>
                         <th className="w-16 px-3 py-3 font-medium text-muted">Actions</th>
                     </tr>
                 </thead>
@@ -43,26 +43,26 @@ export function SessionListTable({ sessions, onEdit, onDelete, isDeleting }: Ses
                             key={session.id}
                             className="border-b border-border last:border-0 transition-colors hover:bg-surface"
                         >
-                            <td className="px-5 py-3.5 font-medium text-fg">
+                            <td className="px-3 py-3.5 font-medium text-fg">
                                 {session.role_context || "Session"}
                             </td>
-                            <td className="px-5 py-3.5">
+                            <td className="px-3 py-3.5">
                                 <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${MODE_BADGES[session.mode] || ""}`}>
                                     {session.mode === "interview" ? "Interview" : "Practice"}
                                 </span>
                             </td>
-                            <td className="px-5 py-3.5 text-muted">
+                            <td className="px-3 py-3.5 text-muted">
                                 {session.candidate_name || session.candidate_email || "—"}
                             </td>
-                            <td className="px-5 py-3.5 text-muted">
+                            <td className="px-3 py-3.5 text-muted">
                                 {session.language || "—"}
                             </td>
-                            <td className="px-5 py-3.5">
+                            <td className="px-3 py-3.5">
                                 <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${STATUS_BADGES[session.status] || ""}`}>
                                     {STATUS_LABELS[session.status] || session.status}
                                 </span>
                             </td>
-                            <td className="px-5 py-3.5">
+                            <td className="px-3 py-3.5">
                                 {session.rating ? (
                                     <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${RATING_BADGES[session.rating] || ""}`}>
                                         {RATING_LABELS[session.rating] || session.rating}
@@ -71,7 +71,7 @@ export function SessionListTable({ sessions, onEdit, onDelete, isDeleting }: Ses
                                     <span className="text-muted">—</span>
                                 )}
                             </td>
-                            <td className="px-5 py-3.5 text-muted">
+                            <td className="px-3 py-3.5 text-muted">
                                 {formatDate(session.created_at)}
                             </td>
                             <td className="px-3 py-3.5">

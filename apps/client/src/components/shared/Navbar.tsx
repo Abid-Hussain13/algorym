@@ -33,38 +33,50 @@ export function Navbar() {
             className="sticky top-0 z-40 border-b border-border bg-surface/84 backdrop-blur-[12px] transition-colors duration-3 ease-default"
             aria-label="Site"
         >
-            <div className="mx-auto flex h-[60px] max-w-[1200px] items-center gap-8 px-10 max-md:gap-3 max-md:px-6 max-[480px]:h-auto max-[480px]:flex-wrap max-[480px]:px-5 max-[480px]:py-2.5">
-                <Link to="/" onClick={() => scrollToTop()} className="flex items-center no-underline hover:no-underline">
-                    <img src="/logo.svg" alt="Algorym" className="h-8 w-auto max-md:h-7" />
+            <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-4 px-5 md:h-[60px] md:gap-8 md:px-10">
+                <Link to="/" onClick={scrollToTop} className="flex shrink-0 items-center no-underline hover:no-underline">
+                    <img src="/logo.svg" alt="Algorym" className="h-7 w-auto md:h-8" />
                 </Link>
-                <div className="ml-auto flex items-center gap-3 max-[480px]:ml-0 max-[480px]:w-full max-[480px]:justify-between max-[480px]:border-t max-[480px]:border-border max-[480px]:pt-2.5">
+
+                <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-3">
                     <ThemeToggle />
-                    {user ? <div>
-                        <Button asChild variant="primary" size="sm" className="">
-                            <Link to="/app">Dashbaord</Link>
+
+                    {user ? (
+                        <Button asChild variant="primary" size="sm">
+                            <Link to="/app" className="hidden sm:inline-flex">
+                                Dashboard
+                            </Link>
                         </Button>
-                    </div> : null}
+                    ) : null}
+
                     {status === 'loading' || status === 'idle' ? (
-                        <div className="h-8 w-20" />
+                        <div className="h-8 w-20 shrink-0" />
                     ) : user ? (
-                        <div className="relative" ref={dropdownRef}>
+                        <div className="relative shrink-0" ref={dropdownRef}>
                             <button
                                 type="button"
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                className="group flex items-center gap-2 rounded-sm  py-1"
+                                className="group flex items-center gap-2 rounded-sm py-1"
                             >
-                                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-[15px] font-semibold text-white">
+                                <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent text-sm font-semibold text-white">
                                     {user.name.charAt(0).toUpperCase()}
-                                </div>
-                                <span className="text-sm font-medium text-fg max-sm:hidden">
+                                </span>
+                                <span className="hidden max-w-[140px] truncate text-sm font-medium text-fg lg:inline">
                                     {user.name.toUpperCase()}
                                 </span>
                                 <ChevronDown
-                                    className={`h-4 w-4 text-muted transition-all duration-200 group-hover:text-accent ${isDropdownOpen ? 'rotate-180 text-accent' : ''}`}
+                                    className={`h-4 w-4 shrink-0 text-muted transition-all duration-200 group-hover:text-accent ${isDropdownOpen ? 'rotate-180 text-accent' : ''}`}
                                 />
                             </button>
                             {isDropdownOpen && (
                                 <div className="absolute right-0 top-full mt-2 w-44 rounded-lg border border-border bg-surface py-1 shadow-lg">
+                                    <Link
+                                        to="/app"
+                                        onClick={() => setIsDropdownOpen(false)}
+                                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-fg transition-colors hover:text-accent sm:hidden"
+                                    >
+                                        Dashboard
+                                    </Link>
                                     <button
                                         type="button"
                                         onClick={() => {
@@ -80,7 +92,7 @@ export function Navbar() {
                             )}
                         </div>
                     ) : (
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex shrink-0 items-center gap-1.5">
                             <Button asChild variant="ghost" size="sm">
                                 <Link to="/login">Log in</Link>
                             </Button>

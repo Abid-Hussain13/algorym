@@ -53,8 +53,11 @@ export function LanguageMix({ data }: LanguageMixProps) {
     return (
         <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface-2 p-5 shadow-sm">
             <h3 className="text-sm font-semibold text-fg">Language Mix</h3>
-            <div className="flex items-center gap-6">
-                <div className="h-[180px] w-[180px] shrink-0">
+            {/* flex-wrap + a smaller chart below sm: 180px + gap + legend is
+                wider than the ~272px a 360px card leaves, which clipped the
+                percentage column. */}
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+                <div className="h-[140px] w-[140px] shrink-0 sm:h-[180px] sm:w-[180px]">
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                             <Pie
