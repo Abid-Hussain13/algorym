@@ -13,6 +13,12 @@ export default defineConfig({
         fileParallelism: false,
         env: {
             NODE_ENV: env.NODE_ENV,
+            // Must be passed explicitly. `src/db/pool.ts` loads the real `.env`,
+            // and `buildPoolConfig` prefers DATABASE_URL over the discrete DB_*
+            // variables — so without this line the suite silently used whatever
+            // DATABASE_URL the developer had configured, and `test/setup.ts`
+            // TRUNCATEd that database before every test.
+            DATABASE_URL: env.DATABASE_URL,
             DB_USER: env.DB_USER,
             DB_PASSWORD: env.DB_PASSWORD,
             DB_HOST: env.DB_HOST,

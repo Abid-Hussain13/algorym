@@ -20,8 +20,16 @@ export const testEnv = (): Record<string, string> => {
     const v = (key: string, fallback: string) =>
         process.env[key] ?? file[key] ?? fallback;
 
+    const testDbUser = v("DB_USER", "postgres");
+    const testDbPassword = v("DB_PASSWORD", "postgres");
+    const testDbHost = v("DB_HOST", "localhost");
+    const testDbPort = v("DB_PORT", "5432");
+    const testDbName = v("DB_DATABASE", "algorym_test");
+
     return {
         NODE_ENV: "test",
+        DATABASE_URL: file.DATABASE_URL ??
+            `postgresql://${testDbUser}:${testDbPassword}@${testDbHost}:${testDbPort}/${testDbName}`,
         DB_USER: v("DB_USER", "postgres"),
         DB_PASSWORD: v("DB_PASSWORD", "postgres"),
         DB_HOST: v("DB_HOST", "localhost"),
