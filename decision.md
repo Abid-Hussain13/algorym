@@ -1772,3 +1772,53 @@ const API_BASE = import.meta.env.VITE_API_URL;   // undefined when unset
 Unset, every request went to `undefined/api/...`, surfacing in the browser as a CORS or
 network failure that reads like a server problem. It now falls back to localhost in dev and
 fails fast in production rather than issuing nonsense URLs.
+
+# Surviving a Cold Start
+
+## What the console was actually reporting
+```
+Cross-Origin Request Blocked … Status code: (null)
+```
+`Status code: (null)` is the whole clue. A CORS *policy* failure still returns a response —
+the browser just refuses to hand it over, and the status is visible. `(null)` means **no
+response arrived at all**, so this was never a CORS configuration problem. The server was
+asleep.
+
+Render's free tier powers the service down after ~15 minutes idle and needs the best part of
+a minute to boot. Measured directly:
+
+```
+#1 200 in 4.25s     ← cold
+#2 200 in 0.78s     ← warm
+#3 200 in 0.89s
+```
+
+Any request landing in that window is dropped before the app sees it. Creating a question was
+the most likely thing to hit it, since that is what a user does after leaving the tab.
+
+## Fix: wait for the server, then send the request once
+`request()` now catches the network failure and, instead of failing immediately:
+
+1. polls `GET /health` with backoff (0.5s → 8s, ~15s total);
+2. once it answers, re-sends the original request **once**;
+3. only then reports failure.
+
+**Why poll `/health` rather than just retry the request:** a retry of a `POST` could land
+twice — a timed-out request is not the same as a request that never arrived. `/health` has no
+side effects, so polling it is safe for every verb, and the original request is still sent
+exactly once.
+
+**Single-flighted**, so twenty components mounting at once share a single wake-up instead of
+each polling on its own.
+
+Verified with a server that refuses every connection for 12 seconds and then comes up:
+
+```
+loading app while the API is DEAD…   app shell rendered
+RECOVERED after ~6s past load         ✓ recovered on its own
+```
+
+## The real fix is still the keep-alive
+This makes the app *tolerate* a cold start. It does not prevent one. Set the GitHub secret
+`RENDER_HEALTH_URL=https://algorym-api.onrender.com/health?deep=1` so the workflow in
+`.github/workflows/keep-alive.yml` pings every 14 minutes and the server simply stays up.

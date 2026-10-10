@@ -69,41 +69,113 @@ async function refreshToken(): Promise<void | null> {
     }
 }
 
+/** Cheap, side-effect-free probe. Used to wake a cold server. */
+const WARMUP_PATH = "/health";
+
+/**
+ * Backoff schedule, ~15s total — comfortably longer than Render's ~50s cold
+ * start in practice, without leaving the user staring at a spinner.
+ */
+const WARMUP_DELAYS_MS = [0, 500, 1000, 2000, 4000, 8000];
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Waits for the API to answer again.
+ *
+ * **Why this is a `GET /health` and not just "retry the request":** on a free
+ * tier the original request never reached the app, so retrying is safe — but
+ * that is only *probably* true for a mutation, and a retried `POST /question`
+ * could land twice. `/health` has no side effects at all, so it can be polled
+ * until the server is awake and the original request is then sent for the first
+ * time. Safe for every verb.
+ *
+ * Single-flighted so twenty components mounting at once share one wake-up rather
+ * than each starting their own.
+ */
+let warming: Promise<boolean> | null = null;
+
+function waitForApi(): Promise<boolean> {
+    if (warming) return warming;
+
+    warming = (async () => {
+        for (const delay of WARMUP_DELAYS_MS) {
+            if (delay) await sleep(delay);
+            try {
+                const res = await fetch(`${API_BASE}${WARMUP_PATH}`, {
+                    method: "GET",
+                    cache: "no-store",
+                });
+                if (res.ok) return true;
+            } catch {
+                // Still cold. Keep going.
+            }
+        }
+        return false;
+    })().finally(() => {
+        warming = null;
+    });
+
+    return warming;
+}
+
+/**
+ * One message for "the request never arrived".
+ *
+ * A bare `Failed to fetch` is useless — it cannot tell you whether the network
+ * is down, the server is asleep, or the browser blocked the response. Naming all
+ * three costs a sentence and saves a debugging session.
+ */
+function unreachableMessage(cause: unknown): string {
+    return (
+        `Can't reach the server at ${API_BASE}. ` +
+        `It may be asleep and starting up, offline, or the server's CLIENT_URL may not ` +
+        `match this site's origin (which blocks the request in the browser). ` +
+        `Nothing was saved. Try again in a moment. ` +
+        `(Original error: ${cause instanceof Error ? cause.message : String(cause)})`
+    );
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     let response: Response;
 
+    const init: RequestInit = {
+        credentials: 'include',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+        },
+    };
+
+    const send = () => fetch(`${API_BASE}${path}`, init);
+
     try {
-        response = await fetch(`${API_BASE}${path}`, {
-            credentials: 'include',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers,
-            },
-        });
+        response = await send();
     } catch (cause) {
         /**
-         * `fetch` only rejects when the request never produced a response — the
-         * server is down, the URL is wrong, or **the browser blocked it**.
+         * A free-tier host sleeps after ~15 minutes idle and takes the better
+         * part of a minute to boot. A request that lands in that window is
+         * dropped before the app ever sees it, which the browser reports as a
+         * CORS failure with `Status code: (null)` — no status at all, because
+         * there was no response to have one.
          *
-         * That last one is the one worth naming. When CORS refuses, the browser
-         * discards the response and `fetch` throws a bare `TypeError: Failed to
-         * fetch`, indistinguishable from having no internet. The UI then shows
-         * a generic "Something went wrong", which is how a one-variable deploy
-         * mistake ends up looking like an outage.
-         *
-         * So this turns the most invisible failure in a deployed app into a
-         * message that says what to actually check. The message cannot know
-         * *which* of the three causes it is, so it names them.
+         * So before giving up: wait for the server to come back, then send the
+         * original request once. The wait polls `/health`, so nothing is
+         * duplicated even for a POST.
          */
-        throw new ApiError(
-            0,
-            `Can't reach the server at ${API_BASE}. ` +
-                `If the page is loaded, the usual cause is that the server's CLIENT_URL ` +
-                `does not exactly match this site's origin — the browser blocks the request. ` +
-                `(Original error: ${cause instanceof Error ? cause.message : String(cause)})`
-        );
+        const woke = await waitForApi();
+        if (woke) {
+            try {
+                response = await send();
+            } catch (retryCause) {
+                throw new ApiError(0, unreachableMessage(retryCause));
+            }
+        } else {
+            throw new ApiError(0, unreachableMessage(cause));
+        }
     }
+
 
     if (response.status === 401) {
         if (!PUBLIC_AUTH_APIS.includes(path)) {
