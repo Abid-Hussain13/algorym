@@ -1,6 +1,5 @@
-import jwt from "jsonwebtoken";
 import type { IncomingMessage } from "http";
-import type { AuthPayload } from "../../types/index.js";
+import { verifyAccessToken } from "../../utils/verifyAccessToken.js";
 import { readWsToken } from "../auth.js";
 
 export interface CollabConnectionInfo {
@@ -11,7 +10,7 @@ export interface CollabConnectionInfo {
 
 export const COLLAB_PATH_PREFIX = "/collaboration";
 
-export const parseCollabConnectionInfo = (request: IncomingMessage): CollabConnectionInfo | null => {
+export const parseCollabConnectionInfo = async (request: IncomingMessage): Promise<CollabConnectionInfo | null> => {
     const url = request.url;
     if (!url) return null;
 
@@ -26,7 +25,7 @@ export const parseCollabConnectionInfo = (request: IncomingMessage): CollabConne
 
     if (token) {
         try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET!) as AuthPayload;
+            const decoded = await verifyAccessToken(token);
             return { sessionId, participantId, userId: decoded.id };
         } catch {
             return null;

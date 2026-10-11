@@ -6,7 +6,7 @@ import AppError from "../utils/AppError.js";
 
 type createUserParam = Pick<User, 'name' | 'email' | 'password_hash'>;
 
-export const registerUser = async ({ name, email, password_hash }: createUserParam): Promise<Omit<User, 'password_hash'>> => {
+export const registerUser = async ({ name, email, password_hash }: createUserParam): Promise<Omit<User, 'password_hash'> & { token_version: number }> => {
     const existing = await db.query("Select * from users where email = $1", [email]);
 
     if (existing.rows.length > 0)
@@ -16,13 +16,13 @@ export const registerUser = async ({ name, email, password_hash }: createUserPar
 
     const hash_password = await bcrypt.hash(password_hash, 10);
 
-    const queryString2 = "Insert into users(name, email, password_hash) values ($1, $2, $3) Returning id, name, email, email_verified, created_at";
+    const queryString2 = "Insert into users(name, email, password_hash) values ($1, $2, $3) Returning id, name, email, email_verified, created_at, token_version";
     const user = await db.query(queryString2, [name, email, hash_password]);
     return user.rows[0];
 }
 
 type createLoginParam = Pick<User, 'email' | 'password_hash'>;
-export const loginUser = async ({ email, password_hash }: createLoginParam): Promise<Omit<User, 'password_hash'>> => {
+export const loginUser = async ({ email, password_hash }: createLoginParam): Promise<Omit<User, 'password_hash'> & { token_version: number }> => {
     const user = await db.query("Select * from users where email = $1", [email]);
     if (!user.rows.length)
         throw new AppError("invalid email or password", 401, [

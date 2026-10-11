@@ -63,7 +63,7 @@ export function useCollaborators(
                 // `state.user` is only present on clients that published the
                 // y-codemirror awareness field, so narrow before reading it.
                 const userColor = (state?.user as { color?: unknown } | undefined)?.color;
-                // Published by `useAwaySignal`.
+                // Published by `useFullscreenGuard`.
                 const focus = state?.focus as
                     | { away?: unknown; since?: unknown; fullscreen?: unknown; exitCount?: unknown }
                     | undefined;

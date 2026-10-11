@@ -486,7 +486,7 @@ function LiveRoomShell({
                 <SessionEndedDialog
                     outcome={outcome}
                     hostName={collaborators.find((c) => c.role === "host")?.displayName ?? ""}
-                    isHost={false}
+                    isHost={isHost}
                     onDismiss={() => setEndedOutcome(null)}
                 />
             )}

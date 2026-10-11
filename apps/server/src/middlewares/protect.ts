@@ -1,19 +1,15 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
 import AppError from "../utils/AppError.js";
+import { verifyAccessToken } from "../utils/verifyAccessToken.js";
 
-export const protect = (req: Request, _res: Response, next: NextFunction): void => {
+export const protect = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     const token = req.cookies.accessToken;
     if (!token) return next(new AppError("Not authenticated", 401));
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-        req.user = decoded as { id: string; name: string; email: string };
+        req.user = await verifyAccessToken(token);
         next();
-    } catch (error: any) {
-        if (error.name === "TokenExpiredError") {
-            return next(new AppError("Token expired, please login again", 401));
-        }
-        return next(new AppError("Invalid token", 401));
+    } catch (error) {
+        next(error);
     }
 };

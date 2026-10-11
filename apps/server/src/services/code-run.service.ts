@@ -38,7 +38,7 @@ export const getRuntimes = async (): Promise<Array<{ language: string; version: 
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return (await response.json()) as Array<{ language: string; version: string }>;
     } catch (err) {
-        console.log("Code run languages fetch failed.", err);
+        console.error("Code run languages fetch failed.", err);
         return [];
     }
 };

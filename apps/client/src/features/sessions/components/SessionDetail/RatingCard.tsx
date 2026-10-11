@@ -57,9 +57,8 @@ export function RatingCard({ session, className }: RatingCardProps) {
                 sessionId: session.id,
                 participantId: candidateId,
                 rating,
-                // Notes are edited in their own card; pass them through unchanged so
-                // this request cannot blank them.
-                notes: session.notes ?? "",
+                // Notes are edited in their own card. Not sending them means a
+                // stale snapshot here can never overwrite a newer draft.
             })
             .then(() => queryClient.invalidateQueries({ queryKey: ["session", session.id] }))
             .then(() => {

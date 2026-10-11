@@ -17,7 +17,7 @@ export const changePassword = async (userId: string, currentPassword: string, ne
     }
 
     const hash = await bcrypt.hash(newPassword, 10);
-    await db.query("UPDATE users SET password_hash = $1 WHERE id = $2", [hash, userId]);
+    await db.query("UPDATE users SET password_hash = $1, token_version = token_version + 1 WHERE id = $2", [hash, userId]);
 };
 
 export const getPreferences = async (userId: string): Promise<UserPreferences> => {

@@ -13,6 +13,7 @@ const EVENTS_PATH = "/ws";
 interface WsConnection extends WebSocket {
     sessionId?: string;
     participantId?: string;
+    isAlive?: boolean;
 }
 
 const isCollabPath = (pathname: string): boolean => pathname.startsWith(COLLAB_PATH_PREFIX);
@@ -28,6 +29,7 @@ const rejectUpgrade = (socket: Duplex, status: number, reason: string): void => 
  * on it. Only ever one process, one server.
  */
 let activeServer: WebSocketServer | null = null;
+let heartbeatTimer: NodeJS.Timeout | null = null;
 
 /**
  * Close every WebSocket, telling clients why first.
@@ -41,6 +43,10 @@ let activeServer: WebSocketServer | null = null;
  */
 export const shutdownWebSocketServer = (code = 1001, reason = "Server restarting"): void => {
     const wss = activeServer;
+    if (heartbeatTimer) {
+        clearInterval(heartbeatTimer);
+        heartbeatTimer = null;
+    }
     if (!wss) return;
 
     for (const client of wss.clients) {
@@ -54,85 +60,123 @@ export const shutdownWebSocketServer = (code = 1001, reason = "Server restarting
     activeServer = null;
 };
 
+/**
+ * Ping every client periodically and terminate the ones that do not pong.
+ *
+ * Without this, half-open connections (NAT timeouts, sleeping laptops,
+ * network drops) linger on the server forever, so the room believes the
+ * participant is still present.
+ */
+const startHeartbeat = (wss: WebSocketServer): void => {
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
+
+    heartbeatTimer = setInterval(() => {
+        for (const client of wss.clients) {
+            const ws = client as WsConnection;
+            if (ws.isAlive === false) {
+                ws.terminate();
+                continue;
+            }
+            ws.isAlive = false;
+            ws.ping();
+        }
+    }, 30_000);
+
+    heartbeatTimer.unref?.();
+};
+
 export const initializeWebSocketServer = (server: HttpServer): WebSocketServer => {
     const wss = new WebSocketServer({ noServer: true });
     activeServer = wss;
+    startHeartbeat(wss);
 
-    server.on("upgrade", (request: IncomingMessage, socket: Duplex, head: Buffer) => {
+    server.on("upgrade", async (request: IncomingMessage, socket: Duplex, head: Buffer) => {
         const { pathname } = new URL(request.url ?? "/", "http://localhost");
         const collab = isCollabPath(pathname);
 
         if (!collab && pathname !== EVENTS_PATH) return;
 
-        const info = collab
-            ? parseCollabConnectionInfo(request)
-            : extractConnectionInfo(request);
+        try {
+            const info = collab
+                ? await parseCollabConnectionInfo(request)
+                : await extractConnectionInfo(request);
 
-        if (!info) {
-            rejectUpgrade(socket, 401, "Unauthorized");
-            return;
-        }
-
-        verifyParticipant(info)
-            .then((isVerified) => {
-                if (!isVerified) {
-                    rejectUpgrade(socket, 401, "Unauthorized");
-                    return;
-                }
-
-                wss.handleUpgrade(request, socket, head, (ws) => {
-                    wss.emit("connection", ws, request);
-                });
-            })
-            .catch(() => {
-                rejectUpgrade(socket, 500, "Internal Server Error");
-            });
-    });
-
-    wss.on("connection", (ws: WsConnection, req) => {
-        const { pathname } = new URL(req.url ?? "/", "http://localhost");
-
-        if (isCollabPath(pathname)) {
-            const collabInfo = parseCollabConnectionInfo(req);
-
-            if (!collabInfo) {
-                ws.close(4001, "Invalid connection parameters");
+            if (!info) {
+                rejectUpgrade(socket, 401, "Unauthorized");
                 return;
             }
 
-            ws.sessionId = collabInfo.sessionId;
-            ws.participantId = collabInfo.participantId;
+            const isVerified = await verifyParticipant(info);
+            if (!isVerified) {
+                rejectUpgrade(socket, 401, "Unauthorized");
+                return;
+            }
 
-            setupWSConnection(ws, req, { docName: collabInfo.sessionId });
+            wss.handleUpgrade(request, socket, head, (ws) => {
+                wss.emit("connection", ws, request);
+            });
+        } catch {
+            rejectUpgrade(socket, 500, "Internal Server Error");
+        }
+    });
+
+    wss.on("connection", (ws: WsConnection, req) => {
+        ws.isAlive = true;
+        ws.on("pong", () => {
+            ws.isAlive = true;
+        });
+
+        const { pathname } = new URL(req.url ?? "/", "http://localhost");
+
+        if (isCollabPath(pathname)) {
+            parseCollabConnectionInfo(req)
+                .then((collabInfo) => {
+                    if (!collabInfo) {
+                        ws.close(4001, "Invalid connection parameters");
+                        return;
+                    }
+
+                    ws.sessionId = collabInfo.sessionId;
+                    ws.participantId = collabInfo.participantId;
+
+                    setupWSConnection(ws, req, { docName: collabInfo.sessionId });
+                })
+                .catch(() => {
+                    ws.close(4001, "Invalid connection parameters");
+                });
             return;
         }
 
-        const info = extractConnectionInfo(req);
+        extractConnectionInfo(req)
+            .then((info) => {
+                if (!info) {
+                    ws.close(4001, "Invalid connection parameters");
+                    return;
+                }
 
-        if (!info) {
-            ws.close(4001, "Invalid connection parameters");
-            return;
-        }
+                ws.sessionId = info.sessionId;
+                ws.participantId = info.participantId;
 
-        ws.sessionId = info.sessionId;
-        ws.participantId = info.participantId;
+                joinRoom(ws, info.sessionId);
 
-        joinRoom(ws, info.sessionId);
+                broadcast(info.sessionId, { type: "join", payload: {} }, ws);
 
-        broadcast(info.sessionId, { type: "join", payload: {} }, ws);
+                ws.on("message", (data: Buffer) => {
+                    handleMessage(ws, info.sessionId, info.participantId, data);
+                });
 
-        ws.on("message", (data: Buffer) => {
-            handleMessage(ws, info.sessionId, info.participantId, data);
-        });
+                ws.on("close", () => {
+                    leaveRoom(ws, info.sessionId);
+                    broadcast(info.sessionId, { type: "leave", payload: {} });
+                });
 
-        ws.on("close", () => {
-            leaveRoom(ws, info.sessionId);
-            broadcast(info.sessionId, { type: "leave", payload: {} });
-        });
-
-        ws.on("error", () => {
-            leaveRoom(ws, info.sessionId);
-        });
+                ws.on("error", () => {
+                    leaveRoom(ws, info.sessionId);
+                });
+            })
+            .catch(() => {
+                ws.close(4001, "Invalid connection parameters");
+            });
     });
 
     return wss;

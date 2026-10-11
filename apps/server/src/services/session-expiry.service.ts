@@ -2,6 +2,7 @@ import cron from "node-cron";
 import type { ScheduledTask } from "node-cron";
 import db from "../db/pool.js";
 import { broadcast } from "../ws/connectionManager.js";
+import { logSessionEvent } from "./session-events.service.js";
 
 /**
  * Held so shutdown can stop it. Left running, it would fire once more
@@ -55,6 +56,10 @@ export function startSessionExpiryCron() {
             if (completed.length > 0) {
                 console.log(`[cron] Completed ${completed.length} attended session(s) on timeout`);
                 for (const session of completed) {
+                    await logSessionEvent(session.id, null, "session_completed", {
+                        session: { id: session.id, status: "completed" },
+                        source: "cron",
+                    });
                     broadcast(session.id, {
                         type: "session_completed",
                         payload: { session: { id: session.id, status: "completed" } },
@@ -69,6 +74,10 @@ export function startSessionExpiryCron() {
                 // exists in the database: people sat in a dead session waiting on
                 // a code runner that would now reject every submission.
                 for (const session of expired) {
+                    await logSessionEvent(session.id, null, "session_expired", {
+                        session: { id: session.id, status: "expired" },
+                        source: "cron",
+                    });
                     broadcast(session.id, {
                         type: "session_expired",
                         payload: { session: { id: session.id, status: "expired" } },
@@ -88,6 +97,10 @@ export function startSessionExpiryCron() {
                 console.log(`[cron] Auto-started ${started.rows.length} scheduled session(s)`);
 
                 for (const session of started.rows) {
+                    await logSessionEvent(session.id, null, "session_started", {
+                        session: { id: session.id, status: "live" },
+                        source: "cron",
+                    });
                     broadcast(session.id, { type: "session_started", payload: { session: { id: session.id, status: "live" } } });
                 }
             }

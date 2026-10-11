@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
@@ -81,7 +81,13 @@ export function DashboardLayout() {
             .find((item) => location.pathname.startsWith(item.to))?.id ?? "dashboard";
 
     const userName = user?.name ?? "User";
-    if (authStatus === "unauthenticated") navigate('/');
+
+    // Redirect in an effect, not during render: calling navigate() while
+    // rendering triggers React's "cannot update during render" warning and
+    // can abort the tree mid-render.
+    useEffect(() => {
+        if (authStatus === "unauthenticated") navigate("/login", { replace: true });
+    }, [authStatus, navigate]);
 
     if (authStatus === "loading" || authStatus === "idle") {
         return (

@@ -23,37 +23,18 @@ import { StepDurationSchedule } from "./StepDurationSchedule";
 import { StepReview } from "./StepReview";
 import { StepSuccess } from "./StepSuccess";
 import { FormAlert } from "./FormAlert";
-import { ApiError } from "@/lib/api/client";
 import { useNavigate } from "react-router-dom";
 
 const STEP_TITLES = ["Session Mode", "Choose Questions", "Duration & Schedule", "Review & Create"];
+
+import { explainError } from "@/lib/errors";
 
 interface CreateSessionModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }
 
-/**
- * Turns whatever the server said into one sentence a person can act on.
- *
- * The generic fallback used to be the raw `Error.message`, which for a failed fetch is
- * `Failed to fetch` — technically true and completely useless.
- */
-function explainError(err: unknown): string {
-    if (err instanceof ApiError) {
-        // A validation failure carries per-field messages that beat any generic text.
-        if (err.errors?.length) {
-            return err.errors.map((e) => e.message).join(". ");
-        }
-        if (err.status === 0) return "Can't reach the server. Check your connection and try again.";
-        if (err.status === 401 || err.status === 403) return "Your session expired. Sign in again to continue.";
-        if (err.status === 409) return err.message; // already human, e.g. the live-session conflict
-        if (err.status === 422 || err.status === 400) return err.message;
-        if (err.status >= 500) return "Something broke on our side. Your details are still here — try again.";
-        return err.message;
-    }
-    return "Couldn't create the session. Nothing was lost — try again.";
-}
+const CREATE_FALLBACK = "Couldn't create the session. Nothing was lost — try again.";
 
 export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalProps) {
     const [step, setStep] = useState(0);
@@ -210,7 +191,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
             onError: (err) => {
                 // Deliberately does NOT close the dialog: closing threw away the
                 // questions, duration and date the host had already chosen.
-                setProblem(explainError(err));
+                setProblem(explainError(err, CREATE_FALLBACK));
             },
         });
     }, [mode, duration, questionIds, language, roleContext, scheduledISO, scheduledDate, scheduledTime, when, liveSession, createSession, reset, isTimeSlotBlocked, format]);

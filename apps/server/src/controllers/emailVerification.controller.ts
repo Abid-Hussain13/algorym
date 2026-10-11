@@ -15,13 +15,13 @@ export const verifyEmailHandler = async (req: Request, res: Response) => {
 };
 
 export const resendVerification = async (req: Request, res: Response) => {
-    const user = req.user as { id: string; email: string };
+    const user = req.user as { id: string; email: string; name: string };
 
     if (!user?.id || !user?.email) {
         return res.status(401).json({ success: false, message: 'Not authenticated' });
     }
 
-    await generateVerificationToken(user.id, user.email);
+    await generateVerificationToken(user.id, user.email, user.name);
 
     res.json({ success: true, message: 'Verification email sent' });
 };

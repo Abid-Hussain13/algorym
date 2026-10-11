@@ -1,7 +1,6 @@
-import jwt from "jsonwebtoken";
 import type { IncomingMessage } from "http";
 import { URL } from "url";
-import type { AuthPayload } from "../types/index.js";
+import { verifyAccessToken } from "../utils/verifyAccessToken.js";
 import { parseCookieHeader } from "../utils/parse-cookie.js";
 
 export interface WsConnectionInfo {
@@ -27,7 +26,7 @@ export const readWsToken = (request: IncomingMessage): string | null => {
     return parseCookieHeader(request.headers.cookie).accessToken ?? null;
 };
 
-export const extractConnectionInfo = (request: IncomingMessage): WsConnectionInfo | null => {
+export const extractConnectionInfo = async (request: IncomingMessage): Promise<WsConnectionInfo | null> => {
     const url = request.url;
     if (!url) return null;
 
@@ -41,7 +40,7 @@ export const extractConnectionInfo = (request: IncomingMessage): WsConnectionInf
 
     if (token) {
         try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET!) as AuthPayload;
+            const decoded = await verifyAccessToken(token);
             return { userId: decoded.id, email: decoded.email, sessionId, participantId };
         } catch {
             return null;

@@ -123,12 +123,18 @@ export const exportSessionsCsv = async (userId: string, range: ReportsRange): Pr
         `SELECT
             s.role_context, s.mode, s.language, s.status,
             s.scheduled_at, s.duration_minutes, s.started_at, s.ended_at,
-            sp.display_name AS candidate_name,
-            sp.email AS candidate_email,
+            g.display_name AS candidate_name,
+            g.email AS candidate_email,
             se.rating
         FROM sessions s
-        LEFT JOIN session_participants sp ON sp.session_id = s.id AND sp.role = 'guest'
-        LEFT JOIN session_evaluations se ON se.evaluated_participant_id = sp.id
+        LEFT JOIN LATERAL (
+            SELECT id, display_name, email
+            FROM session_participants sp
+            WHERE sp.session_id = s.id AND sp.role = 'guest'
+            ORDER BY sp.joined_at ASC
+            LIMIT 1
+        ) g ON true
+        LEFT JOIN session_evaluations se ON se.evaluated_participant_id = g.id
             AND s.id = se.session_id
         WHERE s.created_by = $1
           AND s.created_at >= ${startSql}

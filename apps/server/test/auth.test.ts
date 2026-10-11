@@ -16,12 +16,12 @@ describe("POST /api/auth/signup", () => {
             .post("/api/auth/signup")
             .send(validUser);
 
-        expect(res.status).toBe(200);
-        expect(res.body.statusCode).toBe(201);
+        expect(res.status).toBe(201);
         expect(res.body.success).toBe(true);
         expect(res.body.data).toMatchObject({ name: validUser.name, email: validUser.email });
         expect(res.body.data).toHaveProperty("id");
         expect(res.body.data.password_hash).toBeUndefined();
+        expect(res.body.data.token_version).toBeUndefined();
     });
 
     it("sets httpOnly auth cookies (accessToken + refreshToken)", async () => {
@@ -40,7 +40,7 @@ describe("POST /api/auth/signup", () => {
 
     it("rejects duplicate email with 409", async () => {
         const res1 = await request(app).post("/api/auth/signup").send(validUser);
-        expect(res1.status).toBe(200);
+        expect(res1.status).toBe(201);
 
         const res2 = await request(app).post("/api/auth/signup").send(validUser);
         expect(res2.status).toBe(409);
@@ -215,5 +215,39 @@ describe("POST /api/auth/refresh", () => {
 
         expect(res.status).toBe(401);
         expect(res.body.message).toBe("Invalid refresh token");
+    });
+});
+
+describe("POST /api/auth/logout", () => {
+    it("revokes outstanding tokens so a stolen cookie stops working", async () => {
+        const agent = request.agent(app);
+        const signupRes = await agent.post("/api/auth/signup").send(validUser);
+        expect(signupRes.status).toBe(201);
+
+        const staleRefresh = ((signupRes.headers["set-cookie"] ?? []) as unknown as string[])
+            .find((c) => c.startsWith("refreshToken="));
+
+        const logoutRes = await agent.post("/api/auth/logout");
+        expect(logoutRes.status).toBe(200);
+
+        const refreshRes = await request(app)
+            .post("/api/auth/refresh")
+            .set("Cookie", staleRefresh!);
+        expect(refreshRes.status).toBe(401);
+    });
+
+    it("invalidates the access token on protected routes too", async () => {
+        const agent = request.agent(app);
+        const signupRes = await agent.post("/api/auth/signup").send(validUser);
+
+        const staleAccess = ((signupRes.headers["set-cookie"] ?? []) as unknown as string[])
+            .find((c) => c.startsWith("accessToken="));
+
+        await agent.post("/api/auth/logout");
+
+        const meRes = await request(app)
+            .get("/api/auth/me")
+            .set("Cookie", staleAccess!);
+        expect(meRes.status).toBe(401);
     });
 });

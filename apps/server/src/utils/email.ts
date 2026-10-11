@@ -26,9 +26,9 @@ export const sendEmail = async ({ to, subject, html }: SendEmailOptions): Promis
     }
 }
 
-export const sendVerificationEmail = async (email: string, token: string): Promise<void> => {
+export const sendVerificationEmail = async (email: string, token: string, name = ''): Promise<void> => {
     const template = getVerificationEmail({
-        name: '',
+        name,
         token,
         clientUrl: process.env.CLIENT_URL!,
     })
@@ -40,9 +40,9 @@ export const sendVerificationEmail = async (email: string, token: string): Promi
     })
 }
 
-export const sendPasswordResetEmail = async (email: string, token: string): Promise<void> => {
+export const sendPasswordResetEmail = async (email: string, token: string, name = ''): Promise<void> => {
     const template = getPasswordResetEmail({
-        name: '',
+        name,
         token,
         clientUrl: process.env.CLIENT_URL!,
     })

@@ -1,5 +1,4 @@
-import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
+import { Request, Response, NextFunction } from "express";
 import * as service from "../services/session.service.js";
 import { getQuestionById } from "../services/questions.service.js";
 import { getHostParticipant, getCandidateParticipant } from "../services/participant.service.js";
@@ -7,20 +6,17 @@ import { saveSessionNotes, getSessionEvaluation } from "../services/evaluation.s
 import * as sessionEventService from "../services/session-events.service.js";
 import AppError from "../utils/AppError.js";
 import { verifyParticipant } from "../utils/verifyParticipant.js";
+import { resolveAccessTokenUserId } from "../utils/verifyAccessToken.js";
 import { broadcast } from "../ws/connectionManager.js";
-import type { AuthPayload } from "../types/index.js";
 
-export const createSession = async (req: Request, res: Response) => {
+export const createSession = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const data = req.body;
         const userId = req.user!.id;
         const session = await service.createSession(userId, data);
         res.status(201).json({ success: true, data: { session }, message: "Session created" });
-    } catch (err: any) {
-        if (err.statusCode) {
-            return res.status(err.statusCode).json({ success: false, message: err.message, statusCode: err.statusCode });
-        }
-        throw err;
+    } catch (err) {
+        next(err);
     }
 };
 
@@ -59,12 +55,7 @@ export const getSessionRoom = async (req: Request, res: Response) => {
     if (!participantId) throw new AppError("participantId is required", 400);
 
     let userId: string | undefined;
-    try {
-        const token = req.cookies?.accessToken;
-        if (token) userId = (jwt.verify(token, process.env.JWT_SECRET!) as AuthPayload).id;
-    } catch {
-        // no/expired cookie — treated as an anonymous guest below
-    }
+    userId = await resolveAccessTokenUserId(req.cookies?.accessToken);
 
     const isVerified = await verifyParticipant({ sessionId, participantId, userId });
     if (!isVerified) throw new AppError("You are not a participant of this session", 403);
@@ -91,6 +82,9 @@ export const startSession = async (req: Request, res: Response) => {
 
     const host = await getHostParticipant(session.id, req.user!.id);
     await sessionEventService.logSessionEvent(session.id, host.id, "session_started", { session });
+
+    // Tell the room immediately instead of making candidates wait for the poll.
+    broadcast(session.id, { type: "session_started", payload: { session } });
 
     res.json({ success: true, data: { session }, message: "Session started" });
 };
@@ -122,17 +116,7 @@ export const cancelSession = async (req: Request, res: Response) => {
 export const joinSession = async (req: Request, res: Response) => {
     const data = req.body;
 
-    let userId: string | undefined;
-
-    try {
-        const token = req.cookies?.accessToken;
-        if (token) {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET!) as AuthPayload;
-            userId = decoded.id;
-        }
-    } catch {
-        // token invalid or expired — treat as guest
-    }
+    const userId = await resolveAccessTokenUserId(req.cookies?.accessToken);
 
     const result = await service.joinSession(data, userId);
 

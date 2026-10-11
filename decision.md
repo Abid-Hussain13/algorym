@@ -1882,3 +1882,75 @@ its orbit rings carries the idea on its own.
 Zero horizontal overflow across 8 routes × 9 widths (360–2560), no text under 11px, and
 verified by eye at 360, 768 and 1920 — including the large screens that could not be tested
 by hand.
+
+# Test-report fix pass (S0–S3, minus email verification)
+
+Applied the full-perspective test report except findings #1, #2 and #11 (auto-login
+before verification, decorative `email_verified`, dead verify-email page): free Resend
+only sends the account-creation email, so enforcing verification would lock every new
+user out. Those three stay as-is until a paid email tier exists.
+
+## Token revocation: `token_version`, not a blacklist
+
+`users.token_version` (integer, default 0) is embedded in both JWTs. `protect`,
+`refresh`, and the WS upgrade re-read the column and reject any token whose claim
+does not match; logout, password reset, change-password and account deletion bump it.
+A stateless 7-day refresh token otherwise survived all four events, which §5.6 classes
+as an S0. Tokens minted before this change carry no claim and fail the check, so the
+deploy forces exactly one re-login. A `iat >= valid_after` column was rejected because
+a reset landing in the same second as a fresh login could revoke the new token too.
+
+## Notes have one owner per column
+
+`PATCH /:id/notes` now validates (`saveNotesSchema`, notes required — `{}` is a 400
+instead of an erase) and is the only writer of `session_evaluations.notes`. The
+evaluate endpoint updates only the columns actually present in the body, so a
+rating-only submit can no longer blank a draft, and the rating form saves its notes
+through the notes endpoint before rating rather than smuggling a stale snapshot in
+the evaluate payload.
+
+## Join semantics
+
+An authenticated guest rejoining gets their existing row back (200) — the old 400
+stranded reloads mid-interview; the host still gets the 400, because a host has no
+business in the join endpoint. The upsert's `WHERE user_id IS NULL OR user_id =
+EXCLUDED.user_id` guard stops a join from overwriting a participant owned by a
+different signed-in account, with a fallback SELECT for the conflict-skipped case.
+New participant rows log `participant_joined`; the enum gained `participant_joined`
+and `session_expired` (appended, in lockstep with the live DB).
+
+`verifyParticipant` links an anonymous row to a signed-in caller only when the emails
+match, which fixes the mid-interview sign-up lockout on /room, /run, /ws and
+/collaboration without letting anyone claim another person's participant id.
+
+## One guest in the data, all guests in the search
+
+Multi-guest sessions duplicated list rows, inflated COUNT, and produced one CSV line
+per guest; the detail page could also pair the rating of a different guest than the
+`candidate_participant_id` it showed. List, detail, dashboard recents and CSV export
+now join the earliest guest through `LEFT JOIN LATERAL ... LIMIT 1`, and search runs
+as an `EXISTS` over any guest in both the count and data queries so pagination totals
+match the rows.
+
+## Also in this pass
+
+- `signup` returns HTTP 201 (the body no longer smuggles `statusCode`).
+- In-memory rate limiting on the credential and reset endpoints (10/5min, 3/10min),
+  skipped under `NODE_ENV=test` so the suite's signups are not throttled.
+- `clearCookie` now sends the same `sameSite`/`secure` attributes the cookies were
+  set with — Express requires a match or strict browsers keep them.
+- WS heartbeat: ping every 30s, `terminate()` anything that does not pong, so
+  half-open sockets cannot accumulate.
+- Cron flips write `session_completed`/`session_expired`/`session_started` event rows
+  (`actor: null`, `payload.source = "cron"`), matching the manual paths.
+- `startSession` broadcasts to the room like `complete`/`cancel` already did.
+- Global `explainError` in `apps/client/src/lib/errors.ts`: 4xx passes the server's
+  own message, 5xx/offline get friendly text, callers supply the fallback.
+- Theme toggle arms the preference sync, so a toggle finally writes both localStorage
+  and the server record instead of reverting on reload; first paint follows
+  `prefers-color-scheme`.
+- Status poller reads every page (bounded at 10) so flips beyond page 1 toast too.
+- Redirect out of the dashboard from an effect, not during render.
+- Google sign-in button removed (no OAuth credentials exist — dead `console.log`);
+  debug logging, `: any` catches, the dead `getAllSessions` service and the stale
+  `useAwaySignal` comment cleaned up; emails address the user by name.

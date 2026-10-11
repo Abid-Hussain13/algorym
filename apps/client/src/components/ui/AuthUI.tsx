@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils/cn'
 import { Button } from '@/components/ui/Button'
 import { ApiError } from '@/lib/api/client'
+import { explainError } from '@/lib/errors'
 import { useNavigate, Link } from 'react-router-dom'
 import { loginThunk, signupThunk, useAppDispatch } from '@/stores'
 
@@ -185,10 +186,8 @@ function SignInForm() {
                 const map: Record<string, string> = {};
                 e.errors.forEach(err => map[err.field] = err.message);
                 setFieldErrors(map);
-            } else if (e instanceof ApiError) {
-                toast.error(e.message);
             } else {
-                toast.error("Something went wrong");
+                toast.error(explainError(e, "Couldn't sign you in. Please try again."));
             }
         } finally {
             setLoading(false);
@@ -265,10 +264,8 @@ function SignUpForm() {
                 const map: Record<string, string> = {};
                 e.errors.forEach(err => map[err.field] = err.message);
                 setFieldErrors(map);
-            } else if (e instanceof ApiError) {
-                toast.error(e.message);
             } else {
-                toast.error("Something went wrong");
+                toast.error(explainError(e, "Couldn't create your account. Please try again."));
             }
         } finally {
             setLoading(false);
@@ -352,23 +349,6 @@ function AuthFormContainer({
                     {isSignIn ? 'Sign up' : 'Sign in'}
                 </button>
             </div>
-            <div className="relative text-center text-[13px]">
-                <div className="absolute inset-0 top-1/2 z-0 flex items-center border-t border-border" />
-                <span className="relative z-10 bg-surface px-3 text-faint">Or continue with</span>
-            </div>
-            <Button
-                type="button"
-                variant="default"
-                className="w-full"
-                onClick={() => console.log('UI: Google button clicked')}
-            >
-                <img
-                    src="https://www.svgrepo.com/show/475656/google-color.svg"
-                    alt="Google icon"
-                    className="mr-2 h-4 w-4"
-                />
-                Continue with Google
-            </Button>
             <div className="text-center text-[14px] text-muted">
                 Skip and Continue with{' '}
                 <a

@@ -12,18 +12,35 @@ const STATUS_LABELS: Record<SessionStatus, string> = {
     expired: "Expired",
 };
 
+const MAX_POLL_PAGES = 10;
+
 export function useSessionStatusPoller() {
     const queryClient = useQueryClient();
     const prevStatuses = useRef<Map<string, SessionStatus>>(new Map());
 
     const { data } = useQuery({
         queryKey: ["sessionStatusPoll"],
-        queryFn: () => sessionsApi.list({ page: 1, sort_by: "date_desc" }),
+        // Page 1 only missed status flips on later pages — the toast never
+        // fired for older sessions. Fetch every page (bounded) and dedupe.
+        queryFn: async () => {
+            const first = await sessionsApi.list({ page: 1, sort_by: "date_desc" });
+            const totalPages = Math.min(first.pagination?.totalPages ?? 1, MAX_POLL_PAGES);
+            const pages = await Promise.all(
+                Array.from({ length: totalPages - 1 }, (_, i) =>
+                    sessionsApi.list({ page: i + 2, sort_by: "date_desc" })
+                )
+            );
+            const byId = new Map<string, (typeof first.sessions)[number]>();
+            for (const s of [...first.sessions, ...pages.flatMap((p) => p.sessions)]) {
+                byId.set(s.id, s);
+            }
+            return [...byId.values()];
+        },
         refetchInterval: 30_000,
         refetchIntervalInBackground: true,
     });
 
-    const sessions = data?.sessions ?? [];
+    const sessions = data ?? [];
 
     const detectChanges = useCallback(() => {
         const next = new Map<string, SessionStatus>();

@@ -119,12 +119,19 @@ export function useThemeControl() {
         [serverPreference, setTheme, updatePrefs]
     );
 
+    // The plain toggle must arm `syncing` too — otherwise the preference is
+    // never written back and the theme silently reverts on the next reload.
+    const togglePreference = useCallback(() => {
+        syncing.current = true;
+        toggle();
+    }, [toggle]);
+
     return {
         /** What is actually on screen right now. */
         theme: applied,
         /** What the user chose, which may be `system`. */
         preference,
         selectPreference,
-        toggle,
+        toggle: togglePreference,
     };
 }

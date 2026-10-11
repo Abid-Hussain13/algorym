@@ -10,7 +10,7 @@ import { protect } from "../middlewares/protect.js";
 import { validate, validateQuery } from "../middlewares/validate.js";
 import {
     createSessionSchema, getAllSessionsSchema, updateSessionSchema,
-    joinSessionSchema, changeQuestionSchema
+    joinSessionSchema, changeQuestionSchema, saveNotesSchema
 } from "../utils/validation.js";
 import { getSessionEvents } from "../controllers/session.controller.js";
 
@@ -34,7 +34,7 @@ sessionRoute.patch("/:id/start", protect, startSession);
 sessionRoute.patch("/:id/complete", protect, completeSession);
 sessionRoute.patch("/:id/cancel", protect, cancelSession);
 sessionRoute.patch("/:id/question", protect, validate(changeQuestionSchema), changeQuestion);
-sessionRoute.patch("/:id/notes", protect, saveNotes);
+sessionRoute.patch("/:id/notes", protect, validate(saveNotesSchema), saveNotes);
 sessionRoute.get("/:id/evaluation", protect, getEvaluation);
 sessionRoute.get("/:id/events", protect, getSessionEvents);
 

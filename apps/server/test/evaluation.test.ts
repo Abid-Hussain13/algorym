@@ -70,6 +70,21 @@ describe("Session evaluation", () => {
             expect(res.body.message).toBe("No candidate has joined this session yet");
         });
 
+        it("rejects a payload without the notes field instead of nulling the draft", async () => {
+            const session = await createSession(agent, { mode: "interview" });
+            await joinGuest(session.id);
+            await agent.patch(`/api/session/${session.id}/notes`).send({ notes: "keep me" });
+
+            const res = await agent.patch(`/api/session/${session.id}/notes`).send({});
+            expect(res.status).toBe(400);
+            expect(res.body.message).toBe("Validation failed");
+
+            const { rows } = await db.query("SELECT notes FROM session_evaluations WHERE session_id = $1", [
+                session.id,
+            ]);
+            expect(rows[0].notes).toBe("keep me");
+        });
+
         it("rejects notes on a scheduled session", async () => {
             const session = await createSession(agent, {
                 mode: "interview",
@@ -136,7 +151,7 @@ describe("Session evaluation", () => {
             expect(res.body.data.result.rating).toBeNull();
         });
 
-        it("persists a single evaluation row after drafts (final submit overwrites notes when omitted)", async () => {
+        it("persists a single evaluation row after drafts and keeps the draft when notes are omitted", async () => {
             const { session, guest } = await setupCompletedInterview();
             await agent.patch(`/api/session/${session.id}/notes`).send({ notes: "draft" });
             await agent.post("/api/evaluation").send({
@@ -150,9 +165,10 @@ describe("Session evaluation", () => {
             ]);
             expect(rows).toHaveLength(1);
             expect(rows[0].rating).toBe("average");
-            // NOTE: evaluateUser upsert sets notes = Excluded.notes ("" when omitted),
-            // so the draft is replaced. Confirms single-row upsert, not data preservation.
-            expect(rows[0].notes).toBe("");
+            // A rating-only submit must not clobber the notes draft: the two
+            // write paths (PATCH /notes and POST /evaluation) only touch the
+            // columns they were actually given.
+            expect(rows[0].notes).toBe("draft");
         });
 
         it("rejects evaluating a live (not completed) session", async () => {

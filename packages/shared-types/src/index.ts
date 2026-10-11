@@ -4,7 +4,7 @@ export type SessionMode = 'interview' | 'practice';
 
 export type SessionStatus = 'scheduled' | 'live' | 'completed' | 'cancelled' | 'expired';
 
-export type EventType = 'code_snapshot' | 'run_result' | 'question_change' | 'session_started' | 'session_completed' | 'session_cancelled' | 'focus_event';
+export type EventType = 'code_snapshot' | 'run_result' | 'question_change' | 'session_started' | 'session_completed' | 'session_cancelled' | 'focus_event' | 'session_expired' | 'participant_joined';
 
 /**
  * Why a focus event was recorded. Both are integrity signals the host reviews

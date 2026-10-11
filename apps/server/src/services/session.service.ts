@@ -3,17 +3,7 @@ import { Pagination, Question, RoomSession, Session, SessionDetail, SessionListI
 import { nanoid } from "nanoid";
 import AppError from "../utils/AppError.js";
 import { CreateSessionInput, GetAllSessionsQuery } from "../utils/validation.js";
-
-interface GetAllSessionsResult {
-    sessions: (Session & { evaluated: boolean })[];
-    pagination: {
-        page: number;
-        limit: number;
-        total: number;
-        totalPages: number;
-    };
-}
-
+import { logSessionEvent } from "./session-events.service.js";
 
 export const createSession = async (userId: string, data: CreateSessionInput): Promise<Session> => {
     const { mode, role_context, scheduled_at, duration_minutes, language } = data;
@@ -109,59 +99,10 @@ export const createSession = async (userId: string, data: CreateSessionInput): P
     }
     catch (err) {
         await db.query("ROLLBACK");
-        console.log("Create Sessoin Error.", err);
+        console.error("Create Session Error.", err instanceof Error ? err.message : err);
         throw new AppError("something went wrong while creating session", 500);
     }
 }
-
-export const getAllSessions = async (userId: string, params: GetAllSessionsQuery): Promise<GetAllSessionsResult> => {
-    const limit = 20;
-    const offset = (params.page - 1) * limit;
-
-    const conditions: string[] = [];
-    const values: (string | number)[] = [];
-    let paramIndex = 1;
-
-    conditions.push(`created_by = $${paramIndex}`);
-    values.push(userId);
-    paramIndex++;
-
-    if (params.status) {
-        conditions.push(`status = $${paramIndex}`);
-        values.push(params.status);
-        paramIndex++;
-    }
-
-    const whereClause = conditions.join(" AND ");
-    const sortBy = params.sort_by === "date_desc" ? "created_at" : params.sort_by === "date_asc" ? "created_at" : "created_at";
-    const order = params.sort_by === "date_asc" ? "ASC" : "DESC";
-
-    const countQuery = `SELECT COUNT(*) FROM sessions WHERE ${whereClause}`;
-    const dataQuery = `SELECT s.*, EXISTS(
-                        SELECT 1 FROM session_evaluations ev WHERE ev.session_id = s.id
-                      ) AS evaluated
-                      FROM sessions s
-                      WHERE ${whereClause}
-                      ORDER BY ${sortBy} ${order}
-                      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-
-    const [countResult, dataResult] = await Promise.all([
-        db.query(countQuery, values),
-        db.query(dataQuery, [...values, limit, offset]),
-    ]);
-
-    const total = parseInt(countResult.rows[0].count, 10);
-
-    return {
-        sessions: dataResult.rows,
-        pagination: {
-            page: params.page,
-            limit,
-            total,
-            totalPages: Math.ceil(total / limit),
-        },
-    };
-};
 
 export const getSessionsList = async (userId: string, params: GetAllSessionsQuery): Promise<SessionListResponse> => {
     const limit = 20;
@@ -172,10 +113,16 @@ export const getSessionsList = async (userId: string, params: GetAllSessionsQuer
     let paramIndex = 2;
 
     if (params.search) {
+        // Search matches the session's own context or ANY guest (count and
+        // data queries share this clause so pagination totals stay honest).
         conditions.push(`(
             s.role_context ILIKE '%' || $${paramIndex} || '%'
-            OR sp.display_name ILIKE '%' || $${paramIndex} || '%'
-            OR sp.email ILIKE '%' || $${paramIndex} || '%'
+            OR EXISTS (
+                SELECT 1 FROM session_participants spx
+                WHERE spx.session_id = s.id AND spx.role = 'guest'
+                  AND (spx.display_name ILIKE '%' || $${paramIndex} || '%'
+                       OR spx.email ILIKE '%' || $${paramIndex} || '%')
+            )
         )`);
         values.push(params.search);
         paramIndex++;
@@ -217,18 +164,23 @@ export const getSessionsList = async (userId: string, params: GetAllSessionsQuer
 
     const countQuery = `SELECT COUNT(*)
         FROM sessions s
-        LEFT JOIN session_participants sp ON sp.session_id = s.id AND sp.role = 'guest'
         WHERE ${whereClause}`;
 
     const dataQuery = `SELECT
             s.id, s.role_context, s.mode, s.status, s.language, s.created_at,
-            sp.display_name AS candidate_name,
-            sp.email AS candidate_email,
+            g.display_name AS candidate_name,
+            g.email AS candidate_email,
             se.rating
         FROM sessions s
-        LEFT JOIN session_participants sp ON sp.session_id = s.id AND sp.role = 'guest'
+        LEFT JOIN LATERAL (
+            SELECT id, display_name, email
+            FROM session_participants sp
+            WHERE sp.session_id = s.id AND sp.role = 'guest'
+            ORDER BY sp.joined_at ASC
+            LIMIT 1
+        ) g ON true
         LEFT JOIN session_evaluations se ON se.session_id = s.id
-            AND se.evaluated_participant_id = sp.id
+            AND se.evaluated_participant_id = g.id
         WHERE ${whereClause}
         ORDER BY ${orderClause}
         LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
@@ -264,8 +216,8 @@ export const getSessionDetail = async (userId: string, sessionId: string): Promi
         `SELECT s.id, s.created_by, s.question_id, s.mode, s.status, s.access_token,
                 s.role_context, s.language, s.scheduled_at, s.duration_minutes,
                 s.started_at, s.ended_at, s.expires_at, s.created_at,
-                sp.display_name AS candidate_name,
-                sp.email AS candidate_email,
+                g.display_name AS candidate_name,
+                g.email AS candidate_email,
                 se.rating, se.notes,
                 COALESCE((
                     SELECT json_agg(json_build_object(
@@ -278,9 +230,7 @@ export const getSessionDetail = async (userId: string, sessionId: string): Promi
                 (SELECT hp.id FROM session_participants hp
                  WHERE hp.session_id = s.id AND hp.role = 'host'
                  ORDER BY hp.joined_at ASC LIMIT 1) AS host_participant_id,
-                (SELECT cp.id FROM session_participants cp
-                 WHERE cp.session_id = s.id AND cp.role = 'guest'
-                 ORDER BY cp.joined_at ASC LIMIT 1) AS candidate_participant_id,
+                g.id AS candidate_participant_id,
                 (SELECT count(*)::int FROM session_events se
                  WHERE se.session_id = s.id AND se.event_type = 'focus_event'
                    AND se.payload->>'kind' = 'fullscreen_exit') AS candidate_fullscreen_exits,
@@ -288,9 +238,15 @@ export const getSessionDetail = async (userId: string, sessionId: string): Promi
                  WHERE se.session_id = s.id AND se.event_type = 'focus_event'
                    AND se.payload->>'kind' = 'tab_away') AS candidate_tab_aways
          FROM sessions s
-         LEFT JOIN session_participants sp ON sp.session_id = s.id AND sp.role = 'guest'
+         LEFT JOIN LATERAL (
+             SELECT id, display_name, email
+             FROM session_participants sp
+             WHERE sp.session_id = s.id AND sp.role = 'guest'
+             ORDER BY sp.joined_at ASC
+             LIMIT 1
+         ) g ON true
          LEFT JOIN session_evaluations se ON se.session_id = s.id
-             AND se.evaluated_participant_id = sp.id
+             AND se.evaluated_participant_id = g.id
          WHERE s.created_by = $1 AND s.id = $2`,
         [userId, sessionId]
     );
@@ -529,14 +485,18 @@ export const joinSession = async (data: JoinSessionData, userId?: string): Promi
         throw new AppError("Session is not open for joining", 400);
     }
 
-    // Duplicate-join guard: check if this user already participated
+    // Already joined as this user? A guest rejoin is a reload / double-click —
+    // hand back the same row. The host has no business in this endpoint at all.
     if (userId) {
         const existingParticipant = await db.query(
-            "SELECT id FROM session_participants WHERE session_id = $1 AND user_id = $2",
+            "SELECT * FROM session_participants WHERE session_id = $1 AND user_id = $2",
             [session.id, userId]
         );
         if (existingParticipant.rows[0]) {
-            throw new AppError("You have already joined this session", 400);
+            if (existingParticipant.rows[0].role === "host") {
+                throw new AppError("You have already joined this session", 400);
+            }
+            return { session, participant: existingParticipant.rows[0] };
         }
     }
 
@@ -581,18 +541,45 @@ export const joinSession = async (data: JoinSessionData, userId?: string): Promi
         if (!displayName) throw new AppError("Name is required to join a session", 400);
     }
 
-        const { rows } = await db.query(
+    // `WHERE` keeps the upsert from ever taking over a row owned by a
+    // different signed-in account: if the conflict target row belongs to
+    // somebody else, nothing updates and we return that row untouched below
+    // (an anonymous rejoin of a linked account), rather than hijacking it.
+    const { rows } = await db.query(
         `INSERT INTO session_participants (session_id, user_id, email, display_name, role, consent_to_contact, consent_timestamp)
          VALUES ($1, $2, $3, $4, $5, $6, now())
          ON CONFLICT (session_id, email) DO UPDATE
            SET display_name = EXCLUDED.display_name,
+               user_id = COALESCE(session_participants.user_id, EXCLUDED.user_id),
                consent_to_contact = EXCLUDED.consent_to_contact,
                consent_timestamp = now()
-         RETURNING *`,
+           WHERE session_participants.user_id IS NULL
+              OR session_participants.user_id = EXCLUDED.user_id
+         RETURNING *, (xmax = 0) AS inserted`,
         [session.id, userId || null, email, displayName, role, consent]
     );
 
-    return { session, participant: rows[0] };
+    let participant = rows[0];
+    if (!participant) {
+        const existingRow = await db.query(
+            "SELECT *, false AS inserted FROM session_participants WHERE session_id = $1 AND email = $2",
+            [session.id, email]
+        );
+        participant = existingRow.rows[0];
+    }
+
+    if (participant?.inserted) {
+        await logSessionEvent(session.id, participant.id, "participant_joined", {
+            participant: { id: participant.id, display_name: participant.display_name, role: participant.role },
+        });
+    }
+
+    if (participant) {
+        const { inserted: _inserted, ...safeParticipant } = participant;
+        participant = safeParticipant;
+    }
+
+    return { session, participant };
 };
 
 export const changeQuestion = async (userId: string, sessionId: string, questionId: string, language: string): Promise<Session> => {

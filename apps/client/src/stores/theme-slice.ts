@@ -11,6 +11,11 @@ function getInitialTheme(): Theme {
     } catch {
         /* noop */
     }
+    // Nothing stored yet: follow the OS instead of always flashing light mode
+    // at people whose system theme is dark.
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
     return 'light'
 }
 

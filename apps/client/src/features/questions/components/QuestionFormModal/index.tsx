@@ -8,6 +8,7 @@ import {
     DialogTitle,
 } from "@/components/ui/Dialog";
 import { useCreateQuestion, useUpdateQuestion, useGenerateQuestion } from "../../hooks/use-question-mutations";
+import { explainError } from "@/lib/errors";
 import { GenerateButton } from "./GenerateButton";
 import { QuestionFormFields } from "./QuestionFormFields";
 import { ConfirmReplaceDialog } from "./ConfirmReplaceDialog";
@@ -108,7 +109,7 @@ export function QuestionFormModal({ open, mode, question, onOpenChange }: Questi
                 },
                 onError: (err) => {
                     setIsGenerating(false);
-                    toast.error(err instanceof Error ? err.message : "Failed to generate");
+                    toast.error(explainError(err, "Couldn't generate the question. Please try again."));
                 },
             }
         );
@@ -161,7 +162,7 @@ export function QuestionFormModal({ open, mode, question, onOpenChange }: Questi
                         onOpenChange(false);
                     },
                     onError: (err) => {
-                        toast.error(err instanceof Error ? err.message : "Failed to update question");
+                        toast.error(explainError(err, "Couldn't save the question. Please try again."));
                     },
                 }
             );
@@ -172,7 +173,7 @@ export function QuestionFormModal({ open, mode, question, onOpenChange }: Questi
                     onOpenChange(false);
                 },
                 onError: (err) => {
-                    toast.error(err instanceof Error ? err.message : "Failed to create question");
+                    toast.error(explainError(err, "Couldn't create the question. Please try again."));
                 },
             });
         }

@@ -97,7 +97,7 @@ describe("POST /api/session/join", () => {
         expect(res.body.data.participant.consent_to_contact).toBe(false);
     });
 
-    it("rejects a second join by the same authenticated user", async () => {
+    it("lets the same authenticated user rejoin and returns the same participant row", async () => {
         const { agent: hostAgent } = await signupAgent(app);
         const session = await createSession(hostAgent, { mode: "practice" });
         const { agent: guestAgent } = await signupAgent(app);
@@ -108,11 +108,19 @@ describe("POST /api/session/join", () => {
             .send({ access_token: token, consent_to_contact: true });
         expect(first.status).toBe(200);
 
+        // A reload or double-clicked Join used to 400 here, which stranded the
+        // candidate on the join screen. Rejoining is idempotent now.
         const second = await guestAgent
             .post("/api/session/join")
             .send({ access_token: token, consent_to_contact: true });
-        expect(second.status).toBe(400);
-        expect(second.body.message).toBe("You have already joined this session");
+        expect(second.status).toBe(200);
+        expect(second.body.data.participant.id).toBe(first.body.data.participant.id);
+
+        const { rows } = await db.query(
+            "SELECT count(*)::int AS count FROM session_participants WHERE session_id = $1 AND role = 'guest'",
+            [session.id]
+        );
+        expect(rows[0].count).toBe(1);
     });
 
     it("rejects the host trying to join as a guest", async () => {

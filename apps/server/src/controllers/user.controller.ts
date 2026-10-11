@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as userService from "../services/user.service.js";
+import { clearAuthCookies } from "./auth.controller.js";
 
 export const changePassword = async (req: Request, res: Response) => {
     const userId = req.user!.id;
@@ -25,8 +26,7 @@ export const deleteAccount = async (req: Request, res: Response) => {
     const userId = req.user!.id;
     await userService.deleteAccount(userId);
 
-    res.clearCookie("accessToken", { path: "/" });
-    res.clearCookie("refreshToken", { path: "/api/auth/refresh" });
+    clearAuthCookies(res);
 
     res.json({ success: true, data: null, message: "Account deleted successfully" });
 };

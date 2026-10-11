@@ -6,7 +6,7 @@ import AppError from '../utils/AppError.js';
 import { sendPasswordResetEmail } from '../utils/email.js';
 
 export const generateResetToken = async (email: string): Promise<void> => {
-    const user = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+    const user = await db.query('SELECT id, name FROM users WHERE email = $1', [email]);
 
     // Always return success to prevent email enumeration
     if (!user.rows.length) return;
@@ -27,7 +27,7 @@ export const generateResetToken = async (email: string): Promise<void> => {
         console.log(`\n🔑 Password reset link: ${process.env.CLIENT_URL}/reset-password?token=${token}\n`);
     }
 
-    await sendPasswordResetEmail(email, token);
+    await sendPasswordResetEmail(email, token, user.rows[0].name);
 };
 
 export const resetPassword = async (token: string, newPassword: string): Promise<void> => {
@@ -46,6 +46,6 @@ export const resetPassword = async (token: string, newPassword: string): Promise
 
     const hash = await bcrypt.hash(newPassword, 10);
 
-    await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, tokenRow.rows[0].user_id]);
+    await db.query('UPDATE users SET password_hash = $1, token_version = token_version + 1 WHERE id = $2', [hash, tokenRow.rows[0].user_id]);
     await db.query('DELETE FROM tokens WHERE token = $1', [token]);
 };

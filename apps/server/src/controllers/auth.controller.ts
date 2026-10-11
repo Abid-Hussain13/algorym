@@ -1,20 +1,30 @@
 import { NextFunction, Request, Response } from "express";
-import jwt from "jsonwebtoken";
 
 import AppError from "../utils/AppError.js";
 import { loginUser, registerUser } from "../services/auth.service.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/generateToken.js";
 import { generateVerificationToken } from "../services/emailVerification.service.js";
-import type { User } from "@algorym/shared-types";
+import { verifyAccessToken, verifyRefreshToken } from "../utils/verifyAccessToken.js";
+import db from "../db/pool.js";
 
 const ACCESS_TOKEN_MAX_AGE = 15 * 60 * 1000;
-const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 1000;
+const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
 const isProduction = process.env.NODE_ENV === "production";
 
 const cookieSiteSettings = {
     sameSite: (isProduction ? "none" : "lax") as "none" | "lax",
     secure: isProduction,
+};
+
+/**
+ * Clearing needs the same attributes the cookies were set with (path,
+ * sameSite, secure) or strict browsers keep them — silently making logout
+ * a no-op in production.
+ */
+export const clearAuthCookies = (res: Response): void => {
+    res.clearCookie("accessToken", { path: "/", ...cookieSiteSettings, httpOnly: true });
+    res.clearCookie("refreshToken", { path: "/api/auth/refresh", ...cookieSiteSettings, httpOnly: true });
 };
 
 const setAuthCookies = (res: Response, accessToken: string, refreshToken: string) => {
@@ -33,73 +43,95 @@ const setAuthCookies = (res: Response, accessToken: string, refreshToken: string
     });
 };
 
-export const signup = async (req: Request, res: Response) => {
-    const { name, email, password } = req.body;
-    const user = await registerUser({ name, email, password_hash: password });
+type SafeUser = { id: string; name: string; email: string; email_verified: boolean; token_version: number };
 
-    const payload: Omit<User, 'password_hash'> = { id: user.id, name: user.name, email: user.email, email_verified: user.email_verified, created_at: user.created_at };
-
-    const accessToken = generateAccessToken(payload);
-    const refreshToken = generateRefreshToken(payload);
-
-    setAuthCookies(res, accessToken, refreshToken);
-
-    // Send verification email (non-blocking)
-    generateVerificationToken(user.id, email).catch((err) => {
-        console.error('Failed to send verification email:', err.message || err);
-    });
-
-    res.json({ success: true, data: payload, message: "User registered successfully", statusCode: 201 });
+const issueTokens = (res: Response, user: SafeUser) => {
+    const jwtPayload = { id: user.id, name: user.name, email: user.email, token_version: user.token_version };
+    setAuthCookies(res, generateAccessToken(jwtPayload), generateRefreshToken(jwtPayload));
+    return { id: user.id, name: user.name, email: user.email, email_verified: user.email_verified };
 };
 
-export const login = async (req: Request, res: Response) => {
-    const { email, password } = req.body;
-    const user = await loginUser({ email, password_hash: password });
-
-    const payload: Omit<User, 'password_hash'> = { id: user.id, name: user.name, email: user.email, email_verified: user.email_verified, created_at: user.created_at };
-    const accessToken = generateAccessToken(payload);
-    const refreshToken = generateRefreshToken(payload);
-
-    setAuthCookies(res, accessToken, refreshToken);
-    console.log("i am in login controller. with success")
-    res.json({ success: true, data: payload, message: "User logged in successfully" });
-};
-
-export const refresh = (req: Request, res: Response, next: NextFunction): void => {
+export const signup = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const refreshToken = req.cookies.refreshToken;
-        if (!refreshToken) return next(new AppError("No refresh token", 401));
+        const { name, email, password } = req.body;
+        const user = await registerUser({ name, email, password_hash: password });
 
-        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as {
-            id: string;
-            name: string;
-            email: string;
-        };
+        const data = issueTokens(res, user);
 
-        const payload = { id: decoded.id, name: decoded.name, email: decoded.email };
-        const newAccessToken = generateAccessToken(payload);
-        const newRefreshToken = generateRefreshToken(payload);
+        generateVerificationToken(user.id, email, user.name).catch((err) => {
+            console.error('Failed to send verification email:', err.message || err);
+        });
 
-        setAuthCookies(res, newAccessToken, newRefreshToken);
-
-        res.json({ success: true, message: "Tokens refreshed" });
-    } catch (error: any) {
-        if (error.name === "TokenExpiredError") {
-            return next(new AppError("Refresh token expired, please login again", 401));
-        }
-        return next(new AppError("Invalid refresh token", 401));
+        res.status(201).json({ success: true, data, message: "User registered successfully" });
+    } catch (error) {
+        next(error);
     }
 };
 
+export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { email, password } = req.body;
+        const user = await loginUser({ email, password_hash: password });
 
-export const getMe = (req: Request, res: Response) => {
-    res.json({ success: true, data: req.user });
+        const data = issueTokens(res, user);
+
+        res.json({ success: true, data, message: "User logged in successfully" });
+    } catch (error) {
+        next(error);
+    }
 };
 
+export const refresh = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) throw new AppError("No refresh token", 401);
 
-export const logout = (_req: Request, res: Response): void => {
-    res.clearCookie('accessToken', { path: '/' });
-    res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+        const decoded = await verifyRefreshToken(refreshToken);
 
-    res.json({ success: true })
-}
+        const { rows } = await db.query<SafeUser>(
+            "SELECT id, name, email, email_verified, token_version FROM users WHERE id = $1",
+            [decoded.id]
+        );
+        if (!rows[0] || rows[0].token_version !== decoded.token_version) {
+            throw new AppError("Session expired, please login again", 401);
+        }
+
+        issueTokens(res, rows[0]);
+        res.json({ success: true, message: "Tokens refreshed" });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getMe = (req: Request, res: Response) => {
+    const user = req.user!;
+    res.json({ success: true, data: { id: user.id, name: user.name, email: user.email } });
+};
+
+export const logout = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const accessToken = req.cookies.accessToken;
+        const refreshToken = req.cookies.refreshToken;
+        let userId: string | undefined;
+        try {
+            if (accessToken) userId = (await verifyAccessToken(accessToken)).id;
+        } catch {
+            // access token invalid/expired — fall back to the refresh token
+        }
+        if (!userId && refreshToken) {
+            try {
+                userId = (await verifyRefreshToken(refreshToken)).id;
+            } catch {
+                // both tokens invalid — nothing to revoke
+            }
+        }
+        if (userId) {
+            await db.query("UPDATE users SET token_version = token_version + 1 WHERE id = $1", [userId]);
+        }
+
+        clearAuthCookies(res);
+        res.json({ success: true });
+    } catch (error) {
+        next(error);
+    }
+};

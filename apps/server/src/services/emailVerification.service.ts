@@ -4,7 +4,7 @@ import db from '../db/pool.js';
 import AppError from '../utils/AppError.js';
 import { sendVerificationEmail } from '../utils/email.js';
 
-export const generateVerificationToken = async (userId: string, email: string): Promise<string> => {
+export const generateVerificationToken = async (userId: string, email: string, name = ''): Promise<string> => {
     // Delete any existing verification tokens for this user
     await db.query("DELETE FROM tokens WHERE user_id = $1 AND type = 'email_verification'", [userId]);
 
@@ -22,7 +22,7 @@ export const generateVerificationToken = async (userId: string, email: string): 
         console.log(`\n📧 Verification link: ${process.env.CLIENT_URL}/verify-email?token=${token}\n`);
     }
 
-    await sendVerificationEmail(email, token);
+    await sendVerificationEmail(email, token, name);
 
     return token;
 };

@@ -1,7 +1,7 @@
-import { Response, Request } from "express";
+import { NextFunction, Response, Request } from "express";
 import AppError from "../utils/AppError.js"
 
-const notFound = (req: Request, res: Response, next: any): void => {
+const notFound = (req: Request, _res: Response, next: NextFunction): void => {
     next(new AppError(`Route ${req.method} ${req.path} not found`, 404));
 }
 

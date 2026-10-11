@@ -38,10 +38,14 @@ export const getCompletedSessionsInRange = async (userId: string, startDate: str
 }
 
 export const getRecentSessions = async (userId: string): Promise<recentSessionType[]> => {
-    const queryString = `Select s.id, s.role_context, s.status, s.created_at, sp.display_name AS name from sessions s Left 
-                        Join session_participants sp on 
-                        sp.session_id = s.id AND sp.role = 'guest' WHERE
-                        s.created_by = $1 Order by s.created_at DESC LIMIT 10`;
+    const queryString = `Select s.id, s.role_context, s.status, s.created_at, g.display_name AS name
+                        from sessions s
+                        LEFT JOIN LATERAL (
+                            SELECT display_name FROM session_participants sp
+                            WHERE sp.session_id = s.id AND sp.role = 'guest'
+                            ORDER BY sp.joined_at ASC LIMIT 1
+                        ) g ON true
+                        WHERE s.created_by = $1 Order by s.created_at DESC LIMIT 10`;
     const { rows } = await db.query(queryString, [userId]);
     return rows;
 }

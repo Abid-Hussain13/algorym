@@ -65,7 +65,12 @@ export function SessionRatingForm({
         setSaving(true);
         setError(null);
         try {
-            await evaluationApi.evaluate({ sessionId, participantId: candidateId, rating, notes });
+            // Notes go through their own endpoint; the evaluate call carries the
+            // rating only, so a stale notes snapshot can never clobber the draft.
+            if (notes !== (existingNotes ?? "")) {
+                await sessionsApi.saveNotes(sessionId, notes);
+            }
+            await evaluationApi.evaluate({ sessionId, participantId: candidateId, rating });
             await queryClient.invalidateQueries({ queryKey: ["session", sessionId] });
             goToSessions();
         } catch (err) {
