@@ -167,9 +167,9 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
         // Every precondition is checked here and reported inline. Previously these
         // returned silently, or toasted and then closed the dialog, so a failed
         // attempt looked identical to a button that did nothing.
-        if (liveSession) {
+        if (liveSession && when !== "later") {
             setProblem(
-                "You already have a live session running. Finish or cancel it before starting another — a host cannot run two rooms at once."
+                "This would open a second live room right now. Finish or cancel the live session first — or switch When to Schedule."
             );
             return;
         }
@@ -329,7 +329,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
                                 the live session first.
                             </FormAlert>
                         )}
-                        {!liveSession && problem && <FormAlert title={problem} />}
+                        {problem && <FormAlert title={problem} />}
                     </div>
                 )}
 
