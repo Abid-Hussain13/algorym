@@ -22,13 +22,21 @@ export const runCode = async (req: Request, res: Response) => {
 
     const result = await runService.runCode({ code, language, stdin });
 
-    await logSessionEvent(sessionId, participantId, "run_result", { ...result, stdin, code });
+    // The id travels back on the WS broadcast so a late joiner's history
+    // fetch and the live feed can recognize the same run from either side.
+    const eventId = await logSessionEvent(sessionId, participantId, "run_result", {
+        ...result,
+        stdin,
+        code,
+        runId,
+    });
 
     const runResultMessage: WsMessage = {
         type: "run_result",
         payload: result,
         actorParticipantId: participantId,
         runId,
+        eventId,
     };
     broadcast(sessionId, runResultMessage);
 

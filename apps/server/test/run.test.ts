@@ -61,6 +61,7 @@ describe("POST /api/run", () => {
         expect(rows[0].payload.stdin).toBe("hello");
         expect(rows[0].payload.code).toBe("print(5)");
         expect(rows[0].payload.status).toBe("accepted");
+        expect(rows[0].payload.runId).toBe("550e8400-e29b-41d4-a716-446655440000");
     });
 
     it("rejects runs on sessions that are not live", async () => {

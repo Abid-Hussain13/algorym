@@ -129,11 +129,10 @@ export interface SessionParticipant {
 
 export interface SessionEvent {
     id: string;
-    session_id: string;
-    actor_participant_id: string | null;
     event_type: EventType;
     payload: Record<string, unknown>;
     created_at: string;
+    actor: { id: string; display_name: string; role: ParticipantRole } | null;
 }
 
 export interface SessionEvaluation {
@@ -295,7 +294,7 @@ export interface CollaboratorPresence {
 
 export type WsMessage =
     | { type: 'code_snapshot'; payload: CodeSnapshotPayload }
-    | { type: 'run_result'; payload: RunResultPayload; actorParticipantId: string; runId?: string }
+    | { type: 'run_result'; payload: RunResultPayload; actorParticipantId: string; runId?: string; eventId?: string }
     | { type: 'question_change'; payload: QuestionChangePayload }
     | { type: 'session_started'; payload: SessionStatePayload }
     | { type: 'session_completed'; payload: SessionStatePayload }

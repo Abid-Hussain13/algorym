@@ -26,11 +26,12 @@ interface EditorFilesState {
  * **everyone**, not just locally. That is intended: the room shares one set of
  * files.
  *
- * `isReady` gates seeding. The question arrives over HTTP *after* the room
- * mounts, so seeding on first render would create an empty buffer and then
- * refuse to fill it — the map would already be non-empty. A question with no
- * starter code at all is still seeded, just empty, which is why this waits for
- * the load to settle rather than for a non-null `starterCode`.
+ * `isReady` gates seeding: the question must have arrived over HTTP *and* the
+ * Yjs doc must have completed its first sync (otherwise an empty local view
+ * races the room's real files map). Seeding on first render would create an
+ * empty buffer and then refuse to fill it — the map would already be non-empty.
+ * A question with no starter code at all is still seeded, just empty, which is
+ * why this waits for the load to settle rather than for a non-null `starterCode`.
  *
  * Seeding happens only when the map is completely empty, so switching question
  * never wipes work in progress — destroying a candidate's solution because the

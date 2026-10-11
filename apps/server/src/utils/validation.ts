@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { EventType } from "@algorym/shared-types";
 
 export const signupSchema = z.object({
     name: z.string().min(1, "Name is required"),
@@ -85,6 +86,30 @@ export const runCodeSchema = z.object({
 
 export const reportsQuerySchema = z.object({
     range: z.enum(["7d", "30d", "90d", "month", "year"]).default("30d"),
+});
+
+// Must list every value of shared-types' EventType; the alias below fails to
+// compile the moment a new event type is added without updating this list.
+const EVENT_TYPES = [
+    "code_snapshot",
+    "run_result",
+    "question_change",
+    "session_started",
+    "session_completed",
+    "session_cancelled",
+    "focus_event",
+    "session_expired",
+    "participant_joined",
+] as const;
+
+type AssertTrue<T extends true> = T;
+type AllEventTypesCovered = AssertTrue<
+    [Exclude<EventType, (typeof EVENT_TYPES)[number]>] extends [never] ? true : false
+>;
+
+export const eventsQuerySchema = z.object({
+    participantId: z.uuid("Invalid participant ID format").optional(),
+    type: z.enum(EVENT_TYPES, { message: "Invalid event type" }).optional(),
 });
 
 export const evaluatedUserSchema = z.object({

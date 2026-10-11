@@ -95,7 +95,7 @@ function LiveRoomShell({
 
     // ── Channel: events (what everyone else ran) ───────────────────────────
     const socket = useSessionSocket(sessionId, participant.id);
-    const outputEntries = useRoomOutput(socket, participant.id);
+    const outputEntries = useRoomOutput(socket, participant.id, sessionId);
 
     // Server-pushed events. `question_change` needs no handling of its own — the
     // room payload is refetched below, so both sides land on the same question.
@@ -175,7 +175,9 @@ function LiveRoomShell({
         collaboration?.files ?? null,
         starterCode,
         language,
-        !isLoading
+        // Seeding before the first Yjs sync sees the real files map would write
+        // the starter into an empty view and race the room's actual code.
+        !isLoading && (collaboration?.hasSynced ?? false)
     );
 
     // Phase 6 guardrails. Passive by design: they make an accident *visible*

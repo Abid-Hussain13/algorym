@@ -1970,3 +1970,24 @@ prepended, newest first.
 - `useRoomOutput` appends oldest → newest; the drawer auto-scrolls to a new run
   only while the reader is pinned to the bottom, and "Running…" is a row at the
   end instead of replacing the list.
+
+## Late joiners: hydrate the feed, gate the seed
+
+Two late-join gaps from testing:
+
+- **Output history** — WS `run_result` broadcasts are fire-and-forget, so
+  someone joining mid-session started with an empty panel. The run log is
+  already persisted, so the room now hydrates from
+  `GET /:id/events?type=run_result` and the server echoes the persisted
+  `eventId` (plus the client `runId`) on every broadcast — whichever channel
+  delivers a run first wins, the other is dropped by id. The events endpoint
+  dropped `protect` for the same capability model as `/room`: membership is
+  proven by `participantId` (anonymous candidates included); the cookie-only
+  path still requires ownership.
+- **Starter-code race** — `useEditorFiles` seeded the starter as soon as the
+  question HTTP resolved, which can beat the first Yjs sync: an empty local
+  files map would then race (and potentially clobber) the room's real buffers.
+  Seeding is now gated on `provider` sync, so the map it reads is authoritative.
+
+Also: the earlier "duplicate output" report was a stale tab — the deployed
+bundle already carried the `runId` dedup; both tabs must be on the same build.

@@ -24,6 +24,19 @@ describe("Session replay events (GET /api/session/:id/events)", () => {
         );
     };
 
+    const joinGuest = async (sessionId: string) => {
+        const session = (
+            await db.query<{ access_token: string }>("SELECT access_token FROM sessions WHERE id = $1", [sessionId])
+        ).rows[0];
+        const res = await request(app).post("/api/session/join").send({
+            access_token: session.access_token,
+            email: "candidate@example.com",
+            display_name: "Candidate",
+            consent_to_contact: true,
+        });
+        return res.body.data.participant as { id: string };
+    };
+
     it("returns events in chronological (ASC) order with actor info", async () => {
         const session = await createSession(agent, { mode: "practice" });
         await insertEvent(session.id, "session_started", { note: "start" });
@@ -104,5 +117,51 @@ describe("Session replay events (GET /api/session/:id/events)", () => {
     it("is protected", async () => {
         const res = await request(app).get("/api/session/00000000-0000-4000-8000-000000000000/events");
         expect(res.status).toBe(401);
+    });
+
+    it("lets an anonymous room participant fetch with their participantId", async () => {
+        const session = await createSession(agent, { mode: "practice" });
+        const guest = await joinGuest(session.id);
+        await insertEvent(session.id, "run_result", { status: "accepted", stdout: "hi" });
+
+        const res = await request(app).get(
+            `/api/session/${session.id}/events?type=run_result&participantId=${guest.id}`
+        );
+        expect(res.status).toBe(200);
+        expect(res.body.data.sessionEvents).toHaveLength(1);
+        expect(res.body.data.sessionEvents[0].event_type).toBe("run_result");
+        expect(res.body.data.sessionEvents[0].actor.display_name).toBe("Test User");
+    });
+
+    it("rejects a participantId that belongs to another session", async () => {
+        const session = await createSession(agent, { mode: "practice" });
+        const otherOwner = await signupAgent(app);
+        const other = await createSession(otherOwner.agent, { mode: "practice" });
+        const outsider = await joinGuest(other.id);
+
+        const res = await request(app).get(
+            `/api/session/${session.id}/events?participantId=${outsider.id}`
+        );
+        expect(res.status).toBe(403);
+        expect(res.body.message).toBe("You are not a participant of this session");
+    });
+
+    it("filters events by type", async () => {
+        const session = await createSession(agent, { mode: "practice" });
+        await insertEvent(session.id, "code_snapshot", { code: "x" });
+        await insertEvent(session.id, "run_result", { status: "accepted", stdout: "1" });
+
+        const res = await agent.get(`/api/session/${session.id}/events?type=run_result`);
+        expect(res.status).toBe(200);
+        const events = res.body.data.sessionEvents;
+        expect(events).toHaveLength(1);
+        expect(events[0].event_type).toBe("run_result");
+    });
+
+    it("rejects an unknown event type", async () => {
+        const session = await createSession(agent, { mode: "practice" });
+        const res = await agent.get(`/api/session/${session.id}/events?type=bogus`);
+        expect(res.status).toBe(400);
+        expect(res.body.message).toBe("Validation failed");
     });
 });

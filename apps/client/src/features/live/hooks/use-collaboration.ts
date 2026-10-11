@@ -12,6 +12,8 @@ export interface Collaboration {
     provider: WebsocketProvider;
     files: Y.Map<Y.Text>;
     isConnected: boolean;
+    /** First sync with the server doc has completed — the files map is authoritative. */
+    hasSynced: boolean;
 }
 
 /**
@@ -51,22 +53,30 @@ export function useCollaboration(sessionId: string, participant: LocalParticipan
         });
 
         let isConnected = provider.wsconnected;
+        let hasSynced = provider.synced;
 
         const handleStatus = ({ status }: { status: string }) => {
             isConnected = status === "connected";
             setCollaboration((prev) => (prev ? { ...prev, isConnected } : prev));
         };
 
+        const handleSync = (state: boolean) => {
+            hasSynced = state;
+            setCollaboration((prev) => (prev ? { ...prev, hasSynced: state } : prev));
+        };
+
         provider.on("status", handleStatus);
+        provider.on("sync", handleSync);
         // The Y.Doc and WebsocketProvider are external objects that cannot be
         // built during render without breaking StrictMode, so they are published
         // to React from here. This is the subscribe-to-an-external-system case,
         // not derived state.
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setCollaboration({ doc, provider, files, isConnected });
+        setCollaboration({ doc, provider, files, isConnected, hasSynced });
 
         return () => {
             provider.off("status", handleStatus);
+            provider.off("sync", handleSync);
             provider.destroy();
             doc.destroy();
             setCollaboration(null);

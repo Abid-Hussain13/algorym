@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import type { EventType } from "@algorym/shared-types";
 import * as service from "../services/session.service.js";
 import { getQuestionById } from "../services/questions.service.js";
 import { getHostParticipant, getCandidateParticipant } from "../services/participant.service.js";
@@ -178,9 +179,25 @@ export const getEvaluation = async (req: Request, res: Response) => {
 
 export const getSessionEvents = async (req: Request, res: Response) => {
     const sessionId = req.params.id as string;
+    const { participantId, type } = (req as any).validatedQuery as {
+        participantId?: string;
+        type?: EventType;
+    };
 
-    await service.getSessionById(req.user!.id, sessionId);
-    const events = await sessionEventService.getSessionEvents(sessionId);
+    // Same capability model as `GET /:id/room`: a room member proves membership
+    // with their participant id (anonymous candidates included); the plain
+    // cookie path (replay tooling, host scripts) still requires ownership.
+    if (participantId) {
+        const userId = await resolveAccessTokenUserId(req.cookies?.accessToken);
+        const isVerified = await verifyParticipant({ sessionId, participantId, userId });
+        if (!isVerified) throw new AppError("You are not a participant of this session", 403);
+    } else {
+        const userId = await resolveAccessTokenUserId(req.cookies?.accessToken);
+        if (!userId) throw new AppError("Not authenticated", 401);
+        await service.getSessionById(userId, sessionId);
+    }
+
+    const events = await sessionEventService.getSessionEvents(sessionId, type);
     const sessionEvents = events.map((r) => ({
         id: r.id,
         event_type: r.event_type,

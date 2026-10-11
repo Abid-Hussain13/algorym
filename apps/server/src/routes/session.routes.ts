@@ -10,7 +10,7 @@ import { protect } from "../middlewares/protect.js";
 import { validate, validateQuery } from "../middlewares/validate.js";
 import {
     createSessionSchema, getAllSessionsSchema, updateSessionSchema,
-    joinSessionSchema, changeQuestionSchema, saveNotesSchema
+    joinSessionSchema, changeQuestionSchema, saveNotesSchema, eventsQuerySchema
 } from "../utils/validation.js";
 import { getSessionEvents } from "../controllers/session.controller.js";
 
@@ -36,6 +36,8 @@ sessionRoute.patch("/:id/cancel", protect, cancelSession);
 sessionRoute.patch("/:id/question", protect, validate(changeQuestionSchema), changeQuestion);
 sessionRoute.patch("/:id/notes", protect, validate(saveNotesSchema), saveNotes);
 sessionRoute.get("/:id/evaluation", protect, getEvaluation);
-sessionRoute.get("/:id/events", protect, getSessionEvents);
+// Events — no `protect`: a candidate proves membership with participantId
+// (same model as /:id/room); the cookie-only path still requires ownership.
+sessionRoute.get("/:id/events", validateQuery(eventsQuerySchema), getSessionEvents);
 
 export default sessionRoute;

@@ -5,6 +5,7 @@ import type {
     CreateQuestionBody,
     CreateSessionBody,
     dashboardStatsType,
+    EventType,
     GenerateQuestionBody,
     GenerateQuestionResponse,
     JoinSessionBody,
@@ -95,8 +96,15 @@ export const sessionsApi = {
         http.patch<{ evaluation: SessionEvaluation }>(`/api/session/${id}/notes`, { notes }),
     evaluation: (id: string) =>
         http.get<{ evaluation: SessionEvaluation }>(`/api/session/${id}/evaluation`),
-    events: (id: string) =>
-        http.get<{ sessionEvents: SessionEvent[] }>(`/api/session/${id}/events`),
+    events: (id: string, opts?: { type?: EventType; participantId?: string }) => {
+        const params = new URLSearchParams()
+        if (opts?.type) params.set('type', opts.type)
+        if (opts?.participantId) params.set('participantId', opts.participantId)
+        const query = params.toString()
+        return http.get<{ sessionEvents: SessionEvent[] }>(
+            `/api/session/${id}/events${query ? `?${query}` : ''}`
+        )
+    },
     scheduledSessions: () => http.get<{ sessions: Array<{ scheduled_at: string; duration_minutes: number | null }> }>('/api/session/scheduled')
 }
 

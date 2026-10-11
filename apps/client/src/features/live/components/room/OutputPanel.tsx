@@ -93,7 +93,11 @@ export function OutputPanel({ entries, localResult, isRunning, nameFor }: Output
     return (
         <ul className="flex flex-col">
             {entries.map((entry) => (
-                <RunCard key={entry.key} result={entry.result} name={nameFor(entry.actorParticipantId)} />
+                <RunCard
+                    key={entry.key}
+                    result={entry.result}
+                    name={entry.actorName ?? nameFor(entry.actorParticipantId)}
+                />
             ))}
             {localResult && !localEchoed && (
                 <RunCard key={`local-${localResult.runId}`} result={localResult.result} name="You" />
