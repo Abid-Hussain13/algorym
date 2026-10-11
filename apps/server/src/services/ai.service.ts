@@ -26,7 +26,7 @@ Generate a complete coding question based on the title above.
 
 Return ONLY a valid JSON object (no markdown fences, no extra text) with this exact structure:
 {
-  "description": "A detailed problem statement formatted in markdown with:\\n- **Problem Overview** (2-3 sentences explaining the task)\\n- **Input Format** (describe the function signature and parameters)\\n- **Output Format** (describe the return value)\\n- **Constraints** (3-4 realistic constraints like array length, value ranges)\\n- **Examples** (2-3 examples with Input, Output, and Explanation)",
+  "description": "A detailed problem statement in plain text (no markdown syntax) with sections separated by blank lines:\\nProblem Overview: (2-3 sentences explaining the task)\\nInput Format: (describe the function signature and parameters)\\nOutput Format: (describe the return value)\\nConstraints: (3-4 realistic constraints like array length, value ranges)\\nExamples: (2-3 examples with Input, Output, and Explanation)",
   "starter_code": {
     "${languages[0]}": "language-appropriate function signature only, no solution, with a brief comment describing the task"
   }
@@ -34,6 +34,7 @@ Return ONLY a valid JSON object (no markdown fences, no extra text) with this ex
 
 Rules:
 - description must be clear, concise, and suitable for a technical interview
+- description must be plain text only: no markdown syntax, no bold/heading/code markers, no bullet symbols — use plain labels like "Problem Overview:" followed by the text
 - starter_code must contain ONLY the function signature with comments — no implementation
 - Use idiomatic conventions for each language (e.g., camelCase for JS, snake_case for Python)
 - starter_code keys must exactly match the language identifiers provided: ${languages.join(", ")}
@@ -45,6 +46,20 @@ function getDifficultyHint(title: string): string {
     if (lower.includes("easy") || lower.includes("basic") || lower.includes("simple")) return "easy";
     if (lower.includes("hard") || lower.includes("complex") || lower.includes("advanced")) return "hard";
     return "medium";
+}
+
+function stripMarkdown(text: string): string {
+    return text
+        .replace(/```[a-zA-Z]*\n?/g, "")
+        .replace(/`([^`]+)`/g, "$1")
+        .replace(/\*\*([^*]+)\*\*/g, "$1")
+        .replace(/__([^_]+)__/g, "$1")
+        .replace(/~~([^~]+)~~/g, "$1")
+        .replace(/^#{1,6}\s+/gm, "")
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+        .replace(/^>\s?/gm, "")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
 }
 
 interface GenerateQuestionParams {
@@ -98,7 +113,7 @@ export async function generateQuestionDetails(
     }
 
     return {
-        description: parsed.description,
+        description: stripMarkdown(parsed.description),
         starter_code: starterCode,
     };
 }
