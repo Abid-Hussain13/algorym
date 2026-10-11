@@ -17,9 +17,33 @@ interface TimePickerProps {
     isBlocked: (v: string) => boolean;
 }
 
+const DROPDOWN_HEIGHT = 280;
+
 export function TimePicker({ value, onChange, isToday, isBlocked }: TimePickerProps) {
     const [open, setOpen] = useState(false);
+    const [dropUp, setDropUp] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
+
+    const toggle = () => {
+        if (!open && ref.current) {
+            const trigger = ref.current.getBoundingClientRect();
+            let top = 0;
+            let bottom = window.innerHeight;
+            for (let el: HTMLElement | null = ref.current.parentElement; el && el !== document.body; el = el.parentElement) {
+                const overflowY = getComputedStyle(el).overflowY;
+                if (overflowY === "auto" || overflowY === "scroll" || overflowY === "hidden") {
+                    const box = el.getBoundingClientRect();
+                    top = box.top;
+                    bottom = box.bottom;
+                    break;
+                }
+            }
+            const roomBelow = bottom - trigger.bottom;
+            const roomAbove = trigger.top - top;
+            setDropUp(roomBelow < DROPDOWN_HEIGHT && roomAbove > roomBelow);
+        }
+        setOpen((o) => !o);
+    };
 
     useEffect(() => {
         if (!open) return;
@@ -52,7 +76,7 @@ export function TimePicker({ value, onChange, isToday, isBlocked }: TimePickerPr
         <div ref={ref} className="relative">
             <button
                 type="button"
-                onClick={() => setOpen((o) => !o)}
+                onClick={toggle}
                 className="flex h-9 w-full items-center justify-between gap-2 rounded-lg border border-border bg-surface px-3 text-sm text-fg transition-colors hover:border-border-strong focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
             >
                 <span>{formatTime12(value)}</span>
@@ -74,7 +98,12 @@ export function TimePicker({ value, onChange, isToday, isBlocked }: TimePickerPr
             </button>
 
             {open && (
-                <div className="absolute left-0 top-full z-50 mt-1 w-full max-h-[280px] overflow-hidden rounded-lg border border-border bg-surface shadow-lg">
+                <div
+                    className={cn(
+                        "absolute left-0 z-50 w-full max-h-[280px] overflow-hidden rounded-lg border border-border bg-surface shadow-lg",
+                        dropUp ? "bottom-full mb-1" : "top-full mt-1"
+                    )}
+                >
                     <div className="overflow-y-auto max-h-[280px]">
                         <TimeSlotGroup
                             label="AM"
