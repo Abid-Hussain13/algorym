@@ -17,7 +17,6 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
 
- or browsers keep loading a build whose assets no longer exist.
 [[headers]]
   for = "/assets/*"
   [headers.values]
