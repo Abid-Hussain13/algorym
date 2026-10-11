@@ -26,9 +26,22 @@ name: Keep Render awake
 
 on:
   schedule:
-    # Every 14 minutes.
-    - cron: "*/14 * * * *"
+    # Every 14 minutes, offset from the top of the hour: GitHub drops queued
+    # scheduled runs during the high-load minute at :00.
+    - cron: "6,20,34,48 * * * *"
   workflow_dispatch: # so it can be triggered manually while testing
+  # Every finished run starts the next one, so when GitHub's cron goes quiet
+  # (it often does — the schedule event is dropped under load) the pings keep
+  # going. The cron above just re-seeds the chain if it ever dies.
+  workflow_run:
+    workflows: ["Keep Render awake"]
+    types: [completed]
+
+# One chain at a time: a cron fire or manual run takes over from the sleeper
+# instead of queueing up behind it.
+concurrency:
+  group: keep-render-awake
+  cancel-in-progress: true
 
 jobs:
   ping:
@@ -36,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     # GitHub disables scheduled workflows after 60 days without repository
     # activity, so if pings stop working check this first.
-    timeout-minutes: 5
+    timeout-minutes: 20
 
     steps:
       - name: Ping
@@ -49,15 +62,27 @@ jobs:
             exit 1
           fi
 
-          status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$HEALTH_URL")
-          echo "GET $HEALTH_URL -> $status"
+          # A cold start takes ~60 seconds, so give each attempt room for it
+          # instead of giving up first and reporting a failure.
+          for attempt in 1 2; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 150 "$HEALTH_URL")
+            echo "GET $HEALTH_URL -> $status (attempt $attempt)"
 
-          # 503 is expected and still fine: it means the app answered but the
-          # database is unreachable, and Render has counted the request either
-          # way. Anything else is a genuine problem worth failing the job over.
-          if [ "$status" = "200" ] || [ "$status" = "503" ]; then
-            echo "Service is awake."
-          else
-            echo "::error::Unexpected status $status"
-            exit 1
-          fi
+            # 503 is expected and still fine: it means the app answered but the
+            # database is unreachable, and Render has counted the request either
+            # way. Anything else is a genuine problem worth failing over.
+            if [ "$status" = "200" ] || [ "$status" = "503" ]; then
+              echo "Service is awake."
+              exit 0
+            fi
+            sleep 15
+          done
+
+          echo "::error::Health endpoint did not answer after 2 attempts"
+          exit 1
+
+      - name: Wait for the next slot
+        # Runs even when the ping failed, so a broken endpoint re-tries on the
+        # next 14 minute slot instead of spinning a hot retry loop.
+        if: always()
+        run: sleep 740
