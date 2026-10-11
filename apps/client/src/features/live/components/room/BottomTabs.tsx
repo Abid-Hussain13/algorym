@@ -1,16 +1,16 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils/cn";
 import { OutputPanel } from "./OutputPanel";
 import { HostNotes } from "./HostNotes";
 import { useResizablePane } from "../../hooks/use-resizable-pane";
 import type { RoomOutputEntry } from "../../hooks/use-room-output";
-import type { RunResultPayload } from "@algorym/shared-types";
+import type { LocalRun } from "../../hooks/use-run-code";
 
 type BottomTab = "output" | "input" | "notes";
 
 interface BottomTabsProps {
     entries: RoomOutputEntry[];
-    localResult: RunResultPayload | null;
+    localResult: LocalRun | null;
     isRunning: boolean;
     nameFor: (participantId: string) => string;
     // stdin lives here, as a tab, rather than in a toolbar row
@@ -90,6 +90,22 @@ export function BottomTabs({
         storageKey: "algorym:room:drawer-height",
     });
 
+    const scrollRef = useRef<HTMLDivElement>(null);
+    // The reader is "pinned" when within 64px of the bottom — only then do new
+    // runs shift the view; scrolling up to read an older run is never yanked.
+    const pinnedRef = useRef(true);
+
+    const handleScroll = () => {
+        const el = scrollRef.current;
+        if (!el) return;
+        pinnedRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 64;
+    };
+
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (el && tab === "output" && pinnedRef.current) el.scrollTop = el.scrollHeight;
+    }, [entries.length, isRunning, tab]);
+
     return (
         <section
             className="relative flex shrink-0 flex-col border-t border-border bg-bg"
@@ -148,7 +164,7 @@ export function BottomTabs({
             </div>
 
             {!collapsed && (
-                <div className="min-h-0 flex-1 overflow-y-auto">
+                <div ref={scrollRef} onScroll={handleScroll} className="min-h-0 flex-1 overflow-y-auto">
                     {tab === "output" && (
                         <OutputPanel
                             entries={entries}

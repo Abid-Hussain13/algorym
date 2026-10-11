@@ -1954,3 +1954,19 @@ match the rows.
 - Google sign-in button removed (no OAuth credentials exist — dead `console.log`);
   debug logging, `: any` catches, the dead `getAllSessions` service and the stale
   `useAwaySignal` comment cleaned up; emails address the user by name.
+
+## One card per run, oldest first
+
+The live output panel could show a run twice and out of order: the presser's
+HTTP result was kept forever (`runCode.data`) and only hidden while the newest
+WS broadcast happened to be their own — so when the *other* person ran, the
+stale local card reappeared (host saw 3 cards after 2 runs). The feed also
+prepended, newest first.
+
+- Every run now carries a client-generated `runId` in `POST /api/run`, echoed
+  back on the `run_result` broadcast. `OutputPanel` shows the local card only
+  until the feed holds that exact `runId` — matching, not timing, so the echo
+  arriving before or after the HTTP response both work.
+- `useRoomOutput` appends oldest → newest; the drawer auto-scrolls to a new run
+  only while the reader is pinned to the bottom, and "Running…" is a row at the
+  end instead of replacing the list.

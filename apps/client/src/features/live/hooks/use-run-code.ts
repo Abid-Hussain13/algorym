@@ -8,21 +8,26 @@ interface RunVariables {
     stdin?: string;
 }
 
+/** The caller's own run: HTTP result plus the id the WS echo will carry. */
+export interface LocalRun {
+    runId: string;
+    result: RunResultPayload;
+}
+
 /**
  * Executes the candidate's code through `POST /api/run`.
  *
- * Returns `RunResultPayload` directly (the envelope's `{ result }` is unwrapped
- * here) so callers never touch `data.result`.
- *
- * Note this is the *caller's* result. Everyone else in the room learns about it
- * through the `run_result` broadcast, which arrives separately over
- * `useSessionSocket` — the two are intentionally not the same object.
+ * A `runId` is generated here and echoed back on the `run_result` broadcast,
+ * which lets `OutputPanel` drop the local card the moment the room-wide copy
+ * of *this* run lands — no matter whose run echoes next.
  */
 export function useRunCode(sessionId: string, participantId: string) {
-    return useMutation<RunResultPayload, Error, RunVariables>({
-        mutationFn: ({ code, language, stdin }) =>
-            runApi
-                .execute({ sessionId, participantId, code, language, stdin })
-                .then(({ result }) => result),
+    return useMutation<LocalRun, Error, RunVariables>({
+        mutationFn: ({ code, language, stdin }) => {
+            const runId = crypto.randomUUID();
+            return runApi
+                .execute({ sessionId, participantId, code, language, stdin, runId })
+                .then(({ result }) => ({ runId, result }));
+        },
     });
 }

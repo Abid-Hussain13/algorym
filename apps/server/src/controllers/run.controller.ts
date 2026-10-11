@@ -9,7 +9,7 @@ import { resolveAccessTokenUserId } from "../utils/verifyAccessToken.js";
 import AppError from "../utils/AppError.js";
 
 export const runCode = async (req: Request, res: Response) => {
-    const { sessionId, participantId, code, language, stdin } = req.body;
+    const { sessionId, participantId, code, language, stdin, runId } = req.body;
 
     const userId = await resolveAccessTokenUserId(req.cookies?.accessToken);
 
@@ -28,6 +28,7 @@ export const runCode = async (req: Request, res: Response) => {
         type: "run_result",
         payload: result,
         actorParticipantId: participantId,
+        runId,
     };
     broadcast(sessionId, runResultMessage);
 

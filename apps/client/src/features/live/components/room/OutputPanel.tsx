@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils/cn";
 import type { RoomOutputEntry } from "../../hooks/use-room-output";
+import type { LocalRun } from "../../hooks/use-run-code";
 import type { RunStatus } from "@algorym/shared-types";
 
 const STATUS_STYLES: Record<RunStatus, string> = {
@@ -27,8 +28,8 @@ const outputOf = (result: RoomOutputEntry["result"]) =>
 
 interface OutputPanelProps {
     entries: RoomOutputEntry[];
-    /** Result of the run this user just triggered, which has not echoed back yet. */
-    localResult: RoomOutputEntry["result"] | null;
+    /** This user's own HTTP result, shown until its `runId` echoes over WS. */
+    localResult: LocalRun | null;
     isRunning: boolean;
     /** Name lookup so a run can be attributed to a person, not an id. */
     nameFor: (participantId: string) => string;
@@ -69,25 +70,19 @@ const RunCard = ({ result, name }: { result: RoomOutputEntry["result"]; name: st
 };
 
 /**
- * Everything anyone in the room has run, newest first.
+ * Everything anyone in the room has run, in run order — oldest at the top,
+ * each new run appended at the bottom as it comes in.
  *
- * The local run appears twice — once as `localResult` (the HTTP answer, instant)
- * and again as a broadcast a moment later. Rather than reconcile the two, the
- * local one is only shown when no broadcast for this run has arrived yet; after
- * that the broadcast entry takes over and there is exactly one card per run.
+ * The presser's own result arrives twice: as the instant HTTP answer and as a
+ * WS echo carrying the same `runId`. The local card is shown only until that
+ * echo lands, so there is exactly one card per run regardless of who runs next.
  */
 export function OutputPanel({ entries, localResult, isRunning, nameFor }: OutputPanelProps) {
-    const hasBroadcastForLatest = entries.length > 0 && entries[0].isSelf;
+    const localEchoed =
+        localResult !== null &&
+        entries.some((entry) => entry.runId !== undefined && entry.runId === localResult.runId);
 
-    if (isRunning) {
-        return (
-            <p className="px-3 py-3 text-xs text-muted" role="status">
-                Running…
-            </p>
-        );
-    }
-
-    if (!entries.length && !localResult) {
+    if (!entries.length && !localResult && !isRunning) {
         return (
             <p className="px-3 py-3 text-xs text-muted">
                 No output yet. Press <span className="font-mono">Run</span> to execute the active file.
@@ -97,12 +92,17 @@ export function OutputPanel({ entries, localResult, isRunning, nameFor }: Output
 
     return (
         <ul className="flex flex-col">
-            {localResult && !hasBroadcastForLatest && (
-                <RunCard result={localResult} name="You" />
-            )}
             {entries.map((entry) => (
                 <RunCard key={entry.key} result={entry.result} name={nameFor(entry.actorParticipantId)} />
             ))}
+            {localResult && !localEchoed && (
+                <RunCard key={`local-${localResult.runId}`} result={localResult.result} name="You" />
+            )}
+            {isRunning && (
+                <li className="px-3 py-3 text-xs text-muted" role="status">
+                    Running…
+                </li>
+            )}
         </ul>
     );
 }

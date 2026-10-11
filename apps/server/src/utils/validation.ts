@@ -79,6 +79,7 @@ export const runCodeSchema = z.object({
         message: "Language must be javascript, python, java, cpp, or go",
     }),
     stdin: z.string().max(10000, "Stdin must be under 10KB").optional(),
+    runId: z.string().min(1).max(64).optional(),
 });
 
 

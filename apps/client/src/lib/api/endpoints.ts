@@ -112,6 +112,7 @@ export const runApi = {
         language: string
         code: string
         stdin?: string
+        runId?: string
     }) => http.post<{ result: RunResultPayload }>('/api/run', body),
 }
 

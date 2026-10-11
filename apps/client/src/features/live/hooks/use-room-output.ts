@@ -7,6 +7,8 @@ export interface RoomOutputEntry {
     key: string;
     actorParticipantId: string;
     isSelf: boolean;
+    /** Echo of the HTTP `runId`, so the presser's local card can be dropped. */
+    runId?: string;
     result: RunResultPayload;
     receivedAt: number;
 }
@@ -18,13 +20,12 @@ let receivedCount = 0;
 
 /**
  * Collects `run_result` broadcasts so the output panel shows what **everyone** in
- * the room ran, not just the local user.
+ * the room ran, in the order the runs completed (oldest first, appended as they
+ * arrive).
  *
- * The presser also receives their own result over HTTP via `useRunCode`. This
- * hook deliberately does not merge the two: HTTP is the immediate, guaranteed
- * answer for the person who pressed Run, and this is the room-wide feed. The
- * broadcast for your own run arrives too, which is why the UI de-duplicates by
- * comparing stdout.
+ * The presser also receives their own result over HTTP via `useRunCode`; that
+ * local card is shown only until this feed carries the same `runId`, which is
+ * reconciled in `OutputPanel`.
  */
 export function useRoomOutput(
     socket: SessionSocket,
@@ -50,11 +51,12 @@ export function useRoomOutput(
                     key: `${message.actorParticipantId}-${receivedAt}-${receivedCount}`,
                     actorParticipantId: message.actorParticipantId,
                     isSelf: message.actorParticipantId === selfParticipantId,
+                    runId: message.runId,
                     result: message.payload,
                     receivedAt,
                 };
 
-                setEntries((prev) => [entry, ...prev].slice(0, MAX_ENTRIES));
+                setEntries((prev) => [...prev, entry].slice(-MAX_ENTRIES));
             }),
         [subscribe, selfParticipantId]
     );

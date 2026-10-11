@@ -44,6 +44,7 @@ describe("POST /api/run", () => {
             code: "print(5)",
             language: "python",
             stdin: "hello",
+            runId: "550e8400-e29b-41d4-a716-446655440000",
         });
 
         expect(res.status).toBe(200);
@@ -124,5 +125,21 @@ describe("POST /api/run", () => {
             language: "python",
         });
         expect(res.status).toBe(400);
+    });
+
+    it("rejects an oversized runId", async () => {
+        const { agent } = await signupAgent(app);
+        const session = await createSession(agent, { mode: "practice" });
+        const guest = await joinGuest(session.id);
+
+        const res = await request(app).post("/api/run").send({
+            sessionId: session.id,
+            participantId: guest.id,
+            code: "x",
+            language: "python",
+            runId: "r".repeat(65),
+        });
+        expect(res.status).toBe(400);
+        expect(res.body.message).toBe("Validation failed");
     });
 });
