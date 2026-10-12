@@ -93,10 +93,10 @@ export function Navbar() {
                         </div>
                     ) : (
                         <div className="flex shrink-0 items-center gap-1.5">
-                            <Button asChild variant="ghost" size="sm">
+                            <Button asChild variant="ghost" size="sm" className="px-3 py-[6px] text-[12px] sm:px-[15px] sm:py-[7px] sm:text-[13px]">
                                 <Link to="/login">Log in</Link>
                             </Button>
-                            <Button asChild variant="primary" size="sm">
+                            <Button asChild variant="primary" size="sm" className="px-3 py-[6px] text-[12px] sm:px-[15px] sm:py-[7px] sm:text-[13px]">
                                 <Link to="/signup">Sign up</Link>
                             </Button>
                         </div>

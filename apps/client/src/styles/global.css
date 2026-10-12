@@ -607,11 +607,6 @@
   line-height: 1.6;
   margin-top: 0;
 }
-/* Below tablet the horizontal expanding columns become a compact vertical
-   accordion: every collapsed step is one horizontal row (icon + label), and
-   only the open step renders its body. Both halves are display-toggled —
-   leaving the hidden half in flow is what reserved ~400px of blank space per
-   step on phones. */
 @media (max-width: 900px) {
   .acc {
     flex-direction: column;
@@ -637,7 +632,7 @@
     flex-direction: row;
     align-items: center;
     gap: 10px;
-    padding: 13px 16px;
+    padding: 15px 16px;
     opacity: 1;
     transform: none;
   }
@@ -665,7 +660,7 @@
     display: none;
     position: relative;
     inset: auto;
-    padding: 2px 16px 18px;
+    padding: 10px 16px 26px;
     justify-content: flex-start;
     transform: none;
   }
@@ -705,7 +700,7 @@
 }
 @media (max-width: 480px) {
   .how {
-    padding: 52px 16px 56px;
+    padding: 64px 16px 72px;
   }
 }
 
@@ -1167,7 +1162,7 @@
 }
 @media (max-width: 480px) {
   .editor-sec {
-    padding: 52px 0 56px;
+    padding: 64px 0 72px;
   }
   .editor-inner {
     padding: 0 16px;
@@ -1423,7 +1418,7 @@
 }
 @media (max-width: 600px) {
   .cs-sec {
-    padding: 52px 16px 56px;
+    padding: 64px 16px 72px;
   }
   /* Tabs stay on one row, as on desktop — just smaller. */
   .cs-tabs {
@@ -1568,6 +1563,9 @@
   flex: 0 0 340px;
   position: relative;
   padding: 8px 0 8px 36px;
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  min-height: 420px;
 }
 .rp-timeline::before {
   content: "";
@@ -1580,7 +1578,10 @@
 }
 .rp-timeline-item {
   position: relative;
-  margin-bottom: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-bottom: 28px;
 }
 .rp-timeline-item:last-child {
   margin-bottom: 0;
@@ -1646,21 +1647,20 @@
   animation: rp-bean-move 10s linear infinite;
 }
 @keyframes rp-bean-move {
-  /* start above line, barely visible, growing in */
   0% { top: 0%; opacity: 0; }
   3% { opacity: 0.35; }
   6% { opacity: 1; }
   /* arrive at station 1, small stop */
-  16% { top: 4%; opacity: 1; }
-  22% { top: 4%; opacity: 1; }
+  10% { top: 2%; opacity: 1; }
+  24% { top: 2%; opacity: 1; }
   /* travel to station 2, small stop */
-  46% { top: 39%; opacity: 1; }
-  52% { top: 39%; opacity: 1; }
+  40% { top: 35%; opacity: 1; }
+  56% { top: 35%; opacity: 1; }
   /* travel to station 3, small stop */
-  76% { top: 74%; opacity: 1; }
-  82% { top: 74%; opacity: 1; }
+  72% { top: 68%; opacity: 1; }
+  88% { top: 68%; opacity: 1; }
   /* fade along the way toward the end */
-  94% { top: 98%; opacity: 0.4; }
+  95% { top: 96%; opacity: 0.4; }
   100% { top: 100%; opacity: 0; }
 }
 
@@ -1683,7 +1683,7 @@
 }
 @media (max-width: 600px) {
   .rp-sec {
-    padding: 52px 16px 56px;
+    padding: 64px 16px 72px;
   }
   .rp-title {
     font-size: 26px;
@@ -1693,33 +1693,24 @@
     line-height: 1.5;
     margin-top: 12px;
   }
-  /* Player and copy stay side by side — the text no longer drops below the
-     animation, it just gets a narrower column. */
-  .rp-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
-    align-items: start;
-    gap: 16px;
-    margin-top: 28px;
-  }
   .rp-player-wrap {
-    position: static;
-    max-width: none;
-    width: 100%;
-    margin: 0;
-    aspect-ratio: 16 / 12;
-    border-radius: var(--radius-md);
+    display: none;
+  }
+  .rp-layout {
+    display: block;
+    margin-top: 26px;
   }
   .rp-timeline {
     flex: none;
     width: 100%;
     padding: 0 0 0 20px;
+    min-height: 300px;
   }
   .rp-timeline::before {
     left: 5px;
   }
   .rp-timeline-item {
-    margin-bottom: 20px;
+    padding-bottom: 14px;
   }
   .rp-timeline-item:last-child {
     margin-bottom: 0;
@@ -1866,7 +1857,7 @@ html[data-theme="dark"] .rp-timeline-marker {
 }
 @media (max-width: 600px) {
   .faq-sec {
-    padding: 52px 16px 56px;
+    padding: 64px 16px 72px;
   }
   .faq-title {
     font-size: 26px;
@@ -1883,27 +1874,34 @@ html[data-theme="dark"] .rp-timeline-marker {
     gap: 10px;
   }
   .faq-track-group {
-    gap: 10px;
+    gap: 12px;
+    padding: 6px 8px;
   }
   .faq-track-group > .faq-card {
-    padding: 14px 14px 16px;
+    width: 240px;
+    padding: 13px 14px 15px;
     gap: 6px;
     border-radius: var(--radius-md);
   }
   .faq-card-title {
-    font-size: 15px;
+    font-size: 14px;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   .faq-card-answer {
-    font-size: 13px;
-    line-height: 1.5;
+    font-size: 12px;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
 
-/* The FAQ is an auto-scrolling marquee on wide screens. Below a tablet it
-   becomes a plain stacked list: content that moves on its own cannot be
-   read at a comfortable pace, cannot be paused by a keyboard user, and at
-   tablet widths the cards were clipped at both edges. */
-@media (max-width: 900px) {
+@media (min-width: 601px) and (max-width: 900px) {
   .faq-track,
   .faq-track-reverse {
     animation: none;
@@ -1920,6 +1918,10 @@ html[data-theme="dark"] .rp-timeline-marker {
     width: 100%;
     padding: 20px 18px 22px;
   }
+}
+.faq-track:focus-within,
+.faq-track-group:focus-within {
+  animation-play-state: paused;
 }
 @media (prefers-reduced-motion: reduce) {
   .faq-track,
@@ -2071,31 +2073,40 @@ html[data-theme="dark"] .rp-timeline-marker {
 }
 @media (max-width: 600px) {
   .foot-inner {
-    padding: 48px 16px 0;
+    padding: 64px 16px 0;
   }
   .foot-top {
-    flex-direction: column;
-    gap: 22px;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 28px;
+    flex-wrap: nowrap;
+  }
+  .foot-brand {
+    max-width: 58%;
   }
   .foot-logo img {
-    height: 52px;
+    height: 44px;
   }
   .foot-tag {
-    font-size: 13px;
-    line-height: 1.55;
-    margin-top: 10px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    margin-top: 14px;
+    max-width: none;
   }
   .foot-links {
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-end;
     gap: 14px;
-    padding-top: 0;
+    padding-top: 4px;
   }
   .foot-link {
     font-size: 13px;
   }
   .foot-hr {
-    margin: 28px 0 18px;
+    margin: 40px 0 24px;
+  }
+  .foot-bottom {
+    gap: 12px;
   }
   .foot-copy,
   .foot-mail {
@@ -2107,23 +2118,17 @@ html[data-theme="dark"] .rp-timeline-marker {
   }
   .foot-wordmark {
     font-size: clamp(44px, 17vw, 96px);
+    margin-top: 8px;
   }
 }
 
 /* ============ SIDEBAR — PILL / STATE COLORS ============ */
-/* One layer paints per state, so hover and the selected page composite
-   identically (accent-soft at 10% alpha is translucent: two stacked layers
-   produce a different tint than one, which is what made hover read washed
-   next to the orange selection).
-   - selected: the button paints accent-soft, its layoutId pill is transparent
-   - hover:    the button is transparent, the SharedLayoutBg pill paints it */
+/* one layer paints per state: selected paints the button, hover paints the pill */
 [data-slot="sidebar-menu"] li .absolute.inset-0.rounded-xl {
   background: transparent !important;
 }
 
-/* Hover — identical accent coloring to the selected item, instant text
-   transition to kill the gray flash; the pill carries the background so the
-   morph animation stays visible while it slides. */
+/* hover: transparent button, pill paints the color */
 [data-slot="sidebar-menu"] li button:hover,
 [data-slot="sidebar-menu"] li a:hover {
   background: transparent !important;
@@ -2152,12 +2157,7 @@ html[data-theme="dark"] .rp-timeline-marker {
   display: none;
 }
 
-/* ── Marketing: one small-screen scale ───────────────────────────────────
-   Every marketing section used to carry its own breakpoint overrides, which
-   drifted apart — headings ran 26–36px, gutters 16/18/20px, section rhythm
-   72/96px. These rules give phones a single type scale and section rhythm so
-   the page reads as one system instead of five separately-tuned sections. */
-@media (max-width: 640px) {
+/* small-screen scale */@media (max-width: 640px) {
   .how,
   .cs-sec,
   .rp-sec,
