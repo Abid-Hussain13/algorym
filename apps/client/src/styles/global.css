@@ -1935,16 +1935,27 @@ html[data-theme="dark"] .rp-timeline-marker {
   }
 }
 
-/* ============ SIDEBAR — ACTIVE PILL OVERRIDE ============ */
-/* The animated pill (motion.span with layoutId) sits on top of the button.
-   Make it transparent so the button's own bg-accent-soft shows through. */
+/* ============ SIDEBAR — PILL / STATE COLORS ============ */
+/* One layer paints per state, so hover and the selected page composite
+   identically (accent-soft at 10% alpha is translucent: two stacked layers
+   produce a different tint than one, which is what made hover read washed
+   next to the orange selection).
+   - selected: the button paints accent-soft, its layoutId pill is transparent
+   - hover:    the button is transparent, the SharedLayoutBg pill paints it */
 [data-slot="sidebar-menu"] li .absolute.inset-0.rounded-xl {
   background: transparent !important;
 }
 
-/* Hover and active — identical accent coloring, instant transition to kill gray flash */
+/* Hover — identical accent coloring to the selected item, instant text
+   transition to kill the gray flash; the pill carries the background so the
+   morph animation stays visible while it slides. */
 [data-slot="sidebar-menu"] li button:hover,
-[data-slot="sidebar-menu"] li a:hover,
+[data-slot="sidebar-menu"] li a:hover {
+  background: transparent !important;
+  color: var(--color-accent-text) !important;
+  transition: none !important;
+}
+
 [data-slot="sidebar-menu"] li button[aria-current="page"],
 [data-slot="sidebar-menu"] li a[aria-current="page"] {
   background: var(--color-accent-soft) !important;
