@@ -607,51 +607,90 @@
   line-height: 1.6;
   margin-top: 0;
 }
+/* Below tablet the horizontal expanding columns become a compact vertical
+   accordion: every collapsed step is one horizontal row (icon + label), and
+   only the open step renders its body. Both halves are display-toggled —
+   leaving the hidden half in flow is what reserved ~400px of blank space per
+   step on phones. */
 @media (max-width: 900px) {
   .acc {
     flex-direction: column;
     height: auto;
+    border-radius: var(--radius-md);
   }
   .acc-panel {
-    flex: 0 0 56px;
+    flex: 0 0 auto;
     border-right: none;
     border-bottom: 1px solid var(--color-border);
-    flex-direction: row;
-    align-items: center;
-    padding: 0 20px;
+    transition: background 0.35s var(--ease-default);
   }
   .acc-panel:last-child {
     border-bottom: none;
   }
   .acc-panel.active {
-    flex: 1 1 auto;
+    background: var(--color-surface-2);
   }
   .acc-collapsed {
-    flex-direction: row;
-    padding: 0;
-    gap: 12px;
     position: relative;
+    inset: auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 16px;
+    opacity: 1;
+    transform: none;
   }
   .acc-panel.active .acc-collapsed {
-    transform: none;
+    display: none;
+  }
+  .acc-icon {
+    width: 20px;
+    height: 20px;
   }
   .acc-title-v {
     writing-mode: horizontal-tb;
+    text-orientation: mixed;
     transform: none;
     margin: 0;
-    font-size: 14px;
+    font-size: 12.5px;
+    letter-spacing: .04em;
+    white-space: normal;
+    line-height: 1.3;
   }
   .acc-panel.active .acc-title-v {
     display: none;
   }
   .acc-expanded {
+    display: none;
     position: relative;
-    padding: 24px 20px 32px;
-    flex-direction: column;
+    inset: auto;
+    padding: 2px 16px 18px;
+    justify-content: flex-start;
     transform: none;
   }
+  .acc-panel.active .acc-expanded {
+    display: flex;
+    opacity: 1;
+  }
   .acc-expanded h3 {
-    font-size: 22px;
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  .acc-expanded p {
+    font-size: 13.5px;
+    line-height: 1.55;
+    max-width: none;
+  }
+  .acc-expanded .acc-detail {
+    margin-top: 12px;
+    padding: 11px 12px;
+  }
+  .acc-expanded .acc-detail p {
+    font-size: 12.5px;
+  }
+  .acc-expanded .acc-detail code {
+    font-size: 12px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -666,7 +705,7 @@
 }
 @media (max-width: 480px) {
   .how {
-    padding: 72px 20px 96px;
+    padding: 52px 16px 56px;
   }
 }
 
@@ -1128,7 +1167,7 @@
 }
 @media (max-width: 480px) {
   .editor-sec {
-    padding: 72px 0 96px;
+    padding: 52px 0 56px;
   }
   .editor-inner {
     padding: 0 16px;
@@ -1384,20 +1423,60 @@
 }
 @media (max-width: 600px) {
   .cs-sec {
-    padding: 72px 20px 96px;
+    padding: 52px 16px 56px;
   }
+  /* Tabs stay on one row, as on desktop — just smaller. */
   .cs-tabs {
-    flex-direction: column;
+    flex-direction: row;
+    margin-top: 28px;
     margin-bottom: -1px;
   }
   .cs-tab {
-    padding-left: 37px;
+    flex: 1 1 0;
+    justify-content: center;
+    gap: 7px;
+    font-size: 13.5px;
+    padding: 9px 10px 10px;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  }
+  .cs-tab .cs-tab-dot {
+    width: 7px;
+    height: 7px;
   }
   .cs-pane-row {
-    padding: 20px 16px 36px;
+    padding: 14px 14px 24px;
+  }
+  .cs-pane-text h3 {
+    font-size: 17px;
+    margin-top: 6px;
+  }
+  .cs-pane-text .cs-pdescr {
+    font-size: 13.5px;
+    line-height: 1.5;
+    margin-top: 8px;
   }
   .cs-cap-list {
+    margin-top: 16px;
     grid-template-columns: 1fr;
+    column-gap: 0;
+  }
+  .cs-cap-list li {
+    font-size: 13px;
+    padding: 9px 0 8px;
+    gap: 8px;
+  }
+  .cs-cap-list .cap-sub {
+    font-size: 11.5px;
+    margin-top: 2px;
+  }
+  .cs-tick {
+    margin-top: 6px;
+  }
+  .cs-plain {
+    max-width: 260px;
+  }
+  .cs-visual {
+    margin-top: 4px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1604,23 +1683,76 @@
 }
 @media (max-width: 600px) {
   .rp-sec {
-    padding: 72px 20px 96px;
+    padding: 52px 16px 56px;
+  }
+  .rp-title {
+    font-size: 26px;
+  }
+  .rp-lede {
+    font-size: 13.5px;
+    line-height: 1.5;
+    margin-top: 12px;
+  }
+  /* Player and copy stay side by side — the text no longer drops below the
+     animation, it just gets a narrower column. */
+  .rp-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+    margin-top: 28px;
+  }
+  .rp-player-wrap {
+    position: static;
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    aspect-ratio: 16 / 12;
+    border-radius: var(--radius-md);
   }
   .rp-timeline {
-    padding-left: 32px;
+    flex: none;
+    width: 100%;
+    padding: 0 0 0 20px;
   }
   .rp-timeline::before {
-    left: 9px;
+    left: 5px;
+  }
+  .rp-timeline-item {
+    margin-bottom: 20px;
+  }
+  .rp-timeline-item:last-child {
+    margin-bottom: 0;
   }
   .rp-timeline-marker {
-    left: -28px;
-    width: 12px;
-    height: 12px;
+    left: -19px;
+    top: 4px;
+    width: 11px;
+    height: 11px;
+  }
+  .rp-timeline-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 6px;
+  }
+  .rp-timeline-icon svg {
+    width: 14px;
+    height: 14px;
+  }
+  .rp-timeline-item h4 {
+    font-size: 14px;
+    margin-bottom: 3px;
+  }
+  .rp-timeline-item p {
+    font-size: 12.5px;
+    line-height: 1.45;
+    max-width: none;
   }
   .rp-bean {
-    left: 10px;
-    width: 8px;
-    height: 8px;
+    left: 6px;
+    width: 7px;
+    height: 7px;
   }
 }
 html[data-theme="dark"] .rp-timeline-marker {
@@ -1734,13 +1866,36 @@ html[data-theme="dark"] .rp-timeline-marker {
 }
 @media (max-width: 600px) {
   .faq-sec {
-    padding: 72px 20px 96px;
+    padding: 52px 16px 56px;
+  }
+  .faq-title {
+    font-size: 26px;
+  }
+  .faq-lede {
+    font-size: 13.5px;
+    line-height: 1.5;
   }
   .faq-head {
-    margin-bottom: 32px;
+    gap: 10px;
+    margin-bottom: 26px;
   }
   .faq-rows {
-    gap: 16px;
+    gap: 10px;
+  }
+  .faq-track-group {
+    gap: 10px;
+  }
+  .faq-track-group > .faq-card {
+    padding: 14px 14px 16px;
+    gap: 6px;
+    border-radius: var(--radius-md);
+  }
+  .faq-card-title {
+    font-size: 15px;
+  }
+  .faq-card-answer {
+    font-size: 13px;
+    line-height: 1.5;
   }
 }
 
@@ -1916,22 +2071,42 @@ html[data-theme="dark"] .rp-timeline-marker {
 }
 @media (max-width: 600px) {
   .foot-inner {
-    padding: 72px 20px 0;
+    padding: 48px 16px 0;
   }
   .foot-top {
     flex-direction: column;
-    gap: 48px;
+    gap: 22px;
+  }
+  .foot-logo img {
+    height: 52px;
+  }
+  .foot-tag {
+    font-size: 13px;
+    line-height: 1.55;
+    margin-top: 10px;
   }
   .foot-links {
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 14px;
+    padding-top: 0;
+  }
+  .foot-link {
+    font-size: 13px;
   }
   .foot-hr {
-    margin: 48px 0 24px;
+    margin: 28px 0 18px;
+  }
+  .foot-copy,
+  .foot-mail {
+    font-size: 12px;
+  }
+  .foot-mail svg {
+    width: 12px;
+    height: 12px;
   }
   .foot-wordmark {
-    font-size: clamp(56px, 22vw, 140px);
+    font-size: clamp(44px, 17vw, 96px);
   }
 }
 
@@ -1977,26 +2152,132 @@ html[data-theme="dark"] .rp-timeline-marker {
   display: none;
 }
 
-/* ── Marketing + auth: small-screen floor ─────────────────────────────
-   Touch targets were 28–32px, below the 44px minimum comfortable on a
-   phone, and the section gutters were inconsistent between breakpoints. */
+/* ── Marketing: one small-screen scale ───────────────────────────────────
+   Every marketing section used to carry its own breakpoint overrides, which
+   drifted apart — headings ran 26–36px, gutters 16/18/20px, section rhythm
+   72/96px. These rules give phones a single type scale and section rhythm so
+   the page reads as one system instead of five separately-tuned sections. */
 @media (max-width: 640px) {
   .how,
   .cs-sec,
   .rp-sec,
-  .faq-sec,
-  .foot-sec {
-    padding-left: 18px;
-    padding-right: 18px;
+  .faq-sec {
+    padding-left: 16px;
+    padding-right: 16px;
   }
-  .acc-panel {
-    flex: 0 0 auto;
-    padding: 0 16px;
+
+  /* Section headings: one size everywhere. */
+  .how-head h2,
+  .editor-head h2,
+  .cs-title,
+  .rp-title,
+  .faq-title {
+    font-size: 26px;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
   }
-  .acc-expanded {
-    padding: 20px 16px 24px;
+
+  /* Section sub-copy: one size everywhere. */
+  .how-head p,
+  .editor-head p,
+  .cs-lede,
+  .rp-lede,
+  .faq-lede {
+    font-size: 13.5px;
+    line-height: 1.55;
+    margin-top: 10px;
   }
-  .acc-expanded h3 {
-    font-size: 19px;
+
+  .how-head,
+  .editor-head {
+    margin-bottom: 26px;
+  }
+  .cs-title,
+  .rp-title {
+    margin-top: 0;
+    max-width: none;
+  }
+  .cs-lede,
+  .rp-lede {
+    margin-top: 10px;
+  }
+
+  /* Editor mock: chrome, code, and icons all shrink together so the whole
+     window still reads as one editor rather than a clipped desktop one. */
+  .ed-topbar {
+    padding: 7px 10px;
+    gap: 8px;
+  }
+  .ed-dots {
+    gap: 4px;
+  }
+  .ed-dots span {
+    width: 7px;
+    height: 7px;
+  }
+  .ed-tabs {
+    gap: 2px;
+    margin-left: 4px;
+    overflow: hidden;
+  }
+  .ed-tab {
+    font-size: 10.5px;
+    padding: 4px 8px;
+    gap: 4px;
+  }
+  .ed-tab svg {
+    width: 10px;
+    height: 10px;
+  }
+  .ed-run {
+    font-size: 10.5px;
+    padding: 4px 10px;
+    gap: 4px;
+  }
+  .ed-run svg {
+    width: 10px;
+    height: 10px;
+  }
+  .ed-body {
+    min-height: 160px;
+  }
+  .ed-sidebar {
+    width: 30px;
+    gap: 10px;
+    padding: 10px 6px;
+  }
+  .ed-sidebar svg {
+    width: 14px;
+    height: 14px;
+  }
+  .ed-gutter {
+    width: 30px;
+    padding: 10px 0;
+  }
+  .ed-gutter .ln {
+    font-size: 9.5px;
+    line-height: 16px;
+    padding-right: 7px;
+  }
+  .ed-code {
+    font-size: 10px;
+    line-height: 16px;
+    padding: 10px 10px;
+  }
+  .ed-bottom-tab {
+    padding: 6px 10px;
+    font-size: 10.5px;
+  }
+  .ed-bottom-content {
+    min-height: 36px;
+    padding: 8px 10px;
+    font-size: 10.5px;
+  }
+  .ed-notes {
+    font-size: 11.5px;
+  }
+  .ed-cursor-label {
+    font-size: 9px;
+    padding: 2px 6px;
   }
 }

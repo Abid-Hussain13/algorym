@@ -18,8 +18,8 @@ export function CTASection({
     className,
 }: CTAProps) {
     return (
-        <section className={cn('relative pt-[72px] pb-[96px] md:pt-[96px] md:pb-[120px]', className)}>
-            <div className="relative mx-auto flex aspect-[16/7] w-full max-w-[1120px] items-center justify-center overflow-hidden rounded-[24px] max-lg:aspect-[16/9] max-sm:aspect-[3/4]">
+        <section className={cn('relative pt-[48px] pb-[56px] md:pt-[96px] md:pb-[120px]', className)}>
+            <div className="relative mx-auto flex aspect-[16/11] w-full max-w-[1120px] items-center justify-center overflow-hidden rounded-[18px] max-lg:aspect-[16/10] md:aspect-[16/7] md:rounded-[24px]">
                 <img
                     src="/cta backgound.png"
                     alt=""
@@ -34,19 +34,19 @@ export function CTASection({
                     <div className="absolute inset-y-0 left-0 w-[80px] bg-[radial-gradient(ellipse_at_left_center,var(--color-accent-soft)_0%,transparent_70%)]" />
                     <div className="absolute inset-y-0 right-0 w-[80px] bg-[radial-gradient(ellipse_at_right_center,var(--color-accent-soft)_0%,transparent_70%)]" />
                 </div>
-                <div className="relative z-10 mx-auto flex max-w-container -translate-y-10 flex-col items-center gap-3 px-8 text-center sm:gap-3">
+                <div className="relative z-10 mx-auto flex max-w-container -translate-y-5 flex-col items-center gap-2 px-5 text-center sm:-translate-y-8 sm:gap-3 sm:px-8 md:-translate-y-10">
 
-                    <h2 className="text-3xl font-semibold text-[#2b2a26] drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)] sm:text-5xl opacity-0 animate-fade-in-up delay-200">
+                    <h2 className="text-[21px] font-semibold text-[#2b2a26] drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)] opacity-0 animate-fade-in-up delay-200 sm:text-3xl md:text-5xl">
                         {title}
                     </h2>
 
                     {description && (
-                        <p className="text-[#6e6a60] drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] opacity-0 animate-fade-in-up delay-300">
+                        <p className="text-[12.5px] leading-[1.5] text-[#6e6a60] drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] opacity-0 animate-fade-in-up delay-300 sm:text-sm md:text-base">
                             {description}
                         </p>
                     )}
 
-                    <Button variant="primary" size="lg" className="mt-6 opacity-0 animate-fade-in-up delay-500" asChild>
+                    <Button variant="primary" size="md" className="mt-3 opacity-0 animate-fade-in-up delay-500 sm:mt-6 md:mt-6" asChild>
                         <a href={action.href}>{action.text}</a>
                     </Button>
                 </div>

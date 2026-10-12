@@ -4,29 +4,33 @@ import { Link } from 'react-router-dom'
 
 export function Hero() {
     return (
-        <header className="relative mx-auto flex max-w-[1200px] items-center justify-between gap-10 flex-col px-5 pt-[56px] pb-[64px] md:px-10 md:pt-[80px] md:pb-[88px] lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:px-10 lg:pt-[96px] lg:pb-[120px]">
-            <div className="relative z-[1] min-w-0 max-w-[520px] flex-1 max-xl:max-w-[520px] max-xl:text-center">
-                <h1 className="animate-rise max-w-[15ch] font-display font-semibold leading-[1.04] tracking-[-0.03em] text-[clamp(38px,4.5vw,64px)] [animation-delay:60ms] max-xl:max-w-none max-lg:text-[38px] max-lg:tracking-[-0.028em] max-sm:text-[32px] max-sm:tracking-[-0.022em] min-[1600px]:text-[72px] min-[2400px]:text-[84px]">
+        <header className="relative mx-auto flex max-w-[1200px] flex-col items-center justify-between gap-10 px-5 pb-[64px] pt-[56px] md:px-10 md:pb-[88px] md:pt-[80px] lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:px-10 lg:pb-[120px] lg:pt-[96px]">
+            <div className="relative z-[1] w-full min-w-0 max-w-[520px] max-xl:text-center lg:max-w-[520px] lg:flex-1 lg:text-left">
+                <h1 className="animate-rise max-w-[15ch] font-display text-[28px] font-semibold leading-[1.06] tracking-[-0.02em] [animation-delay:60ms] sm:text-[34px] md:text-[42px] lg:max-w-none lg:text-[clamp(38px,4.5vw,64px)] lg:tracking-[-0.03em] min-[1600px]:text-[72px] min-[2400px]:text-[84px]">
                     Interviews that run{' '}
                     <span className="text-accent">
-                        live<span className="inline-block -ml-[0.3em] animate-caret-blink font-mono font-medium text-accent" aria-hidden="true">|</span>
+                        live<span className="-ml-[0.3em] inline-block animate-caret-blink font-mono text-[0.9em] font-medium text-accent" aria-hidden="true">|</span>
                     </span>
                 </h1>
-                <p className="animate-rise mt-4 max-w-[40ch] text-lg leading-[1.55] text-muted [animation-delay:140ms] max-xl:mx-auto max-lg:text-base min-[1600px]:text-[19px]">
-                    The interview you've been putting off. Rehearse it with a real partner, live, until you walk
+                <p className="animate-rise mt-3 max-w-[42ch] text-[14px] leading-[1.55] text-muted [animation-delay:140ms] sm:text-[15px] md:mt-4 md:text-base lg:text-lg min-[1600px]:text-[19px]">
+                    The interview you&rsquo;ve been putting off. Rehearse it with a real partner, live, until you walk
                     in ready.
                 </p>
-                <div className="animate-rise mt-6 flex flex-wrap items-center gap-3 [animation-delay:220ms] max-xl:justify-center max-sm:flex-col max-sm:items-stretch">
-                    <Button variant="primary" size="lg" className="max-sm:w-full max-sm:justify-center" asChild>
+                <div className="animate-rise mt-5 flex flex-wrap items-center gap-2 [animation-delay:220ms] sm:mt-6 sm:gap-3">
+                    <Button variant="primary" size="md" asChild>
                         <Link to="/app">Get Started →</Link>
                     </Button>
-                    <Button variant="ghost" size="lg" className="max-sm:w-full max-sm:justify-center" asChild>
+                    <Button variant="ghost" size="md" asChild>
                         <a href="#how-it-works">See how it works</a>
                     </Button>
                 </div>
             </div>
 
-            <HeroStage />
+            {/* The illustration is a desktop/large-tablet luxury; on phones the
+                header text gets the whole screen instead. */}
+            <div className="hidden md:block">
+                <HeroStage />
+            </div>
         </header>
     )
 }

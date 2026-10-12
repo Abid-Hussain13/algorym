@@ -17,7 +17,7 @@ export function Footer({ className }: { className?: string }) {
                 <div className="foot-top">
                     <div className="foot-brand">
                         <div className="foot-logo">
-                            <img src="/logo.svg" alt="Algorym" className="h-25 w-auto" />
+                            <img src="/logo.svg" alt="Algorym" className="h-14 w-auto sm:h-20 md:h-25" />
                         </div>
                         <p className="foot-tag">
                             Real-time algorithmic collaboration for live-coding interviews. Rehearse solo, pair live,
