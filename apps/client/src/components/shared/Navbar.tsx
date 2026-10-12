@@ -39,7 +39,7 @@ export function Navbar() {
                 </Link>
 
                 <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-3">
-                    <ThemeToggle />
+                    <ThemeToggle className="size-[26px] p-0 sm:size-[30px]" />
 
                     {user ? (
                         <Button asChild variant="primary" size="sm">
@@ -93,10 +93,10 @@ export function Navbar() {
                         </div>
                     ) : (
                         <div className="flex shrink-0 items-center gap-1.5">
-                            <Button asChild variant="ghost" size="sm" className="px-3 py-[6px] text-[12px] sm:px-[15px] sm:py-[7px] sm:text-[13px]">
+                            <Button asChild variant="ghost" size="sm" className="px-2.5 py-[4px] text-[11px] sm:px-[15px] sm:py-[7px] sm:text-[13px]">
                                 <Link to="/login">Log in</Link>
                             </Button>
-                            <Button asChild variant="primary" size="sm" className="px-3 py-[6px] text-[12px] sm:px-[15px] sm:py-[7px] sm:text-[13px]">
+                            <Button asChild variant="primary" size="sm" className="px-2.5 py-[4px] text-[11px] sm:px-[15px] sm:py-[7px] sm:text-[13px]">
                                 <Link to="/signup">Sign up</Link>
                             </Button>
                         </div>

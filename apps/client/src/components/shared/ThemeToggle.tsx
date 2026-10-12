@@ -88,7 +88,7 @@ export function ThemeToggle({ className, iconClassName, ...rest }: ThemeTogglePr
       )}
       {...rest}
     >
-      <span className="relative inline-grid h-6 w-6 shrink-0 place-items-center overflow-hidden">
+      <span className="relative inline-grid h-5 w-5 shrink-0 place-items-center overflow-hidden sm:h-6 sm:w-6">
         <AnimatePresence mode="popLayout" initial={false}>
           {mounted ? (
             <motion.span
