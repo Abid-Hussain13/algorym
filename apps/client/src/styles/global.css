@@ -624,6 +624,13 @@
   }
   .acc-panel.active {
     background: var(--color-surface-2);
+    margin: 10px 0;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+  }
+  .acc-panel.active + .acc-panel,
+  .acc-panel + .acc-panel.active {
+    border-top-color: transparent;
   }
   .acc-collapsed {
     position: relative;
@@ -660,7 +667,7 @@
     display: none;
     position: relative;
     inset: auto;
-    padding: 18px 16px 34px;
+    padding: 26px 16px 48px;
     justify-content: flex-start;
     transform: none;
   }

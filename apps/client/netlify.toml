@@ -26,3 +26,10 @@
   for = "/index.html"
   [headers.values]
     Cache-Control = "no-cache"
+
+# The SPA rewrite serves index.html at "/", so it needs its own no-cache rule
+# or browsers keep serving an old bundle after a deploy.
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache"
