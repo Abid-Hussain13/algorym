@@ -14,7 +14,6 @@ import {
     DIFFICULTY_OPTIONS,
 } from "@/features/questions";
 import type { Question } from "@algorym/shared-types";
-
 export function Questions() {
     const [search, setSearch] = useState("");
     const [difficulty, setDifficulty] = useState("");
@@ -26,26 +25,20 @@ export function Questions() {
         sort_by: "date_desc",
         page: 1,
     });
-
     const [formOpen, setFormOpen] = useState(false);
     const [formMode, setFormMode] = useState<"create" | "edit" | "view">("create");
     const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
-
     const { data, isLoading, error } = useQuestions(appliedFilters);
     const deleteQuestion = useDeleteQuestion();
-
     const questions = data?.questions ?? [];
     const pagination = data?.pagination ?? { page: 1, limit: 21, total: 0, totalPages: 1 };
-
     const handleSearch = () => {
         setPage(1);
         setAppliedFilters({ search, difficulty, sort_by: sortBy, page: 1 });
     };
-
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Enter") handleSearch();
     };
-
     const handleDelete = (id: string) => {
         deleteQuestion.mutate(id, {
             onSuccess: () => toast.success("Question deleted"),
@@ -55,25 +48,21 @@ export function Questions() {
             },
         });
     };
-
     const openCreate = () => {
         setFormMode("create");
         setSelectedQuestion(null);
         setFormOpen(true);
     };
-
     const openView = (q: Question) => {
         setFormMode("view");
         setSelectedQuestion(q);
         setFormOpen(true);
     };
-
     const openEdit = (q: Question) => {
         setFormMode("edit");
         setSelectedQuestion(q);
         setFormOpen(true);
     };
-
     return (
         <div className="flex flex-col gap-4 p-4 sm:gap-6 sm:p-6">
             {/* Header */}
@@ -98,7 +87,6 @@ export function Questions() {
                     Add Question
                 </Button>
             </div>
-
             {/* Filters */}
             <div className="flex flex-wrap items-center gap-2">
                 <div className="relative w-full sm:flex-1">
@@ -124,7 +112,6 @@ export function Questions() {
                         className="h-9 w-full rounded-lg border border-border bg-surface-2 pl-9 pr-3 text-[13px] text-fg sm:h-10 sm:pr-4 sm:text-sm placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
                     />
                 </div>
-
                 <div className="min-w-0 flex-1 basis-[38%] sm:flex-none sm:basis-auto">
                     <Dropdown
                         options={[...DIFFICULTY_OPTIONS]}
@@ -133,7 +120,6 @@ export function Questions() {
                         className="w-full"
                     />
                 </div>
-
                 <div className="min-w-0 flex-1 basis-[38%] sm:flex-none sm:basis-auto">
                     <Dropdown
                         options={[...SORT_OPTIONS]}
@@ -142,52 +128,28 @@ export function Questions() {
                         className="w-full"
                     />
                 </div>
-
                 <Button
-
                     variant="primary"
-
                     size="sm"
-
-                    className="h-9 shrink-0 px-2.5 text-[12px] sm:h-10 sm:px-[15px] sm:text-[13px]"
-
+                    className="ml-auto h-9 shrink-0 px-2.5 text-[12px] sm:ml-0 sm:h-10 sm:px-[15px] sm:text-[13px]"
                     onClick={handleSearch}
-
                 >
-
                     <svg
-
                         xmlns="http://www.w3.org/2000/svg"
-
                         viewBox="0 0 24 24"
-
                         fill="none"
-
                         stroke="currentColor"
-
                         strokeWidth="2"
-
                         strokeLinecap="round"
-
                         strokeLinejoin="round"
-
                         className="size-3.5 sm:size-4"
-
                     >
-
                         <circle cx="11" cy="11" r="8" />
-
                         <path d="m21 21-4.3-4.3" />
-
                     </svg>
-
-                    <span className="hidden sm:inline">Search</span>
-
-                    <span className="sm:hidden">Go</span>
-
+                    Search
                 </Button>
             </div>
-
             {/* Content */}
             <div className="flex-1">
                 {isLoading ? (
@@ -216,7 +178,6 @@ export function Questions() {
                     />
                 )}
             </div>
-
             {/* Form Modal */}
             <QuestionFormModal
                 open={formOpen}

@@ -70,7 +70,7 @@ export function SessionsFilters({
             <Button
                 variant="primary"
                 size="sm"
-                className="h-9 shrink-0 px-2.5 text-[12px] sm:h-10 sm:px-[15px] sm:text-[13px]"
+                className="ml-auto h-9 shrink-0 px-2.5 text-[12px] sm:ml-0 sm:h-10 sm:px-[15px] sm:text-[13px]"
                 onClick={onSearchSubmit}
             >
                 <svg
@@ -86,8 +86,7 @@ export function SessionsFilters({
                     <circle cx="11" cy="11" r="8" />
                     <path d="m21 21-4.3-4.3" />
                 </svg>
-                <span className="hidden sm:inline">Search</span>
-                <span className="sm:hidden">Go</span>
+                Search
             </Button>
         </div>
     );

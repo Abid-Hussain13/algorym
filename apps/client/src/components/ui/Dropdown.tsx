@@ -52,7 +52,7 @@ export function Dropdown({
             <button
                 type="button"
                 onClick={() => setOpen((o) => !o)}
-                className="flex h-9 w-full items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-2.5 text-[13px] text-fg transition-colors hover:border-border-strong focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent sm:h-10 sm:gap-2 sm:px-3 sm:text-sm"
+                className="flex h-9 max-w-full items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-2.5 text-[13px] text-fg transition-colors hover:border-border-strong focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent sm:h-10 sm:gap-2 sm:px-3 sm:text-sm"
             >
                 <span className="truncate">{display}</span>
                 <svg
