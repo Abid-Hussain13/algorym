@@ -16,15 +16,15 @@ export function StatCard({
     comparison = "vs. last month",
 }: StatCardProps) {
     return (
-        <div className="flex w-full flex-col gap-3 rounded-xl border border-border bg-surface-2 p-5 shadow-sm transition-colors hover:border-border-strong">
+        <div className="flex w-full flex-col gap-2 rounded-xl border border-border bg-surface-2 p-3.5 shadow-sm transition-colors hover:border-border-strong sm:gap-3 sm:p-5">
             <div className="flex items-start justify-between">
                 <div className="flex flex-col gap-1">
-                    <span className="text-sm font-medium text-muted">{label}</span>
-                    <span className="text-2xl font-semibold tabular-nums text-fg">
+                    <span className="text-[11px] font-medium text-muted sm:text-sm">{label}</span>
+                    <span className="text-lg font-semibold tabular-nums text-fg sm:text-2xl">
                         {value}
                     </span>
                 </div>
-                <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent-soft">
+                <div className="grid size-7 shrink-0 place-items-center rounded-lg bg-accent-soft sm:size-9">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
@@ -33,14 +33,14 @@ export function StatCard({
                         strokeWidth="1.7"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        className="size-4 text-accent"
+                        className="size-3.5 text-accent sm:size-4"
                     >
                         <path d={icon} />
                     </svg>
                 </div>
             </div>
             {trend && trendDirection && (
-                <div className="flex items-center gap-2 text-xs text-muted">
+                <div className="flex items-center gap-1.5 text-[11px] text-muted sm:gap-2 sm:text-xs">
                     <span
                         className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium ${trendDirection === "up"
                                 ? "bg-success/10 text-success"

@@ -38,15 +38,15 @@ export function Reports() {
     }, [range]);
 
     return (
-        <div className="flex flex-col gap-6 p-6">
-            {/* flex-wrap: at ~360px the five range buttons stack and the row is
-                taller than the title, so a single non-wrapping line overlapped it. */}
+        <div className="flex flex-col gap-4 p-4 sm:gap-6 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
-                <h1 className="font-display text-2xl font-semibold tracking-tight text-fg">
-                    Reports
-                </h1>
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
+                    <h1 className="font-display text-xl font-semibold tracking-tight text-fg sm:text-2xl">
+                        Reports
+                    </h1>
                     <TimeFilter value={range} onChange={setRange} />
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
                     <Button variant="primary" size="sm" onClick={handleExport} loading={exporting}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"

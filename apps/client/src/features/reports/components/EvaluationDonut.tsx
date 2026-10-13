@@ -40,9 +40,6 @@ export function EvaluationDonut({ data }: EvaluationDonutProps) {
     return (
         <div className="flex flex-col gap-4 rounded-xl border border-border bg-surface-2 p-5 shadow-sm">
             <h3 className="text-sm font-semibold text-fg">Evaluation</h3>
-            {/* flex-wrap + a smaller chart below sm: 180px + gap + legend is
-                wider than the ~272px a 360px card leaves, which clipped the
-                percentage column. */}
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
                 <div className="h-[140px] w-[140px] shrink-0 sm:h-[180px] sm:w-[180px]">
                     <ResponsiveContainer width="100%" height="100%">
@@ -53,8 +50,8 @@ export function EvaluationDonut({ data }: EvaluationDonutProps) {
                                 nameKey="rating"
                                 cx="50%"
                                 cy="50%"
-                                innerRadius={52}
-                                outerRadius={80}
+                                innerRadius="42%"
+                                outerRadius="76%"
                                 paddingAngle={3}
                                 strokeWidth={0}
                             >

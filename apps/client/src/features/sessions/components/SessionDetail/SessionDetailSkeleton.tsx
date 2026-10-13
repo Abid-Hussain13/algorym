@@ -1,6 +1,6 @@
 export function SessionDetailSkeleton() {
     return (
-        <div className="flex animate-pulse flex-col gap-6 p-6">
+        <div className="flex animate-pulse flex-col gap-4 p-4 sm:gap-6 sm:p-6">
             <div className="h-4 w-24 rounded bg-surface-2" />
 
             <div className="flex flex-col gap-2.5">

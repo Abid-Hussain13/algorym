@@ -53,9 +53,9 @@ export function Sessions() {
     };
 
     return (
-        <div className="flex flex-col gap-6 p-6">
+        <div className="flex flex-col gap-4 p-4 sm:gap-6 sm:p-6">
             <div className="flex items-center justify-between">
-                <h1 className="font-display text-2xl font-semibold tracking-tight text-fg">
+                <h1 className="font-display text-xl font-semibold tracking-tight text-fg sm:text-2xl">
                     Sessions
                 </h1>
                 <Button variant="primary" size="sm" onClick={() => setCreateOpen(true)}>

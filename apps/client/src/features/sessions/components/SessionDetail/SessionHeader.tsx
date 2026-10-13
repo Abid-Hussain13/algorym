@@ -38,7 +38,7 @@ export function SessionHeader({ session }: SessionHeaderProps) {
 
             <div className="flex flex-col gap-2.5">
                 <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="font-display text-2xl font-semibold tracking-tight text-fg">
+                    <h1 className="font-display text-xl font-semibold tracking-tight text-fg sm:text-2xl">
                         {hasName ? session.role_context : "Untitled Session"}
                     </h1>
                     <span

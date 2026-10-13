@@ -24,8 +24,8 @@ export function SessionsFilters({
     onSortByChange,
 }: SessionsFiltersProps) {
     return (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="relative flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+            <div className="relative w-full sm:flex-1">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -45,23 +45,27 @@ export function SessionsFilters({
                     value={search}
                     onChange={(e) => onSearchChange(e.target.value)}
                     onKeyDown={onKeyDown}
-                    className="h-10 w-full rounded-lg border border-border bg-surface-2 pl-9 pr-4 text-sm text-fg placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                    className="h-9 w-full rounded-lg border border-border bg-surface-2 pl-9 pr-3 text-[13px] text-fg sm:h-10 sm:pr-4 sm:text-sm placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
                 />
             </div>
 
-            <Dropdown
-                options={[...MODE_OPTIONS]}
-                value={mode}
-                onChange={onModeChange}
-                className="shrink-0"
-            />
+            <div className="min-w-0 flex-1 sm:flex-none">
+                <Dropdown
+                    options={[...MODE_OPTIONS]}
+                    value={mode}
+                    onChange={onModeChange}
+                    className="w-full"
+                />
+            </div>
 
-            <Dropdown
-                options={[...SORT_OPTIONS]}
-                value={sortBy}
-                onChange={onSortByChange}
-                className="shrink-0"
-            />
+            <div className="min-w-0 flex-1 sm:flex-none">
+                <Dropdown
+                    options={[...SORT_OPTIONS]}
+                    value={sortBy}
+                    onChange={onSortByChange}
+                    className="w-full"
+                />
+            </div>
 
             <Button variant="primary" size="sm" onClick={onSearchSubmit}>
                 <svg

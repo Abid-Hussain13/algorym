@@ -70,9 +70,9 @@ export function DashboardPage() {
         ];
 
     return (
-        <div className="flex flex-col gap-6 p-6">
+        <div className="flex flex-col gap-4 p-4 sm:gap-6 sm:p-6">
             <div className="flex items-center justify-between">
-                <h1 className="font-display text-2xl font-semibold tracking-tight text-fg">
+                <h1 className="font-display text-xl font-semibold tracking-tight text-fg sm:text-2xl">
                     Dashboard
                 </h1>
                 <Button variant="primary" size="sm" onClick={() => setCreateOpen(true)}>
@@ -92,13 +92,13 @@ export function DashboardPage() {
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
                 {statCards.map((card) => (
                     <StatCard key={card.label} {...card} />
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-4">
                 <div className="lg:col-span-3">
                     <SessionsTable sessions={sessions} />
                 </div>
