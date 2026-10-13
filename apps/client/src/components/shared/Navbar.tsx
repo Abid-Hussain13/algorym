@@ -42,7 +42,12 @@ export function Navbar() {
                     <ThemeToggle className="size-[22px] p-0 sm:size-[30px]" />
 
                     {user ? (
-                        <Button asChild variant="primary" size="sm">
+                        <Button
+                            asChild
+                            variant="primary"
+                            size="sm"
+                            className="px-2 py-[3px] text-[10px] sm:px-[15px] sm:py-[7px] sm:text-[13px]"
+                        >
                             <Link to="/app" className="hidden sm:inline-flex">
                                 Dashboard
                             </Link>
@@ -50,22 +55,22 @@ export function Navbar() {
                     ) : null}
 
                     {status === 'loading' || status === 'idle' ? (
-                        <div className="h-8 w-20 shrink-0" />
+                        <div className="h-[22px] w-16 shrink-0 sm:h-8 sm:w-20" />
                     ) : user ? (
                         <div className="relative shrink-0" ref={dropdownRef}>
                             <button
                                 type="button"
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                className="group flex items-center gap-2 rounded-sm py-1"
+                                className="group flex items-center gap-1.5 rounded-sm py-0.5"
                             >
-                                <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent text-sm font-semibold text-white">
+                                <span className="grid size-5 shrink-0 place-items-center rounded-full bg-accent text-[10px] font-semibold text-white sm:size-6 sm:text-[11px]">
                                     {user.name.charAt(0).toUpperCase()}
                                 </span>
-                                <span className="hidden max-w-[140px] truncate text-sm font-medium text-fg lg:inline">
+                                <span className="hidden max-w-[140px] truncate text-[11px] font-medium text-fg lg:inline">
                                     {user.name.toUpperCase()}
                                 </span>
                                 <ChevronDown
-                                    className={`h-4 w-4 shrink-0 text-muted transition-all duration-200 group-hover:text-accent ${isDropdownOpen ? 'rotate-180 text-accent' : ''}`}
+                                    className={`h-3 w-3 shrink-0 text-muted transition-all duration-200 group-hover:text-accent ${isDropdownOpen ? 'rotate-180 text-accent' : ''}`}
                                 />
                             </button>
                             {isDropdownOpen && (
