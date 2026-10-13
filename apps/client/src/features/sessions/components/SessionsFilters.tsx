@@ -71,7 +71,7 @@ export function SessionsFilters({
                 <Button
                     variant="primary"
                     size="sm"
-                    className="h-8 shrink-0 rounded-lg px-2 text-[11px] sm:h-10 sm:px-[15px] sm:text-[13px]"
+                    className="shrink-0 rounded-lg px-2.5 text-[11px] !h-8 sm:!h-10 sm:px-[15px] sm:text-[13px]"
                     onClick={onSearchSubmit}
                 >
                     <svg
