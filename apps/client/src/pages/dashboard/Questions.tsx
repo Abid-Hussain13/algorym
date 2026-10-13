@@ -112,43 +112,47 @@ export function Questions() {
                         className="h-9 w-full rounded-lg border border-border bg-surface-2 pl-9 pr-3 text-[13px] text-fg sm:h-10 sm:pr-4 sm:text-sm placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
                     />
                 </div>
-                <div className="min-w-0 flex-1 basis-[38%] sm:flex-none sm:basis-auto">
-                    <Dropdown
-                        options={[...DIFFICULTY_OPTIONS]}
-                        value={difficulty}
-                        onChange={setDifficulty}
-                        className="w-full"
-                    />
-                </div>
-                <div className="min-w-0 flex-1 basis-[38%] sm:flex-none sm:basis-auto">
-                    <Dropdown
-                        options={[...SORT_OPTIONS]}
-                        value={sortBy}
-                        onChange={setSortBy}
-                        className="w-full"
-                    />
-                </div>
-                <Button
-                    variant="primary"
-                    size="sm"
-                    className="ml-auto h-9 shrink-0 px-2.5 text-[12px] sm:ml-0 sm:h-10 sm:px-[15px] sm:text-[13px]"
-                    onClick={handleSearch}
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="size-3.5 sm:size-4"
+                <div className="flex w-full items-center gap-0 sm:w-auto sm:gap-3">
+                    <div className="min-w-0 flex-1">
+                        <Dropdown
+                            options={[...DIFFICULTY_OPTIONS]}
+                            value={difficulty}
+                            onChange={setDifficulty}
+                            className="w-full"
+                        />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                        <Dropdown
+                            options={[...SORT_OPTIONS]}
+                            value={sortBy}
+                            onChange={setSortBy}
+                            className="w-full"
+                        />
+                    </div>
+
+                    <Button
+                        variant="primary"
+                        size="sm"
+                        className="h-8 shrink-0 rounded-lg px-2 text-[11px] sm:h-10 sm:px-[15px] sm:text-[13px]"
+                        onClick={handleSearch}
                     >
-                        <circle cx="11" cy="11" r="8" />
-                        <path d="m21 21-4.3-4.3" />
-                    </svg>
-                    Search
-                </Button>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="size-3.5 sm:size-4"
+                        >
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.3-4.3" />
+                        </svg>
+                        Search
+                    </Button>
+                </div>
             </div>
             {/* Content */}
             <div className="flex-1">
