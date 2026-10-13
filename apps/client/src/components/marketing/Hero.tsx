@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 
 export function Hero() {
     return (
-        <header className="relative mx-auto flex max-w-[1200px] flex-col items-center justify-between gap-10 px-5 pb-[80px] pt-[72px] md:px-10 md:pb-[88px] md:pt-[80px] lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:px-10 lg:pb-[120px] lg:pt-[96px]">
+        <header className="relative mx-auto flex max-w-[1200px] flex-col items-center justify-between gap-10 px-5 pb-[110px] pt-[100px] md:px-10 md:pb-[124px] md:pt-[112px] lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:px-10 lg:pb-[120px] lg:pt-[96px]">
             <div className="relative z-[1] w-full min-w-0 max-w-[520px] max-xl:text-center lg:max-w-[520px] lg:flex-1 lg:text-left">
                 <h1 className="animate-rise max-w-[15ch] font-display text-[28px] font-semibold leading-[1.06] tracking-[-0.02em] [animation-delay:60ms] sm:text-[34px] md:text-[42px] lg:max-w-none lg:text-[clamp(38px,4.5vw,64px)] lg:tracking-[-0.03em] min-[1600px]:text-[72px] min-[2400px]:text-[84px]">
                     Interviews that run{' '}
