@@ -69,7 +69,6 @@ export function DashboardLayout() {
     ];
 
     const bottomItems = [
-        { label: "Live Room", id: "live-room", to: "/live", icon: "live" },
         { label: "Settings", id: "settings", to: "/app/settings", icon: "settings" },
     ];
 
@@ -192,7 +191,7 @@ export function DashboardLayout() {
                             <div className="flex items-center gap-2">
                                 <button
                                     type="button"
-                                    onClick={() => navigate("/dashboard/settings")}
+                                    onClick={() => navigate("/app/settings")}
                                     className="flex min-h-11 flex-1 items-center gap-3 overflow-hidden rounded-xl p-1 text-left outline-none transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent"
                                 >
                                     <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-soft text-xs font-semibold uppercase text-accent-text">
@@ -217,7 +216,7 @@ export function DashboardLayout() {
                         ) : (
                             <button
                                 type="button"
-                                onClick={() => navigate("/dashboard/settings")}
+                                onClick={() => navigate("/app/settings")}
                                 className="flex w-full items-center justify-center rounded-xl p-1 outline-none transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent"
                             >
                                 <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-soft text-xs font-semibold uppercase text-accent-text">

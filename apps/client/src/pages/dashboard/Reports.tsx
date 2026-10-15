@@ -40,13 +40,11 @@ export function Reports() {
     return (
         <div className="flex flex-col gap-4 p-4 sm:gap-6 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
-                    <h1 className="font-display text-xl font-semibold tracking-tight text-fg sm:text-2xl">
-                        Reports
-                    </h1>
-                    <TimeFilter value={range} onChange={setRange} />
-                </div>
+                <h1 className="font-display text-xl font-semibold tracking-tight text-fg sm:text-2xl">
+                    Reports
+                </h1>
                 <div className="flex flex-wrap items-center gap-3">
+                    <TimeFilter value={range} onChange={setRange} />
                     <Button variant="primary" size="sm" onClick={handleExport} loading={exporting}>
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
