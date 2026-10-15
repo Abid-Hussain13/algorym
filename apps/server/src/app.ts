@@ -23,8 +23,7 @@ if (process.env.NODE_ENV !== "production") {
     app.use(morgan("dev"));
 }
 
-// At the root, not under /api: this is the path a platform health probe or a
-// keep-alive ping expects to find.
+// Health route sits at the root so platform probes can reach it.
 app.use("/", healthRoute);
 
 app.use("/api", router);
