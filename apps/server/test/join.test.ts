@@ -36,7 +36,7 @@ describe("POST /api/session/join", () => {
         const participant = res.body.data.participant;
         expect(participant.role).toBe("guest");
         expect(participant.user_id).toBe(user.id);
-        // identity is taken from the account, not the request body
+        // identity is taken from the account, not the request body.
         expect(participant.display_name).toBe("Candidate");
         expect(participant.email).toBe(email);
         expect(participant.consent_to_contact).toBe(true);
@@ -93,7 +93,7 @@ describe("POST /api/session/join", () => {
         expect(res.status).toBe(200);
         expect(res.body.data.participant.role).toBe("guest");
         expect(res.body.data.participant.user_id).toBeNull();
-        // consent is stored exactly as given — never defaulted to true
+        // consent is stored exactly as given — never defaulted to true.
         expect(res.body.data.participant.consent_to_contact).toBe(false);
     });
 
@@ -182,12 +182,7 @@ describe("POST /api/session/join", () => {
         expect(res.body.message).toBe("Validation failed");
     });
 
-    /**
-     * Regression: re-joining used to INSERT a new participant row every time.
-     * A reload or a double-clicked Join produced three or four rows for one
-     * person, which duplicated them in the roster and made "the candidate"
-     * ambiguous — every participant row is somebody the host could rate.
-     */
+    /** Regression: re-joining used to INSERT a new participant row every time. . */
     it("does not duplicate a participant who joins twice", async () => {
         const { agent } = await signupAgent(app);
         const session = await createSession(agent, { mode: "practice" });

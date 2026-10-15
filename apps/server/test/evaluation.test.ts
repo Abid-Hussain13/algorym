@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import request from "supertest";
-// agent type = request.agent(app) return type
+// agent type = request.agent(app) return type.
 import app from "../src/app.js";
 import { signupAgent, createSession, futureIso } from "./helpers.js";
 import db from "../src/db/pool.js";

@@ -8,7 +8,7 @@ interface StepDurationScheduleProps {
     onDurationChange: (v: number) => void;
     roleContext: string;
     onRoleContextChange: (v: string) => void;
-    /** Explicit start-now vs schedule-for-later, rather than inferring from an empty date. */
+    /** Explicit start-now vs schedule-for-later, rather than inferring from an empty date. . */
     when: "now" | "later";
     onWhenChange: (when: "now" | "later") => void;
     scheduledDates: Set<string>;

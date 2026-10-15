@@ -2,20 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useFullscreen } from "../hooks/use-fullscreen";
 
-/**
- * Fullscreen strip for the **host** only.
- *
- * The host is not being watched, so there is no integrity message here — the
- * candidate's fullscreen state and the exit counter live in the Settings panel
- * now. What the host keeps is the affordance to go full screen themselves, plus
- * a Dismiss for when they have their own setup (dual monitor, camera off, etc.).
- *
- * The candidate's equivalent is `FullscreenGate`, which is intentionally not
- * dismissible and escalates to a blurred editor. This component is the softer,
- * optional version.
- *
- * Re-shown if the host leaves full screen after dismissing and returning.
- */
+/** Fullscreen strip for the **host** only. . */
 export function FullscreenGuard() {
     const { isFullscreen, enter } = useFullscreen();
     const [dismissed, setDismissed] = useState(false);

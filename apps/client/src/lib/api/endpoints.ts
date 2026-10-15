@@ -75,7 +75,7 @@ export const sessionsApi = {
         return http.get<SessionListResponse>(`/api/session${query ? `?${query}` : ''}`)
     },
     get: (id: string) => http.get<{ session: SessionDetail }>(`/api/session/${id}`),
-    /** Participant-scoped live-room payload; works for anonymous guests too. */
+    /** Participant-scoped live-room payload; works for anonymous guests too. . */
     room: (id: string, participantId: string) =>
         http.get<SessionRoom>(`/api/session/${id}/room?participantId=${encodeURIComponent(participantId)}`),
     create: (body: CreateSessionBody) => http.post<{ session: Session }>('/api/session', body),
@@ -109,11 +109,7 @@ export const sessionsApi = {
 }
 
 export const runApi = {
-    /**
-     * `POST /api/run`. Body must match `runCodeSchema` on the server, which is
-     * camelCase — an earlier revision sent `session_id` and was silently 400ing.
-     * The response envelope unwraps to `{ result }`.
-     */
+    /** `POST /api/run`. */
     execute: (body: {
         sessionId: string
         participantId: string
@@ -125,12 +121,7 @@ export const runApi = {
 }
 
 export const evaluationApi = {
-    /**
-     * `POST /api/evaluation`. Body must match `evaluatedUserSchema`, which is
-     * camelCase — this previously sent `session_id` / `evaluated_participant_id`
-     * and would have 400'd on every call, the same mistake `runApi.execute` had.
-     * Only valid once the session is completed, and only for interview mode.
-     */
+    /** `POST /api/evaluation`. */
     evaluate: (body: {
         sessionId: string
         participantId: string

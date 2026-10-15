@@ -4,26 +4,14 @@ import { cn } from "@/lib/utils/cn";
 interface PanelColumnProps {
     title: string;
     onClose: () => void;
-    /** Resizable width in pixels, from `useResizablePane`. */
+    /** Resizable width in pixels, from `useResizablePane`. . */
     width: number;
     handleProps: React.HTMLAttributes<HTMLElement>;
     children: ReactNode;
     footer?: ReactNode;
 }
 
-/**
- * The side panel that opens beside the rail.
- *
- * It is a real column in the layout, not an overlay: no backdrop, no dimming,
- * and the editor keeps its size and scroll position. That matters in a live
- * interview — a panel that covers the code the moment you open it would be
- * unusable.
- *
- * The grab handle sits on the column's inner edge (the right side, because the
- * panel is docked to the left) so dragging it right widens the panel. Dragging
- * further right widens; there is no overlay to click away, so the close button
- * and Escape both dismiss.
- */
+/** The side panel that opens beside the rail. . */
 export function PanelColumn({
     title,
     onClose,

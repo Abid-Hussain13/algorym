@@ -8,13 +8,7 @@ interface QuestionPanelProps {
     isLoading: boolean;
 }
 
-/**
- * The problem the room is working on.
- *
- * Read-only on purpose: only the host changes the question (from the right
- * rail), so the candidate can never accidentally switch the task out from under
- * themselves.
- */
+/** The problem the room is working on. . */
 export function QuestionPanel({ question, language, isLoading }: QuestionPanelProps) {
     if (isLoading) {
         return (

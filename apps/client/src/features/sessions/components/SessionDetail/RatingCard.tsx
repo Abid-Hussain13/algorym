@@ -15,23 +15,7 @@ interface RatingCardProps {
     className?: string;
 }
 
-/**
- * The host's rating of the candidate, editable after the fact.
- *
- * **Why this exists:** the room's rating form is only reachable between completing and
- * leaving, so "Rate later" used to be a one-way door — the host would have to remember,
- * and there was nowhere on the page to change their mind. A rating is a judgement call and
- * judgements get revised, so the session detail page has to allow it. Otherwise the value
- * quietly becomes permanent the first time it is picked.
- *
- * Saves through `POST /api/evaluation`, which is an `ON CONFLICT ... DO UPDATE` upsert, so
- * editing is the same call as first rating — no second endpoint and no risk of the two paths
- * disagreeing.
- *
- * Restricted to **completed interviews** because that is the only thing a rating means:
- * a cancelled session has no evaluation, and a practice session is not assessed. The
- * endpoint is owner-scoped regardless, so a non-host cannot reach the data either way.
- */
+/** The host's rating of the candidate, editable after the fact. . */
 export function RatingCard({ session, className }: RatingCardProps) {
     const queryClient = useQueryClient();
 

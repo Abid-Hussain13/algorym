@@ -197,7 +197,7 @@ describe("POST /api/auth/refresh", () => {
         expect(setCookies.find((c) => c.startsWith("accessToken="))).toBeDefined();
         expect(setCookies.find((c) => c.startsWith("refreshToken="))).toBeDefined();
 
-        // Now the refreshed agent can hit a protected route
+        // Now the refreshed agent can hit a protected route.
         const me = await agent.get("/api/auth/me");
         expect(me.status).toBe(200);
     });

@@ -1,19 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-/**
- * Per-user editor preferences: keymap mode and font size.
- *
- * These are stored in `localStorage`, which is what makes them **per user** —
- * every browser profile keeps its own settings, and they survive reloads
- * without any account round-trip. That matches how `algorym-theme` already
- * behaves.
- *
- * A module-level store plus `useSyncExternalStore` rather than `useState`,
- * because two unrelated parts of the room need to agree on the current value
- * (the editor itself and the settings panel that edits it). `useState` would
- * give each of them a private copy, and the settings panel would happily show
- * "Normal" while the editor silently stayed in vim.
- */
+/** Per-user editor preferences: keymap mode and font size. . */
 
 export type EditorMode = "normal" | "vim";
 
@@ -22,7 +9,7 @@ export interface EditorPreferences {
     fontSize: number;
 }
 
-/** Offered in the settings panel. 13 is the default that matches the theme. */
+/** Offered in the settings panel. 13 is the default that matches the theme. . */
 export const FONT_SIZES = [11, 12, 13, 14, 16, 18, 20] as const;
 
 const DEFAULTS: EditorPreferences = { mode: "normal", fontSize: 13 };

@@ -5,23 +5,11 @@ import { Button } from "@/components/ui/Button";
 
 interface CandidateIntegritySectionProps {
     isHost: boolean;
-    /** Roster from the room's single awareness subscription, not re-read here. */
+    /** Roster from the room's single awareness subscription, not re-read here. . */
     collaborators: Collaborator[];
 }
 
-/**
- * Live integrity readout, shown only to the host, and **only while the candidate
- * is out of full screen**.
- *
- * There is deliberately no "everything is fine" state. A block that sits there
- * green most of the time teaches the host to stop reading it, so the moment it
- * actually appears it is the only thing on screen that matters — and it
- * disappears the instant the candidate comes back.
- *
- * The permanent totals are not lost: they are recorded to `session_events`
- * during the session and shown as the always-visible IntegrityCard on the
- * session detail page afterwards. This is the live edge of that, not the record.
- */
+/** Live integrity readout, host only, and only while a candidate is in the room. . */
 export function CandidateIntegritySection({
     isHost,
     collaborators,
@@ -76,13 +64,7 @@ interface FullscreenControlProps {
     isHost: boolean;
 }
 
-/**
- * Full screen button for the host, for use in Settings.
- *
- * The top strip (`FullscreenGuard`) can be dismissed, so this keeps the action
- * permanently reachable one click away in the sidebar — exactly where the user
- * asked for it to land.
- */
+/** Full screen button for the host, for use in Settings. . */
 export function FullscreenControl({ isHost }: FullscreenControlProps) {
     const { isFullscreen, enter } = useFullscreen();
     if (!isHost) return null;

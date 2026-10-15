@@ -1,14 +1,4 @@
-/**
- * Loads `src/db/seed.sql` — demo users, questions and sessions for a dashboard
- * that otherwise starts empty.
- *
- * Run it after `db:setup`:
- *     pnpm --filter server db:seed
- *
- * The seed assumes one real account already exists (the "Main user"), because
- * the questions and sessions are owned by it. Without that account the foreign
- * keys fail, so this checks for it first and says so plainly.
- */
+/** Loads `src/db/seed.sql` — demo users, questions and sessions for a dashboard . */
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -21,7 +11,7 @@ dotenv.config();
 const here = dirname(fileURLToPath(import.meta.url));
 const SEED_PATH = join(here, "..", "src", "db", "seed.sql");
 
-/** The account the seed data belongs to, named in `seed.sql` itself. */
+/** The account the seed data belongs to, named in `seed.sql` itself. . */
 const MAIN_USER_EMAIL = process.env.SEED_MAIN_USER_EMAIL;
 
 const config = buildClientConfig();

@@ -1,12 +1,4 @@
-/**
- * Stable per-person colour.
- *
- * Used in two places that must agree: the awareness `user` field (which
- * y-codemirror.next reads to paint remote cursors and selections) and the
- * avatars in `CollaboratorsBar`. Deriving it from the participantId — rather
- * than picking randomly — means every client independently agrees on a person's
- * colour, and it survives a reconnect or a refresh.
- */
+/** Stable per-person colour. . */
 
 const PALETTE = [
     "#f4702c", // accent orange (the host's usual colour)
@@ -21,7 +13,7 @@ const PALETTE = [
 
 export const DEFAULT_PARTICIPANT_COLOR = PALETTE[0];
 
-/** djb2-style hash — cheap, stable, and good enough to spread 8 colours. */
+/** djb2-style hash — cheap, stable, and good enough to spread 8 colours. . */
 const hash = (value: string): number => {
     let result = 0;
     for (let i = 0; i < value.length; i++) {

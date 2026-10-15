@@ -13,14 +13,14 @@ interface BottomTabsProps {
     localResult: LocalRun | null;
     isRunning: boolean;
     nameFor: (participantId: string) => string;
-    // stdin lives here, as a tab, rather than in a toolbar row
+    // stdin lives here, as a tab, rather than in a toolbar row.
     stdin: string;
     onStdinChange: (value: string) => void;
     // Host-only
     isHost: boolean;
     sessionId: string;
     initialNotes: string | null;
-    /** A save would succeed right now (a candidate exists). */
+    /** A save would succeed right now (a candidate exists). . */
     notesCanSave: boolean;
     notesBlockedReason?: string | null;
 }
@@ -54,17 +54,7 @@ const TabButton = ({
     </button>
 );
 
-/**
- * The drawer under the editor: **Output** and **Input** for everyone, plus
- * private **Notes** for the host only.
- *
- * **Notes is not rendered at all for a candidate.** A disabled "Notes" tab would
- * still tell them they are being assessed, which is the one thing an interviewer
- * does not want revealed mid-session.
- *
- * The drawer is resizable: drag the bar on its top edge upward to make it taller,
- * or collapse it to a single tab strip. The size persists across reloads.
- */
+/** The drawer under the editor: output and input for everyone, notes for the host. . */
 export function BottomTabs({
     entries,
     localResult,

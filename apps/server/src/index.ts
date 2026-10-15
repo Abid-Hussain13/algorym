@@ -9,39 +9,14 @@ const server = http.createServer(app);
 initializeWebSocketServer(server);
 startSessionExpiryCron();
 
-/**
- * `PORT` first, because every PaaS (Render, Northflank, Koyeb, Fly) assigns the
- * port and tells the process about it through the environment. Hardcoding 3000
- * meant the container listened somewhere nothing was routing to, and the deploy
- * looked like a mystery connection refusal.
- */
+/** `PORT` first, because every PaaS (Render, Northflank, Koyeb, Fly) assigns the . */
 const port = Number(process.env.PORT) || 3000;
 
 server.listen(port, () => {
     console.log(`Server is listening on port ${port}`);
 });
 
-/**
- * Graceful shutdown.
- *
- * Hosted platforms do not kill a process; they send `SIGTERM` and wait. Render
- * gives 30 seconds, then `SIGKILL`s whatever is left. Without a handler the
- * default behaviour is to exit **immediately**, which means:
- *
- * - in-flight HTTP requests are cut off mid-response and the client sees a 502;
- * - every open WebSocket is severed with no close frame, so the editor's Yjs
- *   provider and the event socket both wait out their full backoff before
- *   retrying;
- * - Postgres connections are dropped while still in use.
- *
- * So the order matters. Stop taking new work first, let in-flight requests
- * finish, *then* tear down the sockets and the pool. Closing the HTTP server
- * before the sockets would reject the very reconnects we are trying to make
- * graceful.
- *
- * The hard timer is the escape hatch: if a client refuses to let go, we still
- * exit rather than sit until the platform kills us.
- */
+/** Graceful shutdown. */
 let shuttingDown = false;
 
 async function shutdown(signal: string) {

@@ -10,12 +10,7 @@ export interface WsConnectionInfo {
     participantId: string;
 }
 
-/**
- * The access token is an httpOnly cookie, so browser JavaScript cannot read it to
- * put in the query string. Same-origin WebSocket upgrades do carry the Cookie
- * header, so fall back to it. An explicit `?token=` still wins so scripted
- * clients (and tests) can authenticate without a cookie jar.
- */
+/** The access token is an httpOnly cookie, so browser JavaScript cannot read it to . */
 export const readWsToken = (request: IncomingMessage): string | null => {
     const url = request.url;
     if (url) {

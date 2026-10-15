@@ -46,13 +46,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
     const [scheduledTime, setScheduledTime] = useState("09:00");
     const [roleContext, setRoleContext] = useState("");
     const [questionSearch, setQuestionSearch] = useState("");
-    /**
-     * The one piece of state the user actually needs: why the last attempt failed.
-     *
-     * Cleared on every successful create, and whenever they change something that could
-     * fix it — a stale error sitting next to a form they have since corrected is worse
-     * than no message.
-     */
+    /** The one piece of state the user actually needs: why the last attempt failed. . */
     const [problem, setProblem] = useState<string | null>(null);
 
     const { data: questionsData, isLoading: questionsLoading } = useQuestions();
@@ -62,19 +56,10 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
     const { data: sessionsData } = useSessions({});
     const navigate = useNavigate();
 
-    /**
-     * Start now, or pick a slot. This was previously implicit — an empty date
-     * meant "immediate", buried under a calendar labelled *(optional)*, which
-     * read as "scheduling is a niche feature" rather than "you choose when this
-     * interview happens".
-     */
+    /** Start now, or pick a slot. . */
     const [when, setWhen] = useState<"now" | "later">("now");
 
-    /**
-     * One live interview at a time. The server enforces this; showing it here
-     * as well means the host finds out on the first screen rather than after
-     * picking questions, a duration and a date.
-     */
+    /** One live interview at a time. The server enforces this; showing it here . */
     const liveSession = useMemo(
         () => sessionsData?.sessions?.find((s) => s.status === "live") ?? null,
         [sessionsData]
@@ -82,7 +67,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
 
     useAutoSwitchTime(scheduledDate, duration, scheduledTime, setScheduledTime, isTimeSlotBlocked);
 
-    // Set default duration from user preferences when modal opens
+    // Set default duration from user preferences when modal opens.
     useEffect(() => {
         if (open && prefs?.default_duration_minutes) {
             setDuration(prefs.default_duration_minutes);
@@ -129,10 +114,7 @@ export function CreateSessionModal({ open, onOpenChange }: CreateSessionModalPro
 
     const handleClose = useCallback(
         (v: boolean) => {
-            // Cleared here rather than in an effect on `open`: the dialog is
-            // always closed before it is reopened, so this is the one place the
-            // lifecycle actually happens — and a setState-in-effect would just
-            // cause a second render pass to achieve the same thing.
+            // Cleared here rather than in an effect on `open`: the dialog is.
             if (!v) {
                 reset();
                 setProblem(null);

@@ -16,7 +16,7 @@ import { getSessionEvents } from "../controllers/session.controller.js";
 
 const sessionRoute = Router();
 
-// Join — no auth, auth is optional user can be guest
+// Join — no auth, auth is optional user can be guest.
 sessionRoute.post("/join", validate(joinSessionSchema), joinSession);
 
 // CRUD

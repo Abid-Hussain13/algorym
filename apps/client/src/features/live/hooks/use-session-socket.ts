@@ -5,31 +5,15 @@ import { WsClient } from "@/lib/ws/socket";
 type Listener = (message: WsMessage) => void;
 
 export interface SessionSocket {
-    /** True while the socket is open and the server has answered us. */
+    /** True while the socket is open and the server has answered us. . */
     isConnected: boolean;
-    /** Register a handler for every incoming event. Returns an unsubscribe fn. */
+    /** Register a handler for every incoming event. Returns an unsubscribe fn. . */
     subscribe: (listener: Listener) => () => void;
-    /** Fire-and-forget. Silently drops if the socket is not open yet. */
+    /** Fire-and-forget. Silently drops if the socket is not open yet. . */
     send: (message: WsClientMessage) => void;
 }
 
-/**
- * Binds the `/ws` event socket to React.
- *
- * Deliberately *not* a `useState` of "the last message": two identical
- * `run_result`s in a row would collapse into one, and every consumer would be
- * forced to care about messages it does not handle. Instead each part of the
- * room subscribes to what it needs:
- *
- *     const socket = useSessionSocket(sessionId, participant.id);
- *     useEffect(() => socket.subscribe(msg => {
- *         if (msg.type === 'run_result') setResult(msg.payload);
- *     }), [socket]);
- *
- * The socket is created inside the effect so setup and teardown are symmetric —
- * creating it during render breaks under StrictMode, which mounts, unmounts and
- * remounts in development and would leave a dead socket behind.
- */
+/** Binds the `/ws` event socket to React. . */
 export function useSessionSocket(
     sessionId: string,
     participantId: string,

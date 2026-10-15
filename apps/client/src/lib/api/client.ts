@@ -2,20 +2,12 @@ import type { ApiResponse } from '@algorym/shared-types'
 
 import { authApi } from './endpoints'
 
-/**
- * Baked in at **build** time, so changing it needs a rebuild, not a restart.
- *
- * Failing loudly here beats the alternative: with no value, every request went to
- * `undefined/api/...`, which fails in the browser with a confusing CORS or network
- * error that looks like a server problem rather than a missing env var. Vite
- * replaces `import.meta.env.*` at build time, so `import.meta.env.DEV` is `false`
- * in production and this stays a ~40 byte string in the shipped bundle.
- */
+/** Baked in at **build** time, so changing it needs a rebuild, not a restart. . */
 const API_BASE: string =
     import.meta.env.VITE_API_URL ||
     (import.meta.env.DEV ? "http://localhost:3000" : "");
 
-// Track refresh state to prevent race conditions
+// Track refresh state to prevent race conditions.
 let isRefreshing = false;
 let failedQueue: Array<{ resolve: (value: void | PromiseLike<void>) => void; reject: (reason?: unknown) => void }> = [];
 
@@ -39,7 +31,7 @@ function onRefreshReject(reason?: unknown) {
 
 async function refreshToken(): Promise<void | null> {
     if (isRefreshing) {
-        // Wait for existing refresh to complete
+        // Wait for existing refresh to complete.
         return new Promise<void | null>((resolve, reject) => {
             failedQueue.push({ resolve, reject });
         });
@@ -49,7 +41,7 @@ async function refreshToken(): Promise<void | null> {
     try {
         const result = await authApi.refresh();
 
-        // Refresh successful — clear queue and retry all pending requests
+        // Refresh successful — clear queue and retry all pending requests.
         onRefreshResolve(result ?? undefined);
 
         // Update refresh state
@@ -57,41 +49,26 @@ async function refreshToken(): Promise<void | null> {
 
         return result;
     } catch {
-        // Refresh failed — logout user and reject all pending requests
+        // Refresh failed — logout user and reject all pending requests.
         const error = new Error('Refresh failed');
         onRefreshReject(error);
         isRefreshing = false;
 
         await authApi.logout();
-        // Re-throw to propagate the error
+        // Re-throw to propagate the error.
         throw error;
     }
 }
 
-/** Cheap, side-effect-free probe. Used to wake a cold server. */
+/** Cheap, side-effect-free probe. Used to wake a cold server. . */
 const WARMUP_PATH = "/health";
 
-/**
- * Backoff schedule, ~15s total — comfortably longer than Render's ~50s cold
- * start in practice, without leaving the user staring at a spinner.
- */
+/** Backoff schedule, ~15s total — comfortably longer than Render's ~50s cold . */
 const WARMUP_DELAYS_MS = [0, 500, 1000, 2000, 4000, 8000];
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/**
- * Waits for the API to answer again.
- *
- * **Why this is a `GET /health` and not just "retry the request":** on a free
- * tier the original request never reached the app, so retrying is safe — but
- * that is only *probably* true for a mutation, and a retried `POST /question`
- * could land twice. `/health` has no side effects at all, so it can be polled
- * until the server is awake and the original request is then sent for the first
- * time. Safe for every verb.
- *
- * Single-flighted so twenty components mounting at once share one wake-up rather
- * than each starting their own.
- */
+/** Waits for the API to answer again. . */
 let warming: Promise<boolean> | null = null;
 
 function waitForApi(): Promise<boolean> {
@@ -118,13 +95,7 @@ function waitForApi(): Promise<boolean> {
     return warming;
 }
 
-/**
- * One message for "the request never arrived".
- *
- * A bare `Failed to fetch` is useless — it cannot tell you whether the network
- * is down, the server is asleep, or the browser blocked the response. Naming all
- * three costs a sentence and saves a debugging session.
- */
+/** One message for "the request never arrived". . */
 function unreachableMessage(cause: unknown): string {
     return (
         `Can't reach the server at ${API_BASE}. ` +
@@ -152,17 +123,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     try {
         response = await send();
     } catch (cause) {
-        /**
-         * A free-tier host sleeps after ~15 minutes idle and takes the better
-         * part of a minute to boot. A request that lands in that window is
-         * dropped before the app ever sees it, which the browser reports as a
-         * CORS failure with `Status code: (null)` — no status at all, because
-         * there was no response to have one.
-         *
-         * So before giving up: wait for the server to come back, then send the
-         * original request once. The wait polls `/health`, so nothing is
-         * duplicated even for a POST.
-         */
+        /** A free-tier host sleeps after ~15 minutes idle and takes the better . */
         const woke = await waitForApi();
         if (woke) {
             try {
@@ -178,7 +139,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
     if (response.status === 401) {
         if (!PUBLIC_AUTH_APIS.includes(path)) {
-            // Don't refresh if we're already on the refresh endpoint
+            // Don't refresh if we're already on the refresh endpoint.
             if (path === '/api/auth/refresh') {
                 throw new ApiError(401, 'Session expired, please login again');
             }
@@ -189,8 +150,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
                 return request<T>(path, options);
             } catch {
-                // For /api/auth/me, return a silent "not logged in" error
-                // Other endpoints get "session expired"
+                // For /api/auth/me, return a silent "not logged in" error.
+                // Other endpoints get "session expired".
                 if (path === '/api/auth/me') {
                     throw new ApiError(401, 'Not authenticated');
                 }

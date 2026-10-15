@@ -27,14 +27,7 @@ export const createQuestion = async (agent: Agent, overrides: Record<string, unk
     return res.body.data.question;
 };
 
-/**
- * A timestamp far enough in the future that the suite cannot rot.
- *
- * These tests used to hardcode `2026-09-01`, which silently became a *past*
- * date. The server now (correctly) rejects scheduling in the past, so every
- * assertion about scheduled sessions broke on the day that date passed. Deriving
- * the value from `Date.now()` is what stops this happening again.
- */
+/** A timestamp far enough in the future that the suite cannot rot. . */
 export const futureIso = (hoursAhead = 48): string =>
     new Date(Date.now() + hoursAhead * 60 * 60 * 1000).toISOString();
 

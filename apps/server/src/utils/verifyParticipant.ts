@@ -21,10 +21,7 @@ export const verifyParticipant = async ({ sessionId, participantId, userId }: Pa
     if (user_id === null) {
         if (userId === undefined) return true;
 
-        // Anonymous row + signed-in caller: link them only when the emails
-        // match, so a candidate who signed up mid-session keeps access to the
-        // room they joined as a guest — without letting anyone claim a
-        // participant row that belongs to a different person.
+        // Anonymous row + signed-in caller: link them only when the emails.
         const user = await db.query<{ email: string }>(
             "SELECT email FROM users WHERE id = $1",
             [userId]

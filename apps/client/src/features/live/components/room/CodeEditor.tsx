@@ -8,12 +8,7 @@ interface CodeEditorProps {
     language: string | null | undefined;
 }
 
-/**
- * The editor surface.
- *
- * Deliberately thin: `useCodeEditor` owns the CodeMirror lifecycle, and this
- * only supplies the DOM node it mounts into plus a loading state.
- */
+/** The editor surface. */
 export function CodeEditor({ yText, awareness, language }: CodeEditorProps) {
     const { containerRef, view } = useCodeEditor({ yText, awareness, language });
 

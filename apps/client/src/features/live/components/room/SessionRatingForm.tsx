@@ -13,26 +13,13 @@ interface SessionRatingFormProps {
     mode: string;
     status: string;
     existingRating: EvaluationRating | null;
-    /** Notes saved during the session, so the form opens populated. */
+    /** Notes saved during the session, so the form opens populated. . */
     existingNotes: string | null;
 }
 
 const RATINGS: EvaluationRating[] = ["weak", "average", "strong"];
 
-/**
- * Step two of ending a session: judge it.
- *
- * Only ever shown once the session is already complete. While it is live the
- * host's attention belongs on the interview, and a rating form sitting one click
- * away invites a snap judgement — so nothing rates until the interview is over.
- *
- * Notes arrive pre-filled from whatever the host wrote during the session and
- * stay freely editable.
- *
- * Two exits, because rating is optional and must never feel mandatory:
- * **Done** saves and leaves, **Rate later** skips and leaves. Both land on the
- * sessions page, and the rating stays reachable from the session detail page.
- */
+/** Step two of ending a session: judge it. . */
 export function SessionRatingForm({
     sessionId,
     candidateId,

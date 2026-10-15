@@ -5,7 +5,7 @@ import type { ThemePreference } from "@algorym/shared-types";
 import { useTheme } from "./use-theme";
 import { useUserPreferences, useUpdatePreferences } from "@/features/user/hooks/use-user";
 
-/** The stored preference, which may say "system" even though the applied theme cannot. */
+/** The stored preference, which may say "system" even though the applied theme cannot. . */
 const PREF_KEY = "algorym-theme-preference";
 
 const readStoredPreference = (): ThemePreference | null => {
@@ -22,30 +22,7 @@ const systemTheme = (): "light" | "dark" =>
         ? "dark"
         : "light";
 
-/**
- * **The single theme control for the whole app.**
- *
- * There used to be three theme controls and two competing sources of truth:
- *
- * 1. the navbar toggle and the live-room settings both wrote the Redux slice;
- * 2. the profile preferences page wrote the **server** record and then pushed into Redux.
- *
- * Redux won for rendering, so changing the theme in the room looked correct — but the
- * server record kept the old value, so the preferences page showed a *different* selection
- * than the theme actually in use, and signing in elsewhere restored the stale one. A
- * `system` preference made it worse: Redux only stores `light | dark`, so the moment
- * `system` was resolved to a concrete theme, all trace of "follow the OS" was gone.
- *
- * **The rule now:**
- * - Redux `theme-slice` is the **runtime** source of truth — it alone owns `data-theme`,
- *   which is what every component actually renders against.
- * - This hook is the only place allowed to **write** it, so a change made anywhere lands
- *   everywhere in the same tick.
- * - `preference` (`light | dark | system`) is the **persisted** value, mirrored to the
- *   server for signed-in users and to `localStorage` for everyone.
- * - Changes made through the plain toggle are **synced back** to that persisted preference,
- *   which is what closes the loop that made the preferences page lie.
- */
+/** **The single theme control for the whole app.** . */
 export function useThemeControl() {
     const { setTheme, toggle } = useTheme();
     const applied = useAppSelector(selectTheme);
@@ -127,9 +104,9 @@ export function useThemeControl() {
     }, [toggle]);
 
     return {
-        /** What is actually on screen right now. */
+        /** What is actually on screen right now. . */
         theme: applied,
-        /** What the user chose, which may be `system`. */
+        /** What the user chose, which may be `system`. . */
         preference,
         selectPreference,
         toggle: togglePreference,

@@ -8,10 +8,10 @@ import { sendPasswordResetEmail } from '../utils/email.js';
 export const generateResetToken = async (email: string): Promise<void> => {
     const user = await db.query('SELECT id, name FROM users WHERE email = $1', [email]);
 
-    // Always return success to prevent email enumeration
+    // Always return success to prevent email enumeration.
     if (!user.rows.length) return;
 
-    // Delete any existing reset tokens for this user
+    // Delete any existing reset tokens for this user.
     await db.query("DELETE FROM tokens WHERE user_id = $1 AND type = 'password_reset'", [user.rows[0].id]);
 
     const token = nanoid(64);

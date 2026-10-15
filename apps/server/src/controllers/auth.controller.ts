@@ -17,11 +17,7 @@ const cookieSiteSettings = {
     secure: isProduction,
 };
 
-/**
- * Clearing needs the same attributes the cookies were set with (path,
- * sameSite, secure) or strict browsers keep them — silently making logout
- * a no-op in production.
- */
+/** Clearing needs the same attributes the cookies were set with (path, . */
 export const clearAuthCookies = (res: Response): void => {
     res.clearCookie("accessToken", { path: "/", ...cookieSiteSettings, httpOnly: true });
     res.clearCookie("refreshToken", { path: "/api/auth/refresh", ...cookieSiteSettings, httpOnly: true });
@@ -116,13 +112,13 @@ export const logout = async (req: Request, res: Response, next: NextFunction): P
         try {
             if (accessToken) userId = (await verifyAccessToken(accessToken)).id;
         } catch {
-            // access token invalid/expired — fall back to the refresh token
+            // access token invalid/expired — fall back to the refresh token.
         }
         if (!userId && refreshToken) {
             try {
                 userId = (await verifyRefreshToken(refreshToken)).id;
             } catch {
-                // both tokens invalid — nothing to revoke
+                // both tokens invalid — nothing to revoke.
             }
         }
         if (userId) {

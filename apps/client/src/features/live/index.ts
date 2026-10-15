@@ -11,14 +11,7 @@ export { useNow } from './hooks/use-now'
 export { QuestionPanel } from './components/room/QuestionPanel'
 export { EditorTabs } from './components/room/EditorTabs'
 
-/**
- * Code-split: CodeMirror 6 plus five language modes and the Vim keymap is by far
- * the heaviest dependency in the app, and it is only ever needed inside
- * `/live/:sessionId`. Lazy-loading it here keeps the marketing pages, login and
- * dashboard from downloading an editor they will never mount.
- *
- * Consumers must render this inside a `<Suspense>` boundary.
- */
+/** Code-split: CodeMirror 6 plus five language modes and the Vim keymap is by far . */
 export const CodeEditor = lazy(() =>
     import('./components/room/CodeEditor').then((m) => ({ default: m.CodeEditor }))
 )

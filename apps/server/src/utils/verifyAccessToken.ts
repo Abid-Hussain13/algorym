@@ -3,11 +3,7 @@ import db from "../db/pool.js";
 import AppError from "./AppError.js";
 import type { AuthPayload } from "../types/index.js";
 
-/**
- * Verifies an access token and rejects it if the account's token_version has
- * moved on since the token was issued (logout, password reset, account
- * deletion all bump it).
- */
+/** Verifies an access token and rejects it if the account's token_version has . */
 export const verifyAccessToken = async (token: string): Promise<AuthPayload> => {
     let decoded: AuthPayload;
     try {
@@ -31,7 +27,7 @@ export const verifyAccessToken = async (token: string): Promise<AuthPayload> => 
     return decoded;
 };
 
-/** Verifies signature + expiry of a refresh token without the DB round trip. */
+/** Verifies signature + expiry of a refresh token without the DB round trip. . */
 export const verifyRefreshToken = (token: string): Promise<AuthPayload> => {
     try {
         return Promise.resolve(jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as AuthPayload);

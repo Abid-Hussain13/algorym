@@ -4,10 +4,7 @@ import db from "../db/pool.js";
 import { broadcast } from "../ws/connectionManager.js";
 import { logSessionEvent } from "./session-events.service.js";
 
-/**
- * Held so shutdown can stop it. Left running, it would fire once more
- * mid-teardown and open a query on a database pool that is being closed.
- */
+/** Held so shutdown can stop it. . */
 let expiryTask: ScheduledTask | null = null;
 
 export function stopSessionExpiryCron(): void {
@@ -18,21 +15,7 @@ export function stopSessionExpiryCron(): void {
 export function startSessionExpiryCron() {
     expiryTask = cron.schedule("* * * * *", async () => {
         try {
-            /**
-             * Time is up, but whether that counts as "expired" or "completed"
-             * depends entirely on whether anyone was actually there.
-             *
-             * A session that timed out with a candidate present was worked, and
-             * the host has notes and possibly a rating to give it. Marking that
-             * `expired` throws the interview into a bucket with "nobody turned
-             * up", which is wrong: it hides it from the host's completed list and
-             * makes the evaluation form unreachable, because rating is only
-             * offered on a completed interview.
-             *
-             * So: **a guest ever joined → completed. Host alone → expired.**
-             * The check is on participants rather than live sockets on purpose —
-             * a candidate who closed their tab ten minutes ago still attended.
-             */
+            /** Time is up, but whether that counts as "expired" or "completed" . */
             const timedOut = await db.query<{ id: string; attended: boolean }>(
                 `UPDATE sessions s
                  SET status = CASE WHEN EXISTS (

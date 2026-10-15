@@ -24,12 +24,7 @@ export function JoinSessionForm({ sessionId, accessToken, user, onJoined }: Join
     const [consent, setConsent] = useState(false);
     const [nameError, setNameError] = useState<string>();
     const [emailError, setEmailError] = useState<string>();
-    /**
-     * Consent is collected first, then the rules are shown and acknowledged. Doing
-     * it in this order means nobody is asked to agree to rules they have not read,
-     * and the full screen request is a gesture — which is the only way a browser
-     * will allow it.
-     */
+    /** Consent is collected first, then the rules are shown and acknowledged. . */
     const [showRules, setShowRules] = useState(false);
     const { isFullscreen, enter } = useFullscreen();
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import request from "supertest";
-// agent type = request.agent(app) return type
+// agent type = request.agent(app) return type.
 import app from "../src/app.js";
 import { signupAgent, createQuestion, createSession } from "./helpers.js";
 import db from "../src/db/pool.js";
@@ -50,12 +50,12 @@ describe("Session replay events (GET /api/session/:id/events)", () => {
         expect(events).toHaveLength(2);
         expect(events[0].event_type).toBe("session_started");
         expect(events[1].event_type).toBe("code_snapshot");
-        // ASC = start comes before snapshot
+        // ASC = start comes before snapshot.
         expect(new Date(events[0].created_at).getTime()).toBeLessThanOrEqual(
             new Date(events[1].created_at).getTime()
         );
 
-        // actor joined with display name + role
+        // actor joined with display name + role.
         expect(events[0].actor).toMatchObject({ role: "host", display_name: "Test User" });
         expect(events[0].actor.id).toBeTruthy();
     });

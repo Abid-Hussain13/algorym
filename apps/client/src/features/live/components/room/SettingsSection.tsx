@@ -1,15 +1,7 @@
 import { cn } from "@/lib/utils/cn";
 import type { ReactNode } from "react";
 
-/**
- * One titled block in the Settings panel.
- *
- * The room's panels are narrow (320px) and long, so everything here assumes a
- * small viewport: sections are separated by rules rather than shadows, headings
- * carry the hierarchy instead of size, and each block gets generous internal
- * padding. The earlier version ran all the sections together with `gap-5` on a
- * `text-xs` grid, which read as one dense wall of key/value pairs.
- */
+/** One titled block in the Settings panel. . */
 export function SettingsSection({
     title,
     description,
@@ -36,10 +28,7 @@ export function SettingsSection({
     );
 }
 
-/**
- * A labelled read-only fact: label left, value right, on its own row with real
- * padding so a list of them scans like a table instead of a wall of text.
- */
+/** A labelled read-only fact: label on the left, value on the right. . */
 export function SettingsRow({ label, children }: { label: string; children: ReactNode }) {
     return (
         <div className="flex items-baseline justify-between gap-4 py-1">
@@ -49,7 +38,7 @@ export function SettingsRow({ label, children }: { label: string; children: Reac
     );
 }
 
-/** A bordered card, used for anything interactive inside a section. */
+/** A bordered card, used for anything interactive inside a section. . */
 export function SettingsCard({ children, className }: { children: ReactNode; className?: string }) {
     return (
         <div
@@ -63,7 +52,7 @@ export function SettingsCard({ children, className }: { children: ReactNode; cla
     );
 }
 
-/** Section heading for a group of related controls, used inside cards. */
+/** Section heading for a group of related controls, used inside cards. . */
 export function SettingsField({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
     return (
         <div className="flex flex-col gap-2">

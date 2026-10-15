@@ -7,19 +7,12 @@ import type { Question } from "@algorym/shared-types";
 
 interface AllQuestionsPickerProps {
     currentQuestionId: string | null;
-    /** Question ids already in this session, so they can be marked. */
+    /** Question ids already in this session, so they can be marked. . */
     assignedIds: string[];
     onSelect: (questionId: string, language: string) => void;
 }
 
-/**
- * Host-only: pull any question from the library into the live session.
- *
- * Switching question also passes the language, taken from whichever supported
- * language the question actually supports. Reusing the current language when it
- * is valid avoids needlessly re-seeding the room into a different language
- * mid-interview.
- */
+/** Host-only: pull any question from the library into the live session. . */
 export function AllQuestionsPicker({
     currentQuestionId,
     assignedIds,

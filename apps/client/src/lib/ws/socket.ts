@@ -3,11 +3,11 @@ import { buildWsUrl } from '@/lib/session-urls'
 
 /** Send a ping this often. */
 const HEARTBEAT_INTERVAL = 60_000
-/** No traffic at all for this long and we assume the socket is a zombie. */
+/** No traffic at all for this long and we assume the socket is a zombie. . */
 const HEARTBEAT_TIMEOUT = HEARTBEAT_INTERVAL * 2
 
 export interface WsClientOptions {
-    /** Path such as `/ws`; the origin is resolved from VITE_API_URL. */
+    /** Path such as `/ws`; the origin is resolved from VITE_API_URL. . */
     path: string
     params: Record<string, string>
     onMessage: (message: WsMessage) => void
@@ -15,21 +15,7 @@ export interface WsClientOptions {
     onClose?: () => void
 }
 
-/**
- * Reconnectable JSON socket for `/ws`.
- *
- * Two things this owns that a plain `new WebSocket` does not:
- *
- * 1. **The correct origin.** The app may not be served from the API's port, so
- *    the URL comes from `buildWsUrl` rather than `window.location.host`.
- * 2. **A heartbeat.** A browser cannot send protocol-level pings, and a dropped
- *    connection can stay half-open for minutes while the UI claims to be
- *    connected. We ask the server for a `pong` every 60s and treat silence
- *    longer than 120s as death, then reconnect.
- *
- * Authentication rides on the cookie, which the browser attaches to the upgrade
- * request automatically — there is no token in this URL.
- */
+/** Reconnectable JSON socket for `/ws`. . */
 export class WsClient {
     private socket: WebSocket | null = null
     private heartbeatTimer: ReturnType<typeof setInterval> | null = null

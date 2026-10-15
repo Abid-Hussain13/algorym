@@ -3,65 +3,37 @@ import type { WebsocketProvider } from "y-websocket";
 import type { SessionSocket } from "./use-session-socket";
 import { useFullscreen } from "./use-fullscreen";
 
-/** Derived from the provider so we depend on no extra package. */
+/** Derived from the provider so we depend on no extra package. . */
 type Awareness = WebsocketProvider["awareness"];
 
 export interface FocusGuard {
     isFullscreen: boolean;
     enterFullscreen: () => void;
-    /**
-     * The candidate has been out of full screen and has not come back within the
-     * grace period. The editor blurs behind the full screen button — the only way
-     * forward is to enter full screen.
-     */
+    /** The candidate has been out of full screen and has not come back within the . */
     isBlocking: boolean;
-    /** How many times this participant has left full screen. */
+    /** How many times this participant has left full screen. . */
     exitCount: number;
 }
 
-/** Grace period before the editor is blurred. */
+/** Grace period before the editor is blurred. . */
 const ESCALATE_AFTER_MS = 4000;
 
 interface UseFullscreenGuardOptions {
     awareness: Awareness | null;
     socket: SessionSocket;
-    /** Candidate only — the host is never guarded or reported. */
+    /** Candidate only — the host is never guarded or reported. . */
     enabled: boolean;
 }
 
-/**
- * Single owner of the awareness `focus` field: `{ away, since, fullscreen, exitCount }`.
- *
- * **It must stay the only writer.** An earlier revision had a second hook
- * (`useAwaySignal`) publishing `focus` too, and the two silently clobbered each
- * other: the away signal wrote `{ away, since }` with no `fullscreen` key, so the
- * moment a candidate switched tabs the field lost `fullscreen`, the reader
- * defaulted it to `true`, and **the host's warning disappeared exactly when it
- * mattered**. Awareness fields are whole-object writes, so last writer wins — two
- * owners of one field is always a race.
- *
- * Live state goes on awareness (appears and clears instantly, expires on its own
- * if the tab dies). Durable evidence goes over `/ws` as a `focus_event`, which the
- * server writes to `session_events` and the session detail page reads.
- *
- * Reported **once per transition**, on the way out, so a candidate who never comes
- * back still leaves a record.
- *
- * Nothing here can *prevent* leaving — browsers do not allow that. It makes every
- * departure visible to the host and permanent in the transcript.
- */
+/** Single owner of the awareness `focus` field: `{ away, since, fullscreen, exitCount }`. . */
 export function useFullscreenGuard({ awareness, socket, enabled }: UseFullscreenGuardOptions): FocusGuard {
     const { isFullscreen, enter } = useFullscreen();
     const [exitCount, setExitCount] = useState(0);
 
-    /**
-     * Timestamp of when the grace period elapsed. The blocking flag is derived
-     * from this rather than stored, so returning to full screen clears it with no
-     * state write.
-     */
+    /** Timestamp of when the grace period elapsed. . */
     const [graceElapsedAt, setGraceElapsedAt] = useState<number | null>(null);
 
-    /** True once they have been in full screen, so only real exits count. */
+    /** True once they have been in full screen, so only real exits count. . */
     const wasInFullscreenRef = useRef(false);
     const awaySinceRef = useRef<number | null>(null);
 

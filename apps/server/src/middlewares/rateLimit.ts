@@ -16,14 +16,7 @@ const sweep = setInterval(() => {
 }, 60_000);
 sweep.unref?.();
 
-/**
- * Fixed-window in-memory rate limiter for the auth endpoints.
- *
- * Deliberately per-process (the app is a single Render instance): a Redis
- * layer would be overkill for the traffic this sees, while blocking brute
- * force and signup floods is a DoD checklist item. Skipped under NODE_ENV=test
- * so the suite's many signups from 127.0.0.1 are not throttled.
- */
+/** Fixed-window in-memory rate limiter for the auth endpoints. . */
 export const rateLimit = (bucketName: string, max: number, windowMs: number) =>
     (req: Request, _res: Response, next: NextFunction): void => {
         if (process.env.NODE_ENV === "test") return next();

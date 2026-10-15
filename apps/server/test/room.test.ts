@@ -12,7 +12,7 @@ const accessTokenFor = async (sessionId: string) => {
     return rows[0].access_token;
 };
 
-/** Joins as a completely anonymous guest — no cookie, no account. */
+/** Joins as a completely anonymous guest — no cookie, no account. . */
 const joinAnonymously = async (sessionId: string) => {
     const res = await request(app).post("/api/session/join").send({
         access_token: await accessTokenFor(sessionId),
@@ -75,10 +75,10 @@ describe("GET /api/session/:id/room", () => {
             "Question Alpha",
             "Question Beta",
         ]);
-        // position drives the tab order, so it must be present
+        // position drives the tab order, so it must be present.
         expect(questions[0].position).toBeDefined();
         expect(questions[0].id).toBe(first.id);
-        // the current question is still returned separately
+        // the current question is still returned separately.
         expect(question.title).toBe("Question Alpha");
     });
 

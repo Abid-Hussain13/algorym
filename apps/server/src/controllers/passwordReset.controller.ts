@@ -6,7 +6,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     const { email } = req.body;
     await generateResetToken(email);
 
-    // Always return success to prevent email enumeration
+    // Always return success to prevent email enumeration.
     res.json({ success: true, message: 'If an account exists with that email, a reset link has been sent' });
 };
 

@@ -2,14 +2,7 @@ import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { EditorView } from "@codemirror/view";
 import { tags as t } from "@lezer/highlight";
 
-/**
- * CodeMirror styling that defers to the app's design tokens.
- *
- * The app already defines `--color-syn-*`, `--font-mono` and `data-theme="dark"`
- * on `:root`, so referencing them here means the editor follows the theme
- * automatically — no React state, no re-mounting the editor on toggle, and no
- * second palette to keep in sync.
- */
+/** CodeMirror styling that defers to the app's design tokens. . */
 const base = EditorView.theme({
     "&": {
         height: "100%",

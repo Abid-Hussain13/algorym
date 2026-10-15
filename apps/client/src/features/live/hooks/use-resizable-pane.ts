@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 
-/** Which pointer axis the drag tracks, and which CSS dimension it controls. */
+/** Which pointer axis the drag tracks, and which CSS dimension it controls. . */
 type PaneAxis = "vertical" | "horizontal";
 
 interface UseResizablePaneOptions {
@@ -8,19 +8,11 @@ interface UseResizablePaneOptions {
     initial: number;
     min: number;
     max: number;
-    /**
-     * `vertical` = the pane's size is its **width** and the drag tracks X
-     * (a side column). `horizontal` = the size is its **height** and the drag
-     * tracks Y (the bottom drawer).
-     */
+    /** `vertical` = the pane's size is its **width** and the drag tracks X . */
     axis?: PaneAxis;
-    /**
-     * Set for panes that grow as you drag *left* or *up* — i.e. whose grab edge
-     * moves toward the origin. The left-hand side column and the bottom drawer
-     * both need this.
-     */
+    /** Set for panes that grow as you drag *left* or *up* — i.e. whose grab edge . */
     invert?: boolean;
-    /** Persisted under this key so a reload keeps the user's chosen size. */
+    /** Persisted under this key so a reload keeps the user's chosen size. . */
     storageKey?: string;
 }
 
@@ -35,19 +27,7 @@ const readStored = (key: string | undefined, fallback: number): number => {
     }
 };
 
-/**
- * Drag-to-resize for the room's side column and bottom drawer.
- *
- * Uses Pointer Events with pointer capture, so the drag keeps working once the
- * cursor leaves the handle. A plain `mousemove` bound to the handle stalls the
- * moment the pointer moves off it, which is the usual complaint with
- * hand-rolled resizers.
- *
- * The value is clamped during the drag rather than validated afterwards, and is
- * persisted so a refresh keeps the chosen size. Keyboard resizing is
- * deliberately not implemented — the collapse toggle and the rail buttons cover
- * the non-drag path.
- */
+/** Drag-to-resize for the room's side column and bottom drawer. . */
 export function useResizablePane({
     initial,
     min,
@@ -102,7 +82,7 @@ export function useResizablePane({
 
     return {
         size,
-        /** CSS property this pane's `size` should be assigned to. */
+        /** CSS property this pane's `size` should be assigned to. . */
         dimension: (axis === "vertical" ? "width" : "height") as "width" | "height",
         handleProps: {
             onPointerDown,

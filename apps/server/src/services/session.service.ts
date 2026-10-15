@@ -500,7 +500,7 @@ export const joinSession = async (data: JoinSessionData, userId?: string): Promi
         }
     }
 
-    // Determine role and fill in fields
+    // Determine role and fill in fields.
     const isHost = userId && session.created_by === userId;
 
     let email: string;
@@ -509,7 +509,7 @@ export const joinSession = async (data: JoinSessionData, userId?: string): Promi
     let consent: boolean;
 
     if (isHost) {
-        // Host: pull info from users table, consent is implicit
+        // Host: pull info from users table, consent is implicit.
         role = "host";
         consent = true;
 
@@ -530,7 +530,7 @@ export const joinSession = async (data: JoinSessionData, userId?: string): Promi
         email = user.rows[0].email;
         displayName = user.rows[0].name;
     } else {
-        // Guest: require email + display_name from request body
+        // Guest: require email + display_name from request body.
         role = "guest";
         consent = data.consent_to_contact;
 
@@ -541,10 +541,7 @@ export const joinSession = async (data: JoinSessionData, userId?: string): Promi
         if (!displayName) throw new AppError("Name is required to join a session", 400);
     }
 
-    // `WHERE` keeps the upsert from ever taking over a row owned by a
-    // different signed-in account: if the conflict target row belongs to
-    // somebody else, nothing updates and we return that row untouched below
-    // (an anonymous rejoin of a linked account), rather than hijacking it.
+    // `WHERE` keeps the upsert from ever taking over a row owned by a.
     const { rows } = await db.query(
         `INSERT INTO session_participants (session_id, user_id, email, display_name, role, consent_to_contact, consent_timestamp)
          VALUES ($1, $2, $3, $4, $5, $6, now())

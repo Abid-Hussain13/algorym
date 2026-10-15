@@ -4,7 +4,7 @@ import type { Collaborator } from "../hooks/use-collaborators";
 interface CollaboratorsBarProps {
     collaborators: Collaborator[];
     connected: boolean;
-    /** Host only: surfaces integrity problems without opening Settings. */
+    /** Host only: surfaces integrity problems without opening Settings. . */
     isHost?: boolean;
     className?: string;
 }

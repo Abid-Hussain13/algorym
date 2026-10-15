@@ -10,11 +10,7 @@ export interface LocalParticipant {
 
 export const participantStorageKey = (sessionId: string) => `${STORAGE_PREFIX}${sessionId}`;
 
-/**
- * The live room needs a participantId for both WebSocket URLs. It is issued once
- * at join time, so it is kept in sessionStorage to survive a refresh or an
- * accidental tab close mid-interview without re-prompting the guest.
- */
+/** The live room needs a participantId for both WebSocket URLs. . */
 export const readParticipant = (sessionId: string): LocalParticipant | null => {
     try {
         const raw = sessionStorage.getItem(participantStorageKey(sessionId));

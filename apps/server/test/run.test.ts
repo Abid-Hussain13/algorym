@@ -4,7 +4,7 @@ import app from "../src/app.js";
 import { signupAgent, createSession, futureIso } from "./helpers.js";
 import db from "../src/db/pool.js";
 
-// Mock the external SandboxAPI so tests never hit the network / paid API
+// Mock the external SandboxAPI so tests never hit the network / paid API.
 vi.mock("../src/services/code-run.service.js", () => ({
     runCode: vi.fn(async () => ({
         language: "python",
@@ -52,7 +52,7 @@ describe("POST /api/run", () => {
         expect(res.body.data.result.status).toBe("accepted");
         expect(res.body.data.result.stdout).toBe("5\n");
 
-        // event persisted with stdin + code for the replay
+        // event persisted with stdin + code for the replay.
         const { rows } = await db.query(
             `SELECT payload FROM session_events WHERE session_id = $1 AND event_type = 'run_result'`,
             [session.id]

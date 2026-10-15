@@ -42,13 +42,7 @@ export const getSessionById = async (req: Request, res: Response) => {
     res.json({ success: true, data: { session }, message: "" });
 };
 
-/**
- * `GET /api/session/:id/room?participantId=…`
- *
- * The live room's data source. Deliberately NOT behind `protect`: a candidate can
- * be an anonymous guest with no account, so their proof of membership is the
- * participantId issued at join time — the same check `/api/run` uses.
- */
+/** `GET /api/session/:id/room?participantId=…` . */
 export const getSessionRoom = async (req: Request, res: Response) => {
     const sessionId = req.params.id as string;
     const participantId = typeof req.query.participantId === "string" ? req.query.participantId : "";

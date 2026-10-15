@@ -1,29 +1,16 @@
-/**
- * Standard-library symbols the room autocompletes, per language.
- *
- * Deliberately **free of any CodeMirror import** — the CompletionSource that
- * consumes this lives in `editor-completions.ts`, and keeping them apart means
- * this data can be imported by tests or a future non-editor surface without
- * dragging the editor bundle in.
- *
- * Each entry can carry an `import` line. That is the whole auto-import feature:
- * accepting a completion whose library symbol is missing inserts both the usage
- * at the cursor *and* the required import at the top of the file, so a candidate
- * who types `System.out` gets `import java.lang.System;` for free instead of a
- * red error.
- */
+/** Standard-library symbols the room autocompletes, per language. . */
 
 export interface LanguageSymbol {
-    /** Label shown in the completion list. */
+    /** Label shown in the completion list. . */
     label: string;
-    /** Text inserted when accepted. Defaults to `label`. */
+    /** Text inserted when accepted. Defaults to `label`. . */
     insert?: string;
     detail?: string;
     info?: string;
     type?: "keyword" | "function" | "method" | "class" | "variable" | "module";
-    /** Line inserted at the top of the file, e.g. an import or #include. */
+    /** Line inserted at the top of the file, e.g. an import or #include. . */
     import?: string;
-    /** Skips the completion entirely once this text is found in the document. */
+    /** Skips the completion entirely once this text is found in the document. . */
     importMarker?: string;
 }
 
@@ -212,13 +199,7 @@ export const LANGUAGE_KEYWORDS: Record<string, LanguageSymbol[]> = {
     ],
 };
 
-/**
- * Library symbols that need an import.
- *
- * `importMarker` is what makes the feature idempotent: the import line is only
- * inserted when that exact text is absent from the document, so accepting the
- * same completion twice does not stack duplicate imports.
- */
+/** Library symbols that need an import. . */
 export const LANGUAGE_LIBRARY: Record<string, LanguageSymbol[]> = {
     python: [
         { label: "sys", type: "module", import: "import sys", importMarker: "import sys" },

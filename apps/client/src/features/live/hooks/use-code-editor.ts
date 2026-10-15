@@ -12,16 +12,7 @@ import { editorCompletions, completionKeymaps } from "../lib/editor-completions"
 import { languageExtension } from "../lib/editor-language-extensions";
 import { useEditorPreferences, type EditorMode } from "./use-editor-preferences";
 
-/**
- * Editor appearance and keymap, applied through a `Compartment` so they can be
- * swapped live.
- *
- * A compartment — rather than putting the values in the mount effect's
- * dependency list — because this hook builds its `EditorView` once per buffer.
- * Rebuilding it on every font-size click would destroy and recreate the
- * document view, throwing away the cursor position, selection and scroll
- * offset. `reconfigure` swaps the extension in place.
- */
+/** Editor appearance and keymap, applied through a `Compartment` so they can be . */
 function preferencesExtension(mode: EditorMode, fontSize: number): Extension {
     return [
         EditorView.theme({
@@ -38,7 +29,7 @@ function preferencesExtension(mode: EditorMode, fontSize: number): Extension {
     ];
 }
 
-/** Derived from the provider so we depend on no extra package. */
+/** Derived from the provider so we depend on no extra package. . */
 type Awareness = WebsocketProvider["awareness"];
 
 interface UseCodeEditorOptions {
@@ -47,33 +38,13 @@ interface UseCodeEditorOptions {
     language: string | null | undefined;
 }
 
-/**
- * Mounts a CodeMirror 6 editor bound to one shared `Y.Text`.
- *
- * `yCollab` is what makes this collaborative: it wires the editor to the Yjs
- * document so local edits are broadcast as CRDT updates, remote edits arrive as
- * edits, and remote cursors/selections are drawn automatically using each
- * peer's awareness colour.
- *
- * **`minimalSetup`, not `basicSetup`, is deliberate.** `basicSetup` includes
- * CodeMirror's own `history()`, which records remote edits as if the local user
- * had typed them — so undo would walk other people's changes, and undo state
- * would fight the Yjs `UndoManager`. `minimalSetup` drops `history()`, and
- * `yUndoManagerKeymap` supplies undo that only touches your own edits.
- *
- * Switching tabs changes `yText`, so the effect tears the old view down and
- * builds a new one for the newly active buffer.
- */
+/** Mounts a CodeMirror 6 editor bound to one shared `Y.Text`. . */
 export function useCodeEditor({ yText, awareness, language }: UseCodeEditorOptions) {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [view, setView] = useState<EditorView | null>(null);
     const { mode, fontSize } = useEditorPreferences();
 
-    // One compartment for the whole preferences extension, created once per hook
-    // instance and reused across buffer switches. `useState` with a lazy
-    // initializer rather than `useRef(new Compartment())`: the latter constructs
-    // on every render (the ref discards all but the first), which the compiler
-    // lint rightly rejects.
+    // One compartment for the whole preferences extension, created once per hook.
     const [preferencesCompartment] = useState(() => new Compartment());
 
     useEffect(() => {
@@ -96,17 +67,10 @@ export function useCodeEditor({ yText, awareness, language }: UseCodeEditorOptio
                     keymap.of([
                         ...yUndoManagerKeymap,
                         ...completionKeymaps,
-                        // Without this, Tab is unbound in CodeMirror and the browser
-                        // moves focus to the next control — which in a code editor
-                        // reads as "the editor is broken". Claiming the key inserts an
-                        // indent instead, like every other editor. Listed last so vim's
-                        // normal mode still gets first refusal on Tab.
+                        // Without this, Tab is unbound in CodeMirror and the browser.
                         indentWithTab,
                     ]),
-                    // `minimalSetup` has no gutters, so line numbers have to be
-                    // asked for. Without this there is no `code`, no error line
-                    // pointer and no current-line marker — which also matters for
-                    // the host, who reads the candidate's line numbers aloud.
+                    // `minimalSetup` has no gutters, so line numbers have to be.
                     lineNumbers(),
                     highlightActiveLineGutter(),
                     yCollab(yText, awareness, { undoManager }),
@@ -127,7 +91,7 @@ export function useCodeEditor({ yText, awareness, language }: UseCodeEditorOptio
             setView(null);
         };
         // `mode` and `fontSize` are intentionally absent: preference changes are
-        // applied by the effect below via reconfigure, not by a rebuild.
+        // applied by the effect below via reconfigure, not by a rebuild
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [yText, awareness, language, preferencesCompartment]);
 

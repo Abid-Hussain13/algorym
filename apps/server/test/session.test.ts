@@ -1,5 +1,5 @@
 import request from "supertest";
-// agent type = request.agent(app) return type
+// agent type = request.agent(app) return type.
 import { describe, it, expect, beforeEach } from "vitest";
 import app from "../src/app.js";
 import { signupAgent, createQuestion, createSession, uniqueEmail, futureIso } from "./helpers.js";
@@ -26,11 +26,7 @@ describe("Session", () => {
             expect(res.body.data.session.duration_minutes).toBeNull();
         });
 
-        /**
-         * The invariant that was silently broken: an immediate session used to be
-         * written with `scheduled_at = now()`, which made every instant session
-         * look booked and made this assertion impossible to even write.
-         */
+        /** The invariant that was silently broken: an immediate session used to be . */
         it("leaves scheduled_at null for an immediate session", async () => {
             const res = await agent.post("/api/session").send({ mode: "practice" });
             expect(res.status).toBe(201);
@@ -204,7 +200,7 @@ describe("Session", () => {
             expect(started.body.data.session.status).toBe("live");
             expect(started.body.data.session.started_at).toBeTruthy();
 
-            // live session cannot be started again
+            // live session cannot be started again.
             const again = await agent.patch(`/api/session/${s.id}/start`);
             expect(again.status).toBe(400);
             expect(again.body.message).toBe("Session is not scheduled");
@@ -221,14 +217,14 @@ describe("Session", () => {
         });
 
         it("cancel: scheduled and live sessions can be cancelled, closed ones cannot", async () => {
-            // live → cancelled is allowed, and stamps ended_at because it ran
+            // live → cancelled is allowed, and stamps ended_at because it ran.
             const live = await liveSession();
             const cancelledLive = await agent.patch(`/api/session/${live.id}/cancel`);
             expect(cancelledLive.status).toBe(200);
             expect(cancelledLive.body.data.session.status).toBe("cancelled");
             expect(cancelledLive.body.data.session.ended_at).toBeTruthy();
 
-            // scheduled → cancelled, and started_at is null so ended_at stays null
+            // scheduled → cancelled, and started_at is null so ended_at stays null.
             const scheduled = await createSession(agent, { scheduled_at: futureIso() });
             const cancelled = await agent.patch(`/api/session/${scheduled.id}/cancel`);
             expect(cancelled.status).toBe(200);

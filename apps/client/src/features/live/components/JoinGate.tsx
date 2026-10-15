@@ -11,7 +11,7 @@ import type { LocalParticipant } from "../lib/participant-store";
 
 interface JoinGateProps {
     sessionId: string;
-    /** Rendered once the visitor is a confirmed participant. */
+    /** Rendered once the visitor is a confirmed participant. . */
     children: (participant: LocalParticipant) => React.ReactNode;
 }
 
@@ -21,7 +21,7 @@ export function JoinGate({ sessionId, children }: JoinGateProps) {
     const status = useAppSelector(selectAuthStatus);
     const user = useAppSelector(selectUser);
 
-    /** Set only by the join form or by a previous visit (sessionStorage). */
+    /** Set only by the join form or by a previous visit (sessionStorage). . */
     const [joined, setJoined] = useState<LocalParticipant | null>(() => readParticipant(sessionId));
 
     const isAuthResolved = status === "authenticated" || status === "unauthenticated";
@@ -37,10 +37,7 @@ export function JoinGate({ sessionId, children }: JoinGateProps) {
 
     const isHost = status === "authenticated" && hostProbe?.session !== undefined;
 
-    // The host is never sent through the join form, but still needs a
-    // participantId for the WebSocket URLs — recover theirs from the detail
-    // response (which is owner-scoped, so only they can read it). Derived during
-    // render rather than pushed into state from an effect.
+    // The host is never sent through the join form, but still needs a.
     const hostParticipant = useMemo<LocalParticipant | null>(() => {
         const hostId = hostProbe?.session?.host_participant_id;
         if (!isHost || !hostId) return null;

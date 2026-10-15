@@ -9,18 +9,13 @@ interface EditorControlsProps {
     onRun: () => void;
     isRunning: boolean;
     canRun: boolean;
-    /** Language is fixed once candidates are in the room — host only can change it. */
+    /** Language is fixed once candidates are in the room — host only can change it. . */
     canChangeLanguage: boolean;
-    /** Why Run is unavailable, shown in the tooltip. */
+    /** Why Run is unavailable, shown in the tooltip. . */
     blockedReason?: string | null;
 }
 
-/**
- * The editor's right-aligned controls: **Run**, then the language picker last.
- *
- * Both live in the tab strip rather than a separate toolbar row so the editor
- * gets the vertical space back — on a full-screen room every row is real estate.
- */
+/** The editor's right-aligned controls: **Run**, then the language picker last. . */
 export function EditorControls({
     language,
     availableLanguages,

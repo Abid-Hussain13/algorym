@@ -6,11 +6,7 @@ export type SessionStatus = 'scheduled' | 'live' | 'completed' | 'cancelled' | '
 
 export type EventType = 'code_snapshot' | 'run_result' | 'question_change' | 'session_started' | 'session_completed' | 'session_cancelled' | 'focus_event' | 'session_expired' | 'participant_joined';
 
-/**
- * Why a focus event was recorded. Both are integrity signals the host reviews
- * after the session: leaving full screen is the stronger one, because the room
- * explicitly asks the candidate to stay in it.
- */
+/** Why a focus event was recorded. */
 export type FocusEventKind = 'fullscreen_exit' | 'tab_away';
 
 export interface FocusEventPayload {
@@ -74,21 +70,14 @@ export interface SessionDetail extends Session {
     questions: SessionQuestionRef[];
     /** Owner-scoped endpoint, so only the host ever receives this. */
     host_participant_id: string | null;
-    /**
-     * First guest who joined. Lets the host rate a candidate who has already left
-     * the room — the awareness roster only knows about people still connected.
-     */
+    /** First guest who joined. */
     candidate_participant_id: string | null;
     /** Integrity signals recorded against the candidate during the session. */
     candidate_fullscreen_exits: number;
     candidate_tab_aways: number;
 }
 
-/**
- * What a participant needs to render the live room. Deliberately does NOT
- * include `access_token` — the invite secret is not something a candidate
- * should be handed back.
- */
+/** What a participant needs to render the live room. */
 export interface RoomSession {
     id: string;
     question_id: string | null;
@@ -108,10 +97,7 @@ export interface RoomSession {
 export interface SessionRoom {
     session: RoomSession;
     question: Question | null;
-    /**
-     * Every question assigned to this session, in order. Visible to candidates so
-     * they know what is coming; only the host can actually switch.
-     */
+    /** Every question assigned to this session, in order. */
     questions: SessionQuestionRef[];
 }
 

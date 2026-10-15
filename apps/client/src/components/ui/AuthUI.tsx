@@ -13,7 +13,7 @@ import { explainError } from '@/lib/errors'
 import { useNavigate, Link } from 'react-router-dom'
 import { loginThunk, signupThunk, useAppDispatch } from '@/stores'
 
-// ─── Typewriter ──────────────────────────────────────────────────────────────
+// ─── Typewriter ──────────────────────────────────────────────────────────────.
 
 export interface TypewriterProps {
     text: string | string[]
@@ -86,7 +86,7 @@ export function Typewriter({
     )
 }
 
-// ─── Label ───────────────────────────────────────────────────────────────────
+// ─── Label ───────────────────────────────────────────────────────────────────.
 
 const Label = React.forwardRef<
     React.ElementRef<typeof LabelPrimitive.Root>,
@@ -103,7 +103,7 @@ const Label = React.forwardRef<
 ))
 Label.displayName = LabelPrimitive.Root.displayName
 
-// ─── Input ───────────────────────────────────────────────────────────────────
+// ─── Input ───────────────────────────────────────────────────────────────────.
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
     ({ className, type, ...props }, ref) => {
@@ -122,7 +122,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
 )
 Input.displayName = 'Input'
 
-// ─── PasswordInput ───────────────────────────────────────────────────────────
+// ─── PasswordInput ───────────────────────────────────────────────────────────.
 
 export interface PasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     label?: string
@@ -163,7 +163,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
 )
 PasswordInput.displayName = 'PasswordInput'
 
-// ─── Form Components ─────────────────────────────────────────────────────────
+// ─── Form Components ─────────────────────────────────────────────────────────.
 
 function SignInForm() {
     const [loading, setLoading] = useState(false);
@@ -327,7 +327,7 @@ function SignUpForm() {
     )
 }
 
-// ─── AuthFormContainer ───────────────────────────────────────────────────────
+// ─── AuthFormContainer ───────────────────────────────────────────────────────.
 
 function AuthFormContainer({
     isSignIn,
@@ -362,7 +362,7 @@ function AuthFormContainer({
     )
 }
 
-// ─── AuthUI ──────────────────────────────────────────────────────────────────
+// ─── AuthUI ──────────────────────────────────────────────────────────────────.
 
 interface AuthContentProps {
     image?: {

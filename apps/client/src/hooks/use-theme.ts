@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { selectTheme, setTheme, toggleTheme } from '@/stores/theme-slice'
 import { useAppDispatch, useAppSelector } from '@/stores/hooks'
 
-/** Applies the current theme to <html data-theme="..."> on mount and persists it. */
+/** Applies the current theme to <html data-theme="..."> on mount and persists it. . */
 export function useTheme() {
   const dispatch = useAppDispatch()
   const theme = useAppSelector(selectTheme)

@@ -28,10 +28,10 @@ const outputOf = (result: RoomOutputEntry["result"]) =>
 
 interface OutputPanelProps {
     entries: RoomOutputEntry[];
-    /** This user's own HTTP result, shown until its `runId` echoes over WS. */
+    /** This user's own HTTP result, shown until its `runId` echoes over WS. . */
     localResult: LocalRun | null;
     isRunning: boolean;
-    /** Name lookup so a run can be attributed to a person, not an id. */
+    /** Name lookup so a run can be attributed to a person, not an id. . */
     nameFor: (participantId: string) => string;
 }
 
@@ -69,14 +69,7 @@ const RunCard = ({ result, name }: { result: RoomOutputEntry["result"]; name: st
     );
 };
 
-/**
- * Everything anyone in the room has run, in run order — oldest at the top,
- * each new run appended at the bottom as it comes in.
- *
- * The presser's own result arrives twice: as the instant HTTP answer and as a
- * WS echo carrying the same `runId`. The local card is shown only until that
- * echo lands, so there is exactly one card per run regardless of who runs next.
- */
+/** Everything anyone in the room has run, oldest first. . */
 export function OutputPanel({ entries, localResult, isRunning, nameFor }: OutputPanelProps) {
     const localEchoed =
         localResult !== null &&

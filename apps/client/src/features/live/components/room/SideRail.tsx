@@ -3,11 +3,11 @@ import { cn } from "@/lib/utils/cn";
 export type RailPanel = "question" | "questions" | "browse" | "settings" | null;
 
 interface SideRailProps {
-    /** Host-only panels; hidden entirely for a candidate. */
+    /** Host-only panels; hidden entirely for a candidate. . */
     isHost: boolean;
     active: RailPanel;
     onSelect: (panel: RailPanel) => void;
-    /** True when the session can still be ended, so the actions icon is shown. */
+    /** True when the session can still be ended, so the actions icon is shown. . */
 }
 
 interface RailButtonProps {
@@ -62,24 +62,7 @@ const QuestionIcon = () => (
 );
 
 
-/**
- * The vertical icon column on the **left** edge of the room.
- *
- * Order: **question** (everyone) → assigned questions → all questions → end
- * session (host only) → settings.
- *
- * The question comes first because it is the one panel both roles need, and it
- * is a peer of the others rather than a permanent column — the editor gets the
- * full width until someone asks for it.
- *
- * Every button toggles its panel; clicking the open one closes it. The panel is
- * a resizable column beside this rail, not an overlay, so opening one never dims
- * or covers the editor.
- *
- * **Panel state is per-viewer.** It is plain React state in `LiveRoomShell`, so
- * two people in the same room can have different panels open, different sizes and
- * completely different themes at the same time.
- */
+/** The vertical icon column on the **left** edge of the room. . */
 export function SideRail({ isHost, active, onSelect }: SideRailProps) {
     return (
         <nav

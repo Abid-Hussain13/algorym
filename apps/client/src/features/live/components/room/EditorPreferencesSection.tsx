@@ -11,21 +11,7 @@ const MODES: Array<{ value: EditorMode; label: string; hint: string }> = [
     { value: "vim", label: "Vim", hint: "Modal keys (i, Esc, :w)" },
 ];
 
-/**
- * Per-user editor settings.
- *
- * Normal vs vim changes the **keymap**, not the behaviour: the vim extension
- * only remaps keys and adds vim's visual mode, so undo still goes through the
- * Yjs `UndoManager` and only ever touches your own edits. Switching is applied
- * live through a CodeMirror compartment, so it does not disturb the cursor, the
- * selection or the scroll position.
- *
- * Font size is applied the same way rather than by scaling the whole layout —
- * the room's chrome stays fixed and only the code grows.
- *
- * Both persist per browser via `localStorage`, so each user keeps their own
- * choice and it survives a reload.
- */
+/** Per-user editor settings. . */
 export function EditorPreferencesSection() {
     const { mode, fontSize, setMode, setFontSize } = useEditorPreferences();
 

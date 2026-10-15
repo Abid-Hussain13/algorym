@@ -5,26 +5,14 @@ import { sessionsApi } from '@/lib/api';
 export interface LiveSessionState {
     session: RoomSession | null;
     question: Question | null;
-    /** Every assigned question, so a candidate can see what is coming. */
+    /** Every assigned question, so a candidate can see what is coming. . */
     questions: SessionQuestionRef[];
     isLoading: boolean;
     error: Error | null;
     refetch: () => void;
 }
 
-/**
- * The live room's copy of session state: status, language, and the current
- * question's full text and starter code.
- *
- * Goes through `GET /api/session/:id/room` rather than the dashboard's
- * `GET /api/session/:id` because that one is owner-scoped and requires a login —
- * an anonymous candidate has neither. `/room` proves membership with the
- * participantId issued at join instead.
- *
- * Separate query key from `["session", id]` on purpose: the host's richer
- * dashboard payload (notes, question list) and the room's participant payload
- * are different shapes and must not overwrite each other in the cache.
- */
+/** The live room's copy of session state: status, language, and the current . */
 export function useLiveSession(sessionId: string, participantId: string): LiveSessionState {
     const enabled = Boolean(sessionId && participantId);
 

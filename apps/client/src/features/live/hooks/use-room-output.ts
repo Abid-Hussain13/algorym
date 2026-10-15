@@ -5,37 +5,26 @@ import { sessionsApi } from "@/lib/api";
 import type { SessionSocket } from "./use-session-socket";
 
 export interface RoomOutputEntry {
-    /** Stable key for React — two identical runs must not collapse. */
+    /** Stable key for React — two identical runs must not collapse. . */
     key: string;
     actorParticipantId: string;
-    /** From the event log, so runs of participants who already left stay named. */
+    /** From the event log, so runs of participants who already left stay named. . */
     actorName?: string;
     isSelf: boolean;
-    /** Echo of the HTTP `runId`, so the presser's local card can be dropped. */
+    /** Echo of the HTTP `runId`, so the presser's local card can be dropped. . */
     runId?: string;
-    /** Persisted event id — dedupes the history fetch against the live feed. */
+    /** Persisted event id — dedupes the history fetch against the live feed. . */
     eventId?: string;
     result: RunResultPayload;
     receivedAt: number;
 }
 
-/** Keep memory bounded in a long interview; the replay uses persisted events. */
+/** Keep memory bounded in a long interview; the replay uses persisted events. . */
 const MAX_ENTRIES = 50;
 
 let receivedCount = 0;
 
-/**
- * Collects the room's runs from two sources into one chronological feed:
- *
- * - **History**: `GET /:id/events?type=run_result` — everything that happened
- *   *before* we joined (live WS broadcasts are fire-and-forget, so a late
- *   joiner would otherwise start with an empty panel).
- * - **Live**: `run_result` broadcasts as they happen.
- *
- * The server echoes the persisted `eventId` (and the client `runId`) on every
- * broadcast, so a run that lands on both channels is stored once, whichever
- * arrives first. Entries append oldest → newest.
- */
+/** The room's runs, oldest first, merged from history and live broadcasts. . */
 export function useRoomOutput(
     socket: SessionSocket,
     selfParticipantId: string | undefined,
@@ -93,7 +82,7 @@ export function useRoomOutput(
 
         if (fresh.length) {
             // Query data is an external system; splicing it into the feed is
-            // exactly what this effect exists to do.
+            // exactly what this effect exists to do
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setEntries((prev) => [...fresh, ...prev].slice(-MAX_ENTRIES));
         }

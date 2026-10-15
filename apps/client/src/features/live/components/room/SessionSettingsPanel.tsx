@@ -24,24 +24,7 @@ interface SessionSettingsPanelProps {
     onCopyInvite?: () => void;
 }
 
-/**
- * Everything about the room that the host can check or change, in one sidebar
- * panel: read-only facts, the live integrity readout, per-user editor settings,
- * and the two ways to end the session.
- *
- * Why one panel: every decision a host makes mid-interview lives here, and
- * splitting them across a rail gave the destructive actions a tab of their own,
- * one stray click from the question list.
- *
- * Ordering carries meaning. Everything neutral is first, integrity sits at the
- * very top because it is the only thing that can change from bad to worse on its
- * own, and the two destructive buttons are last — reached only after scrolling
- * past read-only content, so they are reachable without ever being the first
- * thing on screen.
- *
- * Each user's editor mode, font size and theme are stored per browser, so two
- * people in one room can have entirely different setups.
- */
+/** Everything about the room the host can check or change, in one panel. . */
 export function SessionSettingsPanel({
     session,
     collaborators,

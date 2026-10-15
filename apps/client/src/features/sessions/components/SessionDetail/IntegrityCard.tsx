@@ -9,15 +9,7 @@ interface IntegrityCardProps {
     ref?: Ref<HTMLDivElement>;
 }
 
-/**
- * One exit is a misclick. Repeated exits are a pattern, and the host should be
- * able to see it without reading raw events.
- *
- * The thresholds are deliberately conservative and the wording stays factual —
- * "flagged for review" rather than an accusation. A single accidental `Esc` must
- * not label somebody a cheater, and this tool cannot actually prove intent; it
- * only proves behaviour.
- */
+/** One exit is a misclick. */
 export function IntegrityCard({ session, className, ref }: IntegrityCardProps) {
     // Always rendered, so the host can see that integrity *is* tracked rather than
     // wondering where it went. A session with nobody in it has nothing to report.

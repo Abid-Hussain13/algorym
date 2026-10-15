@@ -53,11 +53,7 @@ export const deleteQuestion = async (req: Request, res: Response) => {
     res.status(204).end();
 };
 
-/**
- * AI-assisted question drafting. The controller lives with the questions
- * resource because it is served from `POST /api/question/generate`; only the
- * generation itself is a separate concern (`services/ai.service.ts`).
- */
+/** AI-assisted question drafting. The controller lives with the questions . */
 export const generateQuestion = async (req: Request, res: Response) => {
     const { title, languages } = req.body;
     const result = await aiService.generateQuestionDetails({ title, languages });

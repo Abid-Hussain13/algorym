@@ -5,29 +5,12 @@ import { useFullscreen } from "../../hooks/use-fullscreen";
 interface SessionEndedDialogProps {
     outcome: "completed" | "cancelled" | "expired";
     hostName: string;
-    /** True for the host, who stays in the room to rate the candidate. */
+    /** True for the host, who stays in the room to rate the candidate. . */
     isHost: boolean;
     onDismiss: () => void;
 }
 
-/**
- * Blocking notice shown when a session ends.
- *
- * **One button, and which one depends on who you are.**
- *
- * - **Candidate** — leaves full screen (the room put them in it, so switching it
- *   back off is a courtesy they won't think to ask for) and goes to the public
- *   home page, since they have no account and `/app/sessions` would bounce them
- *   to the login screen.
- * - **Host** — goes back to wherever they came from with `navigate(-1)`, which
- *   puts them on their own sessions list or wherever they launched the room
- *   from. They must be able to reach the rating, and `navigate(-1)` never leaves
- *   them stranded on a marketing page they did not ask for.
- *
- * Not dismissable by accident: the session is over, there is nothing left to
- * edit, and leaving someone in a live editor they can no longer use is worse
- * than one clear screen with a way out.
- */
+/** Blocking notice shown when a session ends. . */
 export function SessionEndedDialog({
     outcome,
     hostName,

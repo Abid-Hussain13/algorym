@@ -3,25 +3,11 @@ import type { FocusGuard } from "../hooks/use-fullscreen-guard";
 
 interface FullscreenGateProps {
     guard: FocusGuard;
-    /** Total exits so far, shown to the candidate so the rules are not a secret. */
+    /** Total exits so far, shown to the candidate so the rules are not a secret. . */
     exitCount: number;
 }
 
-/**
- * The candidate's full screen gate. **There is no dismiss button, by design.**
- *
- * Earlier revisions had one, and it defeated the whole feature — a candidate
- * could clear the warning once and then work outside full screen for the rest of
- * the interview. The only way past this is the button.
- *
- * Escalation is two-stage, so it never nags someone who is mid-adjustment:
- *
- * 1. Out of full screen → a quiet strip: what happened, and the button.
- * 2. Still out after {@link ESCALATE_AFTER_MS} → the strip stays and the editor
- *    behind it blurs, so the room cannot be used until they return.
- *
- * The host is never shown this — they manage their own screen.
- */
+/** The candidate's full screen gate. **There is no dismiss button, by design.** . */
 export function FullscreenGate({ guard, exitCount }: FullscreenGateProps) {
     if (guard.isFullscreen) return null;
 

@@ -8,23 +8,11 @@ interface AssignedQuestionsProps {
     isLoading: boolean;
     isSwitching: boolean;
     onSelect: (questionId: string) => void;
-    /**
-     * Candidates see the list but cannot act on it. Read-only rather than
-     * host-only, because knowing what is coming makes the interview feel
-     * deliberate — but switching questions is the host's call, since the room
-     * shares one code buffer and the rating depends on everyone being on the
-     * same question at the same time.
-     */
+    /** Candidates see the list but cannot act on it. . */
     readOnly?: boolean;
 }
 
-/**
- * The questions assigned to this session, in order.
- *
- * Order matters: `session_questions` stores them positionally, and the host works
- * through the list deliberately. Switching rotates the chosen question to the
- * front server-side, so the order reflects progress.
- */
+/** The questions assigned to this session, in order. . */
 export function AssignedQuestions({
     questions,
     currentQuestionId,

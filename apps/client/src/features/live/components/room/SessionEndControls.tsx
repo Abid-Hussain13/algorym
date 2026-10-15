@@ -9,18 +9,7 @@ interface SessionEndControlsProps {
     isCancelling: boolean;
 }
 
-/**
- * Complete and Cancel — the only two ways to end a session.
- *
- * They sit at the **bottom** of the Settings panel rather than in a rail tab of
- * their own, so they are always reachable without being the first thing the host
- * sees when they open the room. Everything above them is read-only facts, so by
- * the time the eye reaches the end it is already looking at the neutral part.
- *
- * Completing needs no confirmation — it is the intended action and is reversible
- * from the rating step. Cancelling does, because it disconnects the candidate and
- * is recorded as cancelled: there is no undo.
- */
+/** Complete and Cancel — the only two ways to end a session. . */
 export function SessionEndControls({
     status,
     onComplete,

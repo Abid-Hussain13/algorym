@@ -3,7 +3,7 @@ import type { WebsocketProvider } from "y-websocket";
 import type { CollaboratorPresence } from "@algorym/shared-types";
 import { colorForParticipant } from "../lib/participant-colors";
 
-/** Derived from the provider so we depend on no extra package. */
+/** Derived from the provider so we depend on no extra package. . */
 type Awareness = WebsocketProvider["awareness"];
 type AwarenessState = Map<number, Record<string, unknown>>;
 
@@ -23,26 +23,17 @@ export interface Collaborator extends CollaboratorPresence {
     role: "host" | "guest";
     isSelf: boolean;
     clientId: number;
-    /** True when their document is hidden — in another tab or minimised. */
+    /** True when their document is hidden — in another tab or minimised. . */
     isAway: boolean;
-    /** When they went away, for the host's benefit. */
+    /** When they went away, for the host's benefit. . */
     awaySince: number | null;
-    /** False when the candidate is not in full screen right now. */
+    /** False when the candidate is not in full screen right now. . */
     isFullscreen: boolean;
-    /**
-     * How many times they have left full screen this session. Live value from
-     * awareness — the durable total comes from `session_events` at session end.
-     */
+    /** How many times they have left full screen this session. . */
     exitCount: number;
 }
 
-/**
- * Live roster of everyone connected to the room, derived from Yjs awareness.
- *
- * Awareness is the right source here rather than `join`/`leave` events on /ws:
- * it is keyed per client connection, so a tab that dies without a clean close
- * simply expires from the roster instead of leaving a ghost participant.
- */
+/** Live roster of everyone connected to the room, derived from Yjs awareness. . */
 export function useCollaborators(
     awareness: Awareness | null,
     selfParticipantId: string | undefined,

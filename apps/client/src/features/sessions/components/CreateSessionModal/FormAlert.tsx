@@ -1,16 +1,6 @@
 import type { ReactNode } from "react";
 
-/**
- * A message inside the dialog that stays until you act on it.
- *
- * The whole reason this exists: toasts are wrong for form failures. A toast lives four
- * seconds in a corner, so a user who clicks **Create Session** and sees nothing happen has
- * genuinely been given no information — and a server error that also *closed* the dialog
- * took their half-finished form with it.
- *
- * For anything blocking the action, the message has to be inline, persistent, and sitting
- * right next to the button that was pressed.
- */
+/** A message inside the dialog that stays until you act on it. . */
 export function FormAlert({
     tone = "error",
     title,

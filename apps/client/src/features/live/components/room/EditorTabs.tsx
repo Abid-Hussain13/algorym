@@ -7,23 +7,11 @@ interface EditorTabsProps {
     onSelect: (name: string) => void;
     onAdd: () => void;
     onClose: (name: string) => void;
-    /** Right-aligned controls (Run, language picker). */
+    /** Right-aligned controls (Run, language picker). . */
     toolbar?: ReactNode;
 }
 
-/**
- * Tab strip over the shared `files` map, plus the editor's right-aligned
- * controls.
- *
- * These tabs are not local UI state — each one is a key in the Y.Map that every
- * participant shares. Closing a tab deletes the buffer for the **whole room**,
- * not just locally, so the button only appears on hover and says so in its
- * tooltip. Adding and closing are available to host and candidate alike, because
- * the files belong to both of them.
- *
- * Order follows the map's insertion order (see `useEditorFiles`), so a new file
- * lands to the right of the existing tabs.
- */
+/** Tab strip over the shared files map. . */
 export function EditorTabs({ fileNames, activeName, onSelect, onAdd, onClose, toolbar }: EditorTabsProps) {
     // pr-3 rather than pr-2: the language <select> sits flush against the right
     // edge at phone widths and its chevron was clipped by the rail.

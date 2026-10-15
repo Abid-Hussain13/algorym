@@ -5,21 +5,10 @@ interface SessionTimeWarningProps {
     session: RoomSession | null;
 }
 
-/** Show the warning once this much time is left. */
+/** Show the warning once this much time is left. . */
 const WARN_WITHIN_MS = 5 * 60 * 1000;
 
-/**
- * Tells the host how long is left, once it starts to matter.
- *
- * Silent until five minutes remain on purpose: a countdown that is always on
- * screen is just noise the host learns to ignore. Below the threshold it is
- * persistent and states the actual remaining time, because at that point the
- * useful thing is not "time is short" but "how short".
- *
- * The deadline comes from `expires_at`, falling back to `started_at +
- * duration_minutes` — a session created without a duration has no deadline and is
- * never warned about, which is correct: there is nothing to warn about.
- */
+/** Tells the host how long is left, once it starts to matter. . */
 export function SessionTimeWarning({ session }: SessionTimeWarningProps) {
     // Ticks more often near the end so the final minutes are not chunky.
     const now = useNow(20_000);

@@ -1,15 +1,4 @@
-/**
- * Creates a fresh database from `src/db/schema.sql`.
- *
- * Run it:
- *     pnpm --filter server db:setup
- *     pnpm --filter server db:setup --force     # drops existing tables first
- *
- * Safety is the whole point of this existing as a script rather than a README
- * line. `schema.sql` issues plain `CREATE TABLE`, so running it against a
- * populated database fails halfway and leaves a mess. This refuses up front and
- * tells you what it found, instead.
- */
+/** Creates a fresh database from `src/db/schema.sql`. . */
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
