@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 
-import { ImageWithSpinner } from '@/components/ui/ImageWithSpinner'
+import { ImageWithSkeleton } from '@/components/ui/ImageWithSkeleton'
 
 type Tone = 'interviewer' | 'candidate'
 
@@ -138,14 +138,14 @@ export function Roles() {
                   </ul>
                 </div>
                 <div className="cs-visual">
-                  <ImageWithSpinner
+                  <ImageWithSkeleton
                     src={pane.image}
                     alt={pane.alt}
                     loading="lazy"
                     className="cs-plain"
                     wrapperClassName="w-full flex justify-center"
-                    pendingClassName="aspect-[896/1200]"
-                    spinnerSize="md"
+                    pendingClassName="mx-auto w-full max-w-[420px] aspect-[896/1200]"
+                    skeletonClassName="rounded-lg"
                   />
                 </div>
               </div>

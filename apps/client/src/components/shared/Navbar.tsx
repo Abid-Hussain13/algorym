@@ -4,7 +4,7 @@ import { ChevronDown, LogOut } from 'lucide-react'
 
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
 import { Button } from '@/components/ui/Button'
-import { ImageWithSpinner } from '@/components/ui/ImageWithSpinner'
+import { ImageWithSkeleton } from '@/components/ui/ImageWithSkeleton'
 import { useAppSelector, useAppDispatch, selectUser, selectAuthStatus } from '@/stores'
 import { logoutThunk } from '@/stores/auth-slice'
 
@@ -36,13 +36,13 @@ export function Navbar() {
         >
             <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-4 px-5 md:h-[60px] md:gap-8 md:px-10">
                 <Link to="/" onClick={scrollToTop} className="flex shrink-0 items-center no-underline hover:no-underline">
-                    <ImageWithSpinner
+                    <ImageWithSkeleton
                         src="/logo.svg"
                         alt="Algorym"
-                        className="absolute left-0 top-0 h-7 w-auto md:h-8"
-                        wrapperClassName="h-7 md:h-8"
+                        className="h-7 w-auto md:h-8"
+                        wrapperClassName="h-7 md:h-8 items-center"
                         pendingClassName="w-7 md:w-8"
-                        spinnerSize="sm"
+                        skeletonClassName="rounded"
                     />
                 </Link>
 

@@ -2,23 +2,22 @@ import { useEffect, useRef, useState } from 'react'
 import type { ComponentPropsWithoutRef } from 'react'
 
 import { cn } from '@/lib/utils/cn'
-import { Spinner } from './Spinner'
 
-interface ImageWithSpinnerProps extends ComponentPropsWithoutRef<'img'> {
-    spinnerSize?: 'sm' | 'md' | 'lg'
+interface ImageWithSkeletonProps extends ComponentPropsWithoutRef<'img'> {
     wrapperClassName?: string
     pendingClassName?: string
+    skeletonClassName?: string
 }
 
-export function ImageWithSpinner({
-    spinnerSize = 'sm',
+export function ImageWithSkeleton({
     wrapperClassName,
     pendingClassName,
+    skeletonClassName,
     className,
     onLoad,
     onError,
     ...props
-}: ImageWithSpinnerProps) {
+}: ImageWithSkeletonProps) {
     const [loaded, setLoaded] = useState(false)
     const imgRef = useRef<HTMLImageElement>(null)
 
@@ -29,11 +28,12 @@ export function ImageWithSpinner({
     const markLoaded = () => setLoaded(true)
 
     return (
-        <span className={cn('relative flex justify-center', wrapperClassName, !loaded && pendingClassName)}>
+        <span className={cn('relative', wrapperClassName, !loaded && pendingClassName)}>
             {!loaded && (
-                <span className="absolute inset-0 z-[1] grid place-items-center" aria-hidden="true">
-                    <Spinner size={spinnerSize} />
-                </span>
+                <span
+                    className={cn('absolute inset-0 z-[1] animate-pulse bg-surface-2 rounded-sm', skeletonClassName)}
+                    aria-hidden="true"
+                />
             )}
             <img
                 ref={imgRef}

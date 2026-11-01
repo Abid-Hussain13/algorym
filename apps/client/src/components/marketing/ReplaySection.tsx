@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import lottie from 'lottie-web'
 import animationData from '@/assets/replay-animation.json'
 
-import { Spinner } from '@/components/ui/Spinner'
-
 const timelineItems = [
   {
     icon: (
@@ -74,9 +72,7 @@ export function ReplaySection() {
       <div className="rp-layout" data-od-id="replay-layout">
         <div className="rp-player-wrap" data-od-id="replay-player">
           {!animReady && (
-            <div className="pointer-events-none absolute inset-0 z-[1] grid place-items-center" aria-hidden="true">
-              <Spinner size="lg" />
-            </div>
+            <div className="absolute inset-0 z-[1] animate-pulse bg-surface-2" aria-hidden="true" />
           )}
           <div
             ref={lottieRef}
