@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import lottie from 'lottie-web'
 import animationData from '@/assets/replay-animation.json'
+
+import { Spinner } from '@/components/ui/Spinner'
 
 const timelineItems = [
   {
@@ -37,6 +39,7 @@ const timelineItems = [
 
 export function ReplaySection() {
   const lottieRef = useRef<HTMLDivElement>(null)
+  const [animReady, setAnimReady] = useState(false)
 
   useEffect(() => {
     const el = lottieRef.current
@@ -49,7 +52,12 @@ export function ReplaySection() {
       animationData,
       rendererSettings: { preserveAspectRatio: 'xMidYMid meet' },
     })
-    return () => anim.destroy()
+    const markReady = () => setAnimReady(true)
+    anim.addEventListener('DOMLoaded', markReady)
+    return () => {
+      anim.removeEventListener('DOMLoaded', markReady)
+      anim.destroy()
+    }
   }, [])
 
   return (
@@ -65,7 +73,17 @@ export function ReplaySection() {
 
       <div className="rp-layout" data-od-id="replay-layout">
         <div className="rp-player-wrap" data-od-id="replay-player">
-          <div ref={lottieRef} id="replay-lottie" data-od-id="replay-lottie-player" />
+          {!animReady && (
+            <div className="pointer-events-none absolute inset-0 z-[1] grid place-items-center" aria-hidden="true">
+              <Spinner size="lg" />
+            </div>
+          )}
+          <div
+            ref={lottieRef}
+            id="replay-lottie"
+            data-od-id="replay-lottie-player"
+            className={animReady ? 'opacity-100 transition-opacity' : 'opacity-0'}
+          />
         </div>
 
         <div className="rp-timeline" data-od-id="replay-timeline">

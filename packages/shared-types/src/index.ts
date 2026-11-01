@@ -219,6 +219,7 @@ export interface SessionListItem {
     mode: string;
     status: string;
     created_at: string;
+    scheduled_at: string | null;
     candidate_name: string | null;
     candidate_email: string | null;
     language: string | null;

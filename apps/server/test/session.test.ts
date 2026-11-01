@@ -27,10 +27,12 @@ describe("Session", () => {
         });
 
         /** The invariant that was silently broken: an immediate session used to be . */
-        it("leaves scheduled_at null for an immediate session", async () => {
+        it("stamps scheduled_at for an immediate session", async () => {
             const res = await agent.post("/api/session").send({ mode: "practice" });
             expect(res.status).toBe(201);
-            expect(res.body.data.session.scheduled_at).toBeNull();
+            expect(res.body.data.session.status).toBe("live");
+            expect(res.body.data.session.scheduled_at).toBeTruthy();
+            expect(res.body.data.session.scheduled_at).toBe(res.body.data.session.started_at);
         });
 
         it("refuses a second live session for the same host", async () => {

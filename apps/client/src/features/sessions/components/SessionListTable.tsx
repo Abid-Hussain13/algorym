@@ -72,7 +72,7 @@ export function SessionListTable({ sessions, onEdit, onDelete, isDeleting }: Ses
                                 )}
                             </td>
                             <td className="px-3 py-3.5 text-muted">
-                                {formatDate(session.created_at)}
+                                {formatDate(session.scheduled_at || session.created_at)}
                             </td>
                             <td className="px-3 py-3.5">
                                 <div className="flex items-center gap-0.5">

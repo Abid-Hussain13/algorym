@@ -70,7 +70,7 @@ export const createSession = async (userId: string, data: CreateSessionInput): P
         startTime = new Date();
         status = "live";
         startedAt = startTime.toISOString();
-        scheduledAtISO = null;
+        scheduledAtISO = startTime.toISOString();
     }
 
     const expiresAt = duration_minutes
@@ -177,6 +177,7 @@ export const getSessionsList = async (userId: string, params: GetAllSessionsQuer
 
     const dataQuery = `SELECT
             s.id, s.role_context, s.mode, s.status, s.language, s.created_at,
+            s.scheduled_at,
             g.display_name AS candidate_name,
             g.email AS candidate_email,
             se.rating

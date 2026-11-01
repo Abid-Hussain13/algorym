@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react'
 
+import { ImageWithSpinner } from '@/components/ui/ImageWithSpinner'
+
 type Tone = 'interviewer' | 'candidate'
 
 interface Cap {
@@ -136,7 +138,15 @@ export function Roles() {
                   </ul>
                 </div>
                 <div className="cs-visual">
-                  <img className="cs-plain" src={pane.image} alt={pane.alt} loading="lazy" />
+                  <ImageWithSpinner
+                    src={pane.image}
+                    alt={pane.alt}
+                    loading="lazy"
+                    className="cs-plain"
+                    wrapperClassName="w-full flex justify-center"
+                    pendingClassName="aspect-[896/1200]"
+                    spinnerSize="md"
+                  />
                 </div>
               </div>
             </div>

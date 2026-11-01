@@ -113,7 +113,7 @@ export function SessionListMobileCards({ sessions, onEdit, onDelete, isDeleting 
                                         )}
                     </div>
                     <p className="text-xs text-muted">
-                        {formatDate(session.created_at)}
+                        {formatDate(session.scheduled_at || session.created_at)}
                     </p>
                 </div>
             ))}

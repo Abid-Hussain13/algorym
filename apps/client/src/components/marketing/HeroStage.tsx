@@ -1,4 +1,5 @@
 import heroHost from '@/assets/hero-host.png'
+import { ImageWithSpinner } from '@/components/ui/ImageWithSpinner'
 import { EditorResultCard } from '@/components/marketing/HeroStageCards/EditorResultCard'
 import { LiveSessionCard } from '@/components/marketing/HeroStageCards/LiveSessionCard'
 import { ReplayEvalCard } from '@/components/marketing/HeroStageCards/ReplayEvalCard'
@@ -28,10 +29,12 @@ export function HeroStage() {
 
       {/* Center avatar */}
       <div className="il-center absolute left-1/2 top-1/2 z-10 h-[108px] w-[108px] sm:h-[130px] sm:w-[130px] md:h-[160px] md:w-[160px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full">
-        <img
+        <ImageWithSpinner
           src={heroHost}
           alt="Host"
+          wrapperClassName="h-full w-full"
           className="block h-full w-full object-cover scale-[1.3] [transform-origin:50%_28%]"
+          spinnerSize="md"
         />
       </div>
 
