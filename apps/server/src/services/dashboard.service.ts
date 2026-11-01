@@ -1,6 +1,7 @@
 import { dashboardStatsType, SessionStatus } from "@algorym/shared-types";
 import db from "../db/pool.js";
 import { LAST_MONTH_END, LAST_MONTH_START, THIS_MONTH_END, THIS_MONTH_START } from "../utils/period.js";
+import { reconcileSessions } from "./session-reconcile.service.js";
 
 
 export interface recentSessionType {
@@ -68,6 +69,8 @@ const getMonthRatings = async (userId: string): Promise<monthRatingType[]> => {
 };
 
 export const getDashboardStats = async (userId: string): Promise<dashboardStatsType> => {
+    await reconcileSessions({ userId, source: "request" });
+
     const thisMonthStart = THIS_MONTH_START;
     const thisMonthEnd = THIS_MONTH_END;
     const lastMonthStart = LAST_MONTH_START;

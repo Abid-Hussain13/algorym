@@ -68,6 +68,8 @@ export function useSessionStatusPoller() {
                 }
 
                 queryClient.invalidateQueries({ queryKey: ["sessions"] });
+                queryClient.invalidateQueries({ queryKey: ["session"] });
+                queryClient.invalidateQueries({ queryKey: ["scheduledSession"] });
                 queryClient.invalidateQueries({ queryKey: ["dashboard"] });
             }
         }

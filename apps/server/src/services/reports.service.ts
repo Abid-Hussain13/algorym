@@ -2,6 +2,7 @@ import { ReportsRange, ReportsResponse, EvaluationRating, EvaluationDistribution
 import db from "../db/pool.js";
 import { getCompletedSessionsInRange, getDurationInRange, getSessionsInRange } from "./dashboard.service.js";
 import { getPeriod } from "../utils/period.js";
+import { reconcileSessions } from "./session-reconcile.service.js";
 
 const getLanguageDistribution = async (userId: string, startSql: string, endSql: string): Promise<LanguageDistributionItem[]> => {
     const queryString = `
@@ -60,6 +61,8 @@ const getSessionsOverTime = async (userId: string, startSql: string, endSql: str
 };
 
 export const getReports = async (userId: string, range: ReportsRange): Promise<ReportsResponse> => {
+    await reconcileSessions({ userId, source: "request" });
+
     const { startSql, endSql, bucketSql } = getPeriod(range);
 
     const [totalSessions, avgDurationMinutes, completedSessions, languageDistribution, evaluationDistribution, sessionsOverTime] =
@@ -117,6 +120,8 @@ function formatDateTime(dateStr: string | null): string {
 }
 
 export const exportSessionsCsv = async (userId: string, range: ReportsRange): Promise<string> => {
+    await reconcileSessions({ userId, source: "request" });
+
     const { startSql, endSql } = getPeriod(range);
 
     const { rows } = await db.query(

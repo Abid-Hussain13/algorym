@@ -4,8 +4,11 @@ import { nanoid } from "nanoid";
 import AppError from "../utils/AppError.js";
 import { CreateSessionInput, GetAllSessionsQuery } from "../utils/validation.js";
 import { logSessionEvent } from "./session-events.service.js";
+import { reconcileSessions } from "./session-reconcile.service.js";
 
 export const createSession = async (userId: string, data: CreateSessionInput): Promise<Session> => {
+    await reconcileSessions({ userId, source: "request" });
+
     const { mode, role_context, scheduled_at, duration_minutes, language } = data;
     const questionIds = resolveQuestionIds(data, []);
     const question_id = questionIds[0] ?? null;
@@ -70,7 +73,11 @@ export const createSession = async (userId: string, data: CreateSessionInput): P
         scheduledAtISO = null;
     }
 
-    const expiresAt = duration_minutes ? new Date(startTime.getTime() + duration_minutes * 60000).toISOString() : null;
+    const expiresAt = duration_minutes
+        ? new Date(startTime.getTime() + duration_minutes * 60000).toISOString()
+        : scheduled_at
+            ? new Date(startTime.getTime() + 30 * 60000).toISOString()
+            : null;
 
     try {
         await db.query("BEGIN")
@@ -105,6 +112,8 @@ export const createSession = async (userId: string, data: CreateSessionInput): P
 }
 
 export const getSessionsList = async (userId: string, params: GetAllSessionsQuery): Promise<SessionListResponse> => {
+    await reconcileSessions({ userId, source: "request" });
+
     const limit = 20;
     const offset = (params.page - 1) * limit;
 
@@ -204,6 +213,8 @@ export const getSessionsList = async (userId: string, params: GetAllSessionsQuer
 };
 
 export const getSessionById = async (userId: string, sessionId: string): Promise<Session> => {
+    await reconcileSessions({ userId, sessionId, source: "request" });
+
     const queryString = `Select * from sessions where created_by = $1 AND id = $2`;
     const session = await db.query(queryString, [userId, sessionId]);
 
@@ -212,6 +223,8 @@ export const getSessionById = async (userId: string, sessionId: string): Promise
 }
 
 export const getSessionDetail = async (userId: string, sessionId: string): Promise<SessionDetail> => {
+    await reconcileSessions({ userId, sessionId, source: "request" });
+
     const { rows } = await db.query(
         `SELECT s.id, s.created_by, s.question_id, s.mode, s.status, s.access_token,
                 s.role_context, s.language, s.scheduled_at, s.duration_minutes,
@@ -256,6 +269,8 @@ export const getSessionDetail = async (userId: string, sessionId: string): Promi
 }
 
 export const getSessionRoom = async (sessionId: string): Promise<SessionRoom> => {
+    await reconcileSessions({ sessionId, source: "request" });
+
     const { rows } = await db.query(
         `SELECT id, question_id, mode, status, role_context, language, scheduled_at,
                 duration_minutes, started_at, ended_at, expires_at, created_at
@@ -331,6 +346,8 @@ const syncSessionQuestions = async (sessionId: string, questionIds: string[]): P
 };
 
 export const updateSession = async (userId: string, sessionId: string, data: Partial<CreateSessionInput>): Promise<Session> => {
+    await reconcileSessions({ userId, sessionId, source: "request" });
+
     const existing = await db.query(
         "SELECT * FROM sessions WHERE id = $1 AND created_by = $2",
         [sessionId, userId]
@@ -353,7 +370,8 @@ export const updateSession = async (userId: string, sessionId: string, data: Par
     const roleContext = data.role_context ?? session.role_context;
     const scheduledAt = data.scheduled_at ?? session.scheduled_at;
     const durationMinutes = data.duration_minutes ?? session.duration_minutes;
-    const expiresAt = durationMinutes ? new Date(new Date(scheduledAt).getTime() + durationMinutes * 60000).toISOString() : null;
+    const scheduledMs = scheduledAt ? new Date(scheduledAt).getTime() : null;
+    const expiresAt = scheduledMs ? new Date(scheduledMs + (durationMinutes ?? 30) * 60000).toISOString() : null;
 
     const { rows } = await db.query(
         `UPDATE sessions
@@ -415,7 +433,12 @@ export const startSession = async (userId: string, sessionId: string): Promise<S
     }
 
     const { rows } = await db.query(
-        `UPDATE sessions SET status = 'live', started_at = now() WHERE id = $1 AND created_by = $2 RETURNING *`,
+        `UPDATE sessions
+         SET status = 'live',
+             started_at = now(),
+             expires_at = now() + COALESCE(duration_minutes, 30) * interval '1 minute'
+         WHERE id = $1 AND created_by = $2
+         RETURNING *`,
         [sessionId, userId]
     );
 
@@ -479,8 +502,14 @@ export const joinSession = async (data: JoinSessionData, userId?: string): Promi
         [data.access_token]
     );
 
-    const session = existing.rows[0];
+    let session = existing.rows[0];
     if (!session) throw new AppError("Session not found", 404);
+
+    await reconcileSessions({ sessionId: session.id, source: "request" });
+
+    const refreshed = await db.query("SELECT * FROM sessions WHERE id = $1", [session.id]);
+    session = refreshed.rows[0];
+
     if (session.status !== "scheduled" && session.status !== "live") {
         throw new AppError("Session is not open for joining", 400);
     }
@@ -603,6 +632,8 @@ export const changeQuestion = async (userId: string, sessionId: string, question
 };
 
 export const getSessionStatus = async (sessionId: string): Promise<string> => {
+    await reconcileSessions({ sessionId, source: "request" });
+
     const queryString = `SELECT status from sessions WHERE id = $1`;
     const sessionStatus = await db.query<{ status: string }>(queryString, [sessionId]);
     if (!sessionStatus.rows[0]) throw new AppError("Session not found", 404);
@@ -610,6 +641,8 @@ export const getSessionStatus = async (sessionId: string): Promise<string> => {
 }
 
 export const scheduledSessions = async (userId: string) => {
+    await reconcileSessions({ userId, source: "request" });
+
     const queryString = `SELECT scheduled_at, duration_minutes FROM sessions WHERE created_by = $1 AND status = 'scheduled' AND scheduled_at IS NOT NULL`;
     const { rows } = await db.query(queryString, [userId]);
     return rows.map(s => ({ scheduled_at: s.scheduled_at as string, duration_minutes: s.duration_minutes as number | null }));
