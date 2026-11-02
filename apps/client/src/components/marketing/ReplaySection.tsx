@@ -1,6 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
-import lottie from 'lottie-web'
-import animationData from '@/assets/replay-animation.json'
+import { useRef, useState } from 'react'
 
 const timelineItems = [
   {
@@ -36,27 +34,8 @@ const timelineItems = [
 ]
 
 export function ReplaySection() {
-  const lottieRef = useRef<HTMLDivElement>(null)
-  const [animReady, setAnimReady] = useState(false)
-
-  useEffect(() => {
-    const el = lottieRef.current
-    if (!el) return
-    const anim = lottie.loadAnimation({
-      container: el,
-      renderer: 'svg',
-      loop: true,
-      autoplay: true,
-      animationData,
-      rendererSettings: { preserveAspectRatio: 'xMidYMid meet' },
-    })
-    const markReady = () => setAnimReady(true)
-    anim.addEventListener('DOMLoaded', markReady)
-    return () => {
-      anim.removeEventListener('DOMLoaded', markReady)
-      anim.destroy()
-    }
-  }, [])
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [videoReady, setVideoReady] = useState(false)
 
   return (
     <div className="rp-wrap">
@@ -71,14 +50,23 @@ export function ReplaySection() {
 
       <div className="rp-layout" data-od-id="replay-layout">
         <div className="rp-player-wrap" data-od-id="replay-player">
-          {!animReady && (
+          {!videoReady && (
             <div className="absolute inset-0 z-[1] animate-pulse bg-surface-2" aria-hidden="true" />
           )}
-          <div
-            ref={lottieRef}
-            id="replay-lottie"
-            data-od-id="replay-lottie-player"
-            className={animReady ? 'opacity-100 transition-opacity' : 'opacity-0'}
+          <video
+            ref={videoRef}
+            data-od-id="replay-video-player"
+            className={videoReady ? 'block h-full w-full object-cover opacity-100 transition-opacity' : 'block h-full w-full object-cover opacity-0'}
+            src="/assets/replay-demo.mp4"
+            poster="/assets/replay-poster.jpg"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            aria-label="Live interview replay: host and candidate working through a coding problem"
+            onCanPlay={() => setVideoReady(true)}
+            onError={() => setVideoReady(true)}
           />
         </div>
 
