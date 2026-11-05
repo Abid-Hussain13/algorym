@@ -23,16 +23,15 @@ const panes: RolePane[] = [
   {
     id: 'interviewer',
     label: 'Interviewer',
-    heading: 'Everything the interviewer can do',
-    description:
-      'From the invite link to the final evaluation, the host runs every step. Private notes and editor settings stay out of the guest\u2019s view.',
+    heading: 'The host',
+    description: 'Runs the whole session. Notes and settings stay private.',
     caps: [
-      { title: 'Create a session & share the invite link', sub: 'signed-in only' },
-      { title: 'Pick the question, change it live', sub: 'while session is live' },
-      { title: 'Start, complete, or cancel', sub: 'any time, status-guarded' },
-      { title: 'Private notes & editor settings', sub: 'never shown to guest' },
-      { title: 'Run code, watch output live', sub: '5 languages' },
-      { title: 'Evaluate the guest', sub: 'weak / average / strong' },
+      { title: 'Share an invite link', sub: 'signed in' },
+      { title: 'Change the question live', sub: 'mid-session' },
+      { title: 'Start, complete, cancel', sub: 'any time' },
+      { title: 'Private notes', sub: 'guest never sees' },
+      { title: 'Run code live', sub: '5 languages' },
+      { title: 'Rate the guest', sub: 'weak \u00b7 average \u00b7 strong' },
     ],
     image: '/interviewer.png',
     alt: 'Interviewer hosting a live coding session',
@@ -40,16 +39,15 @@ const panes: RolePane[] = [
   {
     id: 'candidate',
     label: 'Candidate',
-    heading: 'Everything the candidate can do',
-    description:
-      'Join from the invite link, enter a name, and code alongside the interviewer. The guest sees the question, the editor, and live results, and nothing else.',
+    heading: 'The candidate',
+    description: 'Joins by link, codes live, sees only the problem and the output.',
     caps: [
-      { title: 'Join instantly via invite link', sub: 'no account required' },
-      { title: 'Enter name + consent in seconds', sub: 'guest join flow' },
-      { title: 'Code live in the shared editor', sub: 'Yjs real-time sync' },
-      { title: 'Follow the active question', sub: 'updates when host changes it' },
-      { title: 'Run code & see results live', sub: 'stdin / stdout / status' },
-      { title: 'Rejoin after a drop', sub: 'same link, same room' },
+      { title: 'Join by link', sub: 'no account' },
+      { title: 'Name + consent', sub: 'one step' },
+      { title: 'Shared editor', sub: 'live cursors' },
+      { title: 'Follow the question', sub: 'host updates it' },
+      { title: 'Run & see output', sub: 'live verdicts' },
+      { title: 'Rejoin anytime', sub: 'same link' },
     ],
     image: '/candidate.png',
     alt: 'Candidate joining a live coding session as a guest',
@@ -82,10 +80,7 @@ export function Roles() {
       <h2 className="cs-title">
         Two roles. <em>One live session.</em>
       </h2>
-      <p className="cs-lede">
-        A host and a guest meet in one shared editor. They code together, run the same code, and watch the same
-        verdicts appear. At the end the host evaluates, and the guest never sees it.
-      </p>
+      <p className="cs-lede">One hosts. One codes. Both in the same live editor.</p>
 
       <div className="cs-tabs" role="tablist" aria-label="Session roles">
         {panes.map((pane) => (

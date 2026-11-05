@@ -17,53 +17,45 @@ const panels: Panel[] = [
     {
         id: 0,
         title: 'Create session',
-        heading: 'Create your session',
-        description:
-            'Pick a question from your bank, choose interview or practice mode, and set a duration. You become the host as soon as it is created.',
-        detail:
-            'Interview sessions end with a private evaluation; practice sessions do not. With no scheduled time, the session starts immediately.',
+        heading: 'Set it up',
+        description: 'Pick a question, choose a mode, set a duration.',
+        detail: 'Start now or schedule it. Interview mode rates the guest at the end.',
         accent: 'violet',
         icon: IconCreateSession,
     },
     {
         id: 1,
         title: 'Share link',
-        heading: 'Invite your candidate',
-        description:
-            'Send the invite link. Your candidate joins from the browser with no account and nothing to install.',
-        detail:
-            'Each link carries a token for a single session. The guest enters a name, consents once, and is in the room.',
+        heading: 'Share the link',
+        description: 'The candidate joins from the browser.',
+        detail: 'No account, no install. Name and consent only.',
         accent: 'teal',
         icon: IconShareLink,
     },
     {
         id: 2,
         title: 'Code together',
-        heading: 'Meet in a live editor',
-        description:
-            'Both of you edit the same files in real time, with live cursors and presence, and run code without leaving the room.',
-        detail:
-            'Run JavaScript, Python, Java, C++, and Go in a sandbox. Every verdict, with stdout and timing, appears on both screens at once.',
+        heading: 'Code together',
+        description: 'One editor, live cursors, instant runs.',
+        detail: 'JavaScript, Python, Java, C++, Go. Verdicts on both screens.',
         accent: 'amber',
         icon: IconCodeTogether,
     },
     {
         id: 3,
         title: 'Evaluate guest',
-        heading: 'Evaluate the guest',
-        description:
-            'When the session ends, the host rates the guest weak, average, or strong, and adds notes. Only the host sees any of it.',
-        detail: 'The guest sees run verdicts and the session itself, never the host\u2019s assessment.',
+        heading: 'Evaluate',
+        description: 'Rate the guest weak, average, or strong.',
+        detail: 'Host only. Never shown to the guest.',
         accent: 'rose',
         icon: IconEvaluate,
     },
     {
         id: 4,
         title: 'Watch replay',
-        heading: 'Replay the session',
-        description: 'Rewatch the session like a video: runs, code snapshots, and question changes, in order.',
-        detail:
-            'Built from the session event log. Scrub to any run or question change to review how the problem was approached.',
+        heading: 'Replay',
+        description: 'Every run and question change on one timeline.',
+        detail: 'Scrub to any moment.',
         accent: 'accent',
         icon: IconReplay,
     },
@@ -91,7 +83,7 @@ export function HowItWorks() {
                     <h2>
                         How it <em>works</em>
                     </h2>
-                    <p>From invite link to replay, in five steps.</p>
+                    <p>Invite to replay in five steps.</p>
                 </div>
 
                 <div className="acc" role="tablist" aria-label="How it works steps">

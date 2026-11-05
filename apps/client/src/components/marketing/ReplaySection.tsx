@@ -9,7 +9,7 @@ const timelineItems = [
       </svg>
     ),
     title: 'Scrub to any moment',
-    description: 'Jump to a question change, a code snapshot, or a run verdict on the timeline.',
+    description: 'Jump to any run, snapshot, or question change.',
   },
   {
     icon: (
@@ -19,7 +19,7 @@ const timelineItems = [
       </svg>
     ),
     title: 'Code as it was',
-    description: 'Every run stores a snapshot of the editor, so you can see exactly what the code looked like when it ran.',
+    description: 'Each run keeps its own snapshot of the editor.',
   },
   {
     icon: (
@@ -29,8 +29,7 @@ const timelineItems = [
       </svg>
     ),
     title: 'Verdict history',
-    description:
-      'Every run lands on the timeline with its verdict color-coded: accepted, wrong answer, time limit, or an error.',
+    description: 'Every verdict marked on the timeline.',
   },
 ]
 
@@ -44,10 +43,7 @@ export function ReplaySection() {
       <h2 className="rp-title">
         Every session, <em>replayable.</em>
       </h2>
-      <p className="rp-lede">
-        Each session is rebuilt from its event log as a video-style player. Scrub through runs, code snapshots, and
-        question changes in the order they happened.
-      </p>
+      <p className="rp-lede">Runs, snapshots, and question changes on one scrubable timeline.</p>
 
       <div className="rp-layout" data-od-id="replay-layout">
         <div className="rp-player-wrap" data-od-id="replay-player">

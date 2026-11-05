@@ -13,7 +13,7 @@ interface CTAProps {
 
 export function CTASection({
     title = 'Code together, live',
-    description = 'Create a session, send the invite link, and run the interview in one shared editor.',
+    description = 'Start a session and send the invite link.',
     action = { text: 'Get started', href: '/app' },
     className,
 }: CTAProps) {
