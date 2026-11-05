@@ -25,24 +25,24 @@ const faqData: FaqRow[] = [
         direction: 'left',
         items: [
             {
-                question: 'How do I start a live interview?',
+                question: 'How do I start an interview?',
                 answer:
-                    'Create a board, share the link with your partner, and jump in. Code appears on screen in real time for both of you.',
+                    'Create a session from your dashboard, share the invite link, and your candidate joins from the browser. Both of you land in the same editor.',
             },
             {
-                question: 'Is my session data private?',
+                question: 'Does the candidate need an account?',
                 answer:
-                    'Yes. Sessions are persisted as event logs only you and invited participants can access — never shared or sold.',
+                    'No. The guest enters a name on the invite link, consents, and joins. No sign-up, nothing to install.',
             },
             {
-                question: 'Can I review a past session?',
+                question: 'Which languages can we run?',
                 answer:
-                    'Absolutely. Every session is replayable — scrub through code changes, run results, and question transitions exactly as they happened.',
+                    'JavaScript, Python, Java, C++, and Go. Every run returns stdout, stderr, compile output, time, and memory.',
             },
             {
-                question: 'Do I need a real partner to rehearse?',
+                question: 'Is my session private?',
                 answer:
-                    'No. You can rehearse solo whenever you want, and pair up with a real partner when you are ready to go live.',
+                    'Only the host and invited participants can open it. Ratings and notes are visible to the host alone.',
             },
         ],
     },
@@ -52,24 +52,24 @@ const faqData: FaqRow[] = [
         direction: 'right',
         items: [
             {
-                question: 'Can my team use Algorym together?',
+                question: 'Can I change the question mid-session?',
                 answer:
-                    'Yes. Invite colleagues to a board to collaborate on the same algorithm in real time, with presence for every participant.',
+                    'Yes. The host can push a new question while the session is live, and the editor updates for both sides.',
             },
             {
-                question: 'What happens if my internet drops mid-interview?',
+                question: 'What does the replay show?',
                 answer:
-                    'Your progress is saved from persisted events. Reconnect and your session picks right back up without losing anything.',
+                    'Runs, code snapshots, and question changes, rebuilt as a player you can scrub. Joins and comments are not part of it.',
             },
             {
-                question: 'Is there a free plan?',
+                question: 'What if my connection drops?',
                 answer:
-                    'Yes — start free and rehearse as much as you like. Upgrade when you need more boards and teammates.',
+                    'The room state lives on the server. Rejoin with the same invite link and continue from where the session is.',
             },
             {
-                question: 'How do I cancel anytime?',
+                question: 'Can I cancel a session?',
                 answer:
-                    'Cancel from your account settings in two clicks. Your boards and replays remain accessible until the end of your billing period.',
+                    'Cancel it from the dashboard at any point. Both sides see the status change immediately.',
             },
         ],
     },
@@ -112,8 +112,7 @@ export function FaqSection({ title, subtitle, rows = faqData }: FaqSectionProps)
                     )}
                 </h2>
                 <p className="faq-lede">
-                    {subtitle ??
-                        'Everything you need to know about running and reviewing live coding interviews with Algorym.'}
+                    {subtitle ?? 'How sessions, replays, and evaluations work in Algorym.'}
                 </p>
             </div>
             <div className="faq-rows">

@@ -13,8 +13,8 @@ export function Hero() {
                     </span>
                 </h1>
                 <p className="animate-rise mt-3 max-w-[42ch] text-[14px] leading-[1.55] text-muted [animation-delay:140ms] sm:text-[15px] md:mt-4 md:text-base lg:text-lg min-[1600px]:text-[19px]">
-                    The interview you&rsquo;ve been putting off. Rehearse it with a real partner, live, until you walk
-                    in ready.
+                    Run the interview in one shared editor. Send an invite link, solve the problem together, and
+                    replay every run afterwards.
                 </p>
                 <div className="animate-rise mt-6 flex flex-nowrap items-center gap-2 [animation-delay:220ms] sm:mt-6 sm:gap-3">
                     <Button

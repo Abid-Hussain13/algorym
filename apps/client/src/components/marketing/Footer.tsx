@@ -20,8 +20,8 @@ export function Footer({ className }: { className?: string }) {
                             <img src="/logo.svg" alt="Algorym" className="h-14 w-auto sm:h-20 md:h-25" />
                         </div>
                         <p className="foot-tag">
-                            Real-time algorithmic collaboration for live-coding interviews. Rehearse solo, pair live,
-                            review every replay.
+                            Live coding interviews in a shared editor. Invite by link, run in five languages,
+                            evaluate privately, replay every session.
                         </p>
                     </div>
                     <nav className="foot-links" aria-label="Footer">

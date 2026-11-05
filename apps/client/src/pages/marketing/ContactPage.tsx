@@ -16,7 +16,7 @@ export function ContactPage() {
       </h1>
 
       <p className="mt-4 text-[17px] leading-[1.65] text-muted max-w-[52ch]">
-        Questions, feedback, partnership ideas, or just want to say hi? We read every message.
+        Questions, feedback, or bug reports go here. Every message is read.
       </p>
 
       {submitted ? (
@@ -28,7 +28,7 @@ export function ContactPage() {
             Message sent
           </h2>
           <p className="mt-2 text-[15px] leading-[1.6] text-muted">
-            We'll get back to you within a day or two. Thanks for reaching out.
+            Thanks for the message. We will reply by email.
           </p>
         </div>
       ) : (
@@ -116,16 +116,16 @@ export function ContactPage() {
         <h2 className="font-display text-[17px] font-semibold tracking-[-0.01em] text-fg">
           Prefer email?
         </h2>
-        <p className="mt-2 text-[15px] leading-[1.6] text-muted">
-          You can reach us directly at{' '}
-          <a
-            href="mailto:abidhussainme1@gmail.com"
-            className="text-accent-text transition-colors duration-[120ms] ease-default hover:text-fg"
-          >
-            abidhussainme1@gmail.com
-          </a>
-          . We typically respond within 24 hours.
-        </p>
+          <p className="mt-2 text-[15px] leading-[1.6] text-muted">
+            You can also reach us directly at{' '}
+            <a
+              href="mailto:abidhussainme1@gmail.com"
+              className="text-accent-text transition-colors duration-[120ms] ease-default hover:text-fg"
+            >
+              abidhussainme1@gmail.com
+            </a>
+            .
+          </p>
       </div>
     </div>
   )

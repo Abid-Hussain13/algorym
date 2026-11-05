@@ -249,9 +249,12 @@ export function EditorShowcase() {
       <div className="editor-inner">
         <div className="editor-head">
           <h2>
-            A real editor, <em>not a toy</em>
+            One editor, <em>two cursors</em>
           </h2>
-          <p>Syntax highlighting, live cursors, and instant code execution. Everything two people need to conduct a serious interview.</p>
+          <p>
+            Syntax highlighting in five languages, live cursors on both sides, and run output that streams back as it
+            happens. Built on CodeMirror 6, with vim mode and shared files.
+          </p>
         </div>
 
         <div className="editor-wrap">

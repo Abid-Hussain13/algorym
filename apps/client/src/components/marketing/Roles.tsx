@@ -25,10 +25,10 @@ const panes: RolePane[] = [
     label: 'Interviewer',
     heading: 'Everything the interviewer can do',
     description:
-      'From the invite link to the final evaluation, the host owns every step — with private notes and editor settings kept out of the guest\u2019s view.',
+      'From the invite link to the final evaluation, the host runs every step. Private notes and editor settings stay out of the guest\u2019s view.',
     caps: [
       { title: 'Create a session & share the invite link', sub: 'signed-in only' },
-      { title: 'Pick the question — and change it live', sub: 'while session is live' },
+      { title: 'Pick the question, change it live', sub: 'while session is live' },
       { title: 'Start, complete, or cancel', sub: 'any time, status-guarded' },
       { title: 'Private notes & editor settings', sub: 'never shown to guest' },
       { title: 'Run code, watch output live', sub: '5 languages' },
@@ -42,14 +42,14 @@ const panes: RolePane[] = [
     label: 'Candidate',
     heading: 'Everything the candidate can do',
     description:
-      'Join from a link, type a name, and code side-by-side with the interviewer. The guest\u2019s room is focused — just the question, the editor, and live results.',
+      'Join from the invite link, enter a name, and code alongside the interviewer. The guest sees the question, the editor, and live results, and nothing else.',
     caps: [
       { title: 'Join instantly via invite link', sub: 'no account required' },
       { title: 'Enter name + consent in seconds', sub: 'guest join flow' },
       { title: 'Code live in the shared editor', sub: 'Yjs real-time sync' },
       { title: 'Follow the active question', sub: 'updates when host changes it' },
       { title: 'Run code & see results live', sub: 'stdin / stdout / status' },
-      { title: 'Review & evaluate on any device', sub: 'never device-gated' },
+      { title: 'Rejoin after a drop', sub: 'same link, same room' },
     ],
     image: '/candidate.png',
     alt: 'Candidate joining a live coding session as a guest',
@@ -83,8 +83,8 @@ export function Roles() {
         Two roles. <em>One live session.</em>
       </h2>
       <p className="cs-lede">
-        A host and a guest meet in one shared real-time editor code together, run live, then
-        evaluate. Every session is built to make each side&rsquo;s experience unmistakable.
+        A host and a guest meet in one shared editor. They code together, run the same code, and watch the same
+        verdicts appear. At the end the host evaluates, and the guest never sees it.
       </p>
 
       <div className="cs-tabs" role="tablist" aria-label="Session roles">

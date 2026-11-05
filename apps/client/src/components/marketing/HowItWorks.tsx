@@ -18,8 +18,10 @@ const panels: Panel[] = [
         id: 0,
         title: 'Create session',
         heading: 'Create your session',
-        description: 'Pick a question, choose a mode, and set the time limit optional. You become the host automatically, nothing else to set up.',
-        detail: 'Two modes: interview and practice. Create a session and it goes live immediately, ready for your candidate.',
+        description:
+            'Pick a question from your bank, choose interview or practice mode, and set a duration. You become the host as soon as it is created.',
+        detail:
+            'Interview sessions end with a private evaluation; practice sessions do not. With no scheduled time, the session starts immediately.',
         accent: 'violet',
         icon: IconCreateSession,
     },
@@ -27,8 +29,10 @@ const panels: Panel[] = [
         id: 1,
         title: 'Share link',
         heading: 'Invite your candidate',
-        description: 'Send the tokenized invite link. Your candidate joins right in the browser. No account, No install.',
-        detail: 'Each link is tied to one session. The token in the URL is all a guest needs to join as a participant.',
+        description:
+            'Send the invite link. Your candidate joins from the browser with no account and nothing to install.',
+        detail:
+            'Each link carries a token for a single session. The guest enters a name, consents once, and is in the room.',
         accent: 'teal',
         icon: IconShareLink,
     },
@@ -36,8 +40,10 @@ const panels: Panel[] = [
         id: 2,
         title: 'Code together',
         heading: 'Meet in a live editor',
-        description: 'Both of you edit the same document in real time, live cursors, presence, and instant code execution.',
-        detail: 'Run code in 5 languages: JavaScript, Python, Java, C++, and Go. Verdicts stream back to both screens in real time.',
+        description:
+            'Both of you edit the same files in real time, with live cursors and presence, and run code without leaving the room.',
+        detail:
+            'Run JavaScript, Python, Java, C++, and Go in a sandbox. Every verdict, with stdout and timing, appears on both screens at once.',
         accent: 'amber',
         icon: IconCodeTogether,
     },
@@ -45,8 +51,9 @@ const panels: Panel[] = [
         id: 3,
         title: 'Evaluate guest',
         heading: 'Evaluate the guest',
-        description: 'At the end, the host rates the guest: weak, average, or strong. Only the host ever sees this.',
-        detail: 'The guest gets run verdicts and the session transcript, never the host\u2019s assessment. Evaluations stay private.',
+        description:
+            'When the session ends, the host rates the guest weak, average, or strong, and adds notes. Only the host sees any of it.',
+        detail: 'The guest sees run verdicts and the session itself, never the host\u2019s assessment.',
         accent: 'rose',
         icon: IconEvaluate,
     },
@@ -54,8 +61,9 @@ const panels: Panel[] = [
         id: 4,
         title: 'Watch replay',
         heading: 'Replay the session',
-        description: 'Rewatch the whole session like a video, every edit, comment, and run, in order.',
-        detail: 'Built from the session event log. Scrub to any moment to review how the guest approached the problem.',
+        description: 'Rewatch the session like a video: runs, code snapshots, and question changes, in order.',
+        detail:
+            'Built from the session event log. Scrub to any run or question change to review how the problem was approached.',
         accent: 'accent',
         icon: IconReplay,
     },
@@ -83,7 +91,7 @@ export function HowItWorks() {
                     <h2>
                         How it <em>works</em>
                     </h2>
-                    <p>From invite to replay, five steps, one flow.</p>
+                    <p>From invite link to replay, in five steps.</p>
                 </div>
 
                 <div className="acc" role="tablist" aria-label="How it works steps">

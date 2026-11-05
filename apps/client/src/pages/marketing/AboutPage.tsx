@@ -8,15 +8,15 @@ export function AboutPage() {
       </h1>
 
       <p className="mt-5 text-[17px] leading-[1.65] text-muted max-w-[60ch]">
-        Algorym started from a frustration: mock interviews over video calls with shared screens
-        and disconnected editors never felt like the real thing. You need the pressure of a live
-        environment, the feedback of a shared terminal, and a replay you can study after.
+        Algorym started from a frustration: mock interviews over video calls, with shared screens and
+        separate editors, never felt like the real thing. Practice needs a live partner, results that
+        come back while you type, and a record you can review afterwards.
       </p>
 
       <p className="mt-4 text-[17px] leading-[1.65] text-muted max-w-[60ch]">
-        We built a tool that puts two people in the same codebase, in real time, with run results
-        streaming in as code is written. No screen-sharing lag, no "can you see my cursor?" — just
-        a focused room where the interviewer watches the candidate think through a problem.
+        So Algorym puts two people in the same editor, in real time. Code syncs on both sides, runs
+        stream back with output and verdicts, and there is no screen share to lag behind. The
+        interviewer watches the candidate work through the problem as it happens.
       </p>
 
       <h2 className="mt-[56px] font-display text-[28px] font-semibold tracking-[-0.02em] leading-[1.15] text-fg">
@@ -30,7 +30,7 @@ export function AboutPage() {
           </h3>
           <p className="mt-2 text-[15px] leading-[1.6] text-muted">
             Create a session, pick a question from the bank (or write your own), and share the
-            invite link. The guest joins with a name and consent — no account required.
+            invite link. The guest joins with a name and consent, no account required.
           </p>
         </div>
 
@@ -39,9 +39,9 @@ export function AboutPage() {
             Both code in the same editor
           </h3>
           <p className="mt-2 text-[15px] leading-[1.6] text-muted">
-            The guest writes code while the host watches in real time — cursors visible,
-            selections visible, every keystroke part of the evaluation. Run your code and see
-            results instantly in the shared terminal.
+            Both sides edit the same files in real time: cursors and selections are visible to each
+            other, and every run returns to the shared output panel with stdout, timing, and the
+            verdict.
           </p>
         </div>
 
@@ -50,9 +50,9 @@ export function AboutPage() {
             Replay and evaluate
           </h3>
           <p className="mt-2 text-[15px] leading-[1.6] text-muted">
-            After the session, the host watches a full replay — every code change, every run
-            result, on a scrubable timeline. Rate the candidate privately, add notes, and build
-            a real picture of how they think under pressure.
+            After the session, the host opens a replay built from the event log: runs, code
+            snapshots, and question changes on a scrubable timeline. The rating and notes are
+            entered privately and never shown to the guest.
           </p>
         </div>
       </div>
@@ -66,45 +66,43 @@ export function AboutPage() {
           <span className="mt-2 h-[6px] w-[6px] shrink-0 rounded-full bg-accent opacity-80" />
           <span>
             <strong className="font-semibold text-fg">Practice should feel like the real thing.</strong>{' '}
-            The closer your mock interview is to the actual experience, the more prepared
-            you'll be. Algorym doesn't abstract away the pressure — it simulates it.
+            A mock interview only helps when it resembles the real one, so Algorym keeps the room
+            live: shared editor, both cursors, verdicts that arrive while you are still solving.
           </span>
         </li>
         <li className="flex gap-3 text-[15px] leading-[1.6] text-muted">
           <span className="mt-2 h-[6px] w-[6px] shrink-0 rounded-full bg-accent opacity-80" />
           <span>
-            <strong className="font-semibold text-fg">Code is the artifact, not the transcript.</strong>{' '}
-            We persist code snapshots and run results — not chat logs or join/leave events.
-            The replay shows what matters: how the code evolved and whether it worked.
+            <strong className="font-semibold text-fg">The code is the record.</strong>{' '}
+            We persist code snapshots and run results. Chat and presence stay out of the replay,
+            which shows how the code evolved and whether each run worked.
           </span>
         </li>
         <li className="flex gap-3 text-[15px] leading-[1.6] text-muted">
           <span className="mt-2 h-[6px] w-[6px] shrink-0 rounded-full bg-accent opacity-80" />
           <span>
-            <strong className="font-semibold text-fg">Evaluation is human, not algorithmic.</strong>{' '}
-            Algorym doesn't auto-grade your solution. The interviewer sees the full picture —
-            false starts, refactors, edge case handling — and makes a judgment call.
+            <strong className="font-semibold text-fg">Evaluation stays human.</strong>{' '}
+            Algorym does not auto-grade anything. The interviewer sees the false starts, the
+            refactors, and the edge cases, then makes the call.
           </span>
         </li>
         <li className="flex gap-3 text-[15px] leading-[1.6] text-muted">
           <span className="mt-2 h-[6px] w-[6px] shrink-0 rounded-full bg-accent opacity-80" />
           <span>
-            <strong className="font-semibold text-fg">Guest friction should be zero.</strong>{' '}
-            A candidate joins with one link. Name, consent, enter. No sign-up wall, no email
-            verification, no download. The interview starts in seconds.
+            <strong className="font-semibold text-fg">The guest path stays short.</strong>{' '}
+            A candidate joins with one link: name, consent, enter. No sign-up, no email
+            verification, no download.
           </span>
         </li>
       </ul>
 
       <div className="mt-[56px] rounded-[12px] border border-border bg-surface p-6">
         <h2 className="font-display text-[20px] font-semibold tracking-[-0.01em] text-fg">
-          Built by engineers who've been on both sides
+          Why it exists
         </h2>
         <p className="mt-3 text-[15px] leading-[1.6] text-muted">
-          We've interviewed at dozens of companies and conducted hundreds of technical screens.
-          We've seen what works — focused environments with real problems — and what doesn't —
-          whiteboard hazing and LeetCode grinding with no feedback loop. Algorym is the tool
-          we wish existed when we started interviewing.
+          Algorym started as a way to rehearse technical interviews with a real partner instead of
+          a whiteboard. It stuck because building it turned out to be genuinely fun.
         </p>
       </div>
 
