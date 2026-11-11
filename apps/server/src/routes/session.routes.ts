@@ -8,6 +8,7 @@ import {
 } from "../controllers/session.controller.js";
 import { protect } from "../middlewares/protect.js";
 import { validate, validateQuery } from "../middlewares/validate.js";
+import { rateLimit } from "../middlewares/rateLimit.js";
 import {
     createSessionSchema, getAllSessionsSchema, updateSessionSchema,
     joinSessionSchema, changeQuestionSchema, saveNotesSchema, eventsQuerySchema
@@ -17,7 +18,8 @@ import { getSessionEvents } from "../controllers/session.controller.js";
 const sessionRoute = Router();
 
 // Join — no auth, auth is optional user can be guest.
-sessionRoute.post("/join", validate(joinSessionSchema), joinSession);
+const joinBucket = rateLimit("join", 30, 5 * 60 * 1000);
+sessionRoute.post("/join", joinBucket, validate(joinSessionSchema), joinSession);
 
 // CRUD
 sessionRoute.post("/", protect, validate(createSessionSchema), createSession);

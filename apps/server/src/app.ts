@@ -10,6 +10,9 @@ import notFound from "./middlewares/notFound.js";
 
 const app = express();
 dotenv.config();
+// Render terminates TLS at the edge; without this every client shares the
+// proxy's IP and the rate limiter buckets the whole world together.
+app.set("trust proxy", 1);
 app.use(cors({
     origin: process.env.CLIENT_URL,
     credentials: true,

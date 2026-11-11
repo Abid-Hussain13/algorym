@@ -124,3 +124,33 @@ create unique index idx_evaluations_session_candidate
 create unique index if not exists idx_sessions_one_live_per_user
     on sessions (created_by)
     where status = 'live';
+
+-- Supabase exposes PostgREST on this database. RLS with no policies denies
+-- anon/authenticated; the app connects as postgres (bypassrls) and is unaffected.
+-- Local/test Postgres has no Supabase roles — create them so the revokes run.
+do $$
+begin
+    if not exists (select 1 from pg_roles where rolname = 'anon') then
+        create role anon nologin;
+    end if;
+    if not exists (select 1 from pg_roles where rolname = 'authenticated') then
+        create role authenticated nologin;
+    end if;
+end $$;
+
+alter table users enable row level security;
+alter table tokens enable row level security;
+alter table questions enable row level security;
+alter table sessions enable row level security;
+alter table session_participants enable row level security;
+alter table session_events enable row level security;
+alter table session_evaluations enable row level security;
+alter table session_questions enable row level security;
+alter table user_preferences enable row level security;
+
+revoke all on all tables in schema public from anon, authenticated;
+revoke all on all sequences in schema public from anon, authenticated;
+revoke all on all functions in schema public from anon, authenticated;
+alter default privileges in schema public revoke all on tables from anon, authenticated;
+alter default privileges in schema public revoke all on sequences from anon, authenticated;
+alter default privileges in schema public revoke all on functions from anon, authenticated;
